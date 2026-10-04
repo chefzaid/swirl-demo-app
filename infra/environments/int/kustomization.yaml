@@ -18,11 +18,11 @@ configMapGenerator:
   - runtime-config.json=web-runtime-config.json
 images:
 - name: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-user
-  digest: sha256:5020122e6fd9dfcc14a0a4b7c52cc2e4f85b80824b948db71f0255c7a6843955
+  digest: sha256:9869cb7065fa9534834ccdd82d9d58c70230b7c30a57eaf67f3be03e63991f2f
 - name: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-order
-  digest: sha256:4e47b4f107cff1f01ffc6a49b07cd25c047f6a39a5615578690b99994ee03487
+  digest: sha256:2beb201b04b3ac58a17eb8b078d7fd13eb2753da65b15e8b32bc29ecb0170f43
 - name: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-web
-  digest: sha256:729ce605de13745bcd769e8da085b0f73fbd5650f2be2a3a8cf93a07ad7a3b72
+  digest: sha256:4d65d158c166524f3073e10792f85e2bc40240fbbf10ff958a77d29931447a0c
 patches:
 - target:
     kind: Ingress

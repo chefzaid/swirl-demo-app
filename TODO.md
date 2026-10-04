@@ -30,6 +30,8 @@ Swirl Demo App is a reusable application template, not a product roadmap. New wo
 - [ ] Add consumer-driven contract tests for service and event contracts.
 - [ ] Add a small field-encryption example backed by envelope encryption/KMS abstractions; document key rotation and keep passwords in Keycloak.
 - [ ] Add SBOM generation, image signing and verification, secret scanning, SAST, dependency scanning, and a baseline DAST stage.
+- [ ] Resolve the findings of the CI `03-security` job (2026-10-04, pipeline 723): one critical prototype-pollution issue in a build-time worker-pool dependency and high denial-of-service issues in the router and HTTP-client dependencies; the job is report-only, so they do not block delivery.
+- [ ] Give the order, user and web deployments an explicit non-root pod and container `securityContext` (Trivy KSV-0118 reports the default context, which allows root).
 - [ ] Define retention, export, anonymization, and deletion examples for personal data without expanding the demo into an account-management product.
 - [ ] Add edge security examples for global throttling, request-size limits, and optional bot protection.
 

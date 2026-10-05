@@ -75,4 +75,4 @@ See the [Development Guide](./docs/development.md) for dependency-free local dev
 
 ## License
 
-GPL 3.0
+GPL 3.0. See [LICENSE](./LICENSE).

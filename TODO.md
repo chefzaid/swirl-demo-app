@@ -87,3 +87,47 @@ Swirl Demo App is a reusable application template, not a product roadmap. New wo
 - [ ] Add a third minimal reference service only if it proves a missing pattern such as synchronous resilience, saga compensation, or gRPC.
 - [ ] Add Renovate or Dependabot with grouped, verified platform upgrades.
 - [ ] Add a documented compatibility matrix and automated upgrade tests for supported Java, Node, browser, database, Kafka, and Kubernetes versions.
+
+## Product Direction (added 2026-10-05)
+
+The product is the template itself; the user and order domain stays the smallest example that proves each pattern, as the rules above require. Generators such as JHipster or Spring Initializr produce a project once and leave it; they give no evidence that the result passes a security review, and generated projects drift from the template as soon as it improves. The niche to own is **the audited service starter for regulated enterprise teams**: Java and Angular teams in banking, insurance, energy and the public sector who must pass security, architecture and supplier reviews (DORA, NIS2, ISO/IEC 27001) before anything reaches production.
+
+Differentiators:
+
+1. A service generated with only the capabilities it needs, which keeps receiving template improvements as reviewable merge requests.
+2. Compliance evidence shipped with every release: OWASP ASVS mapping, threat model, SBOM, signatures and scan results in one pack.
+3. Every distributed-systems pattern demonstrated by its failure mode, with tests, runbooks and a removal path.
+4. A measured production-readiness score for any project generated from the template.
+
+### Generator And Upgrade Stream
+
+- [ ] **ADR — distribution:** compare a templating generator with a stored answers file and three-way regeneration, a Maven archetype with an Angular schematic, and published starters only. The choice must let adopters receive later template changes; a one-shot copy does not. Builds on the initialization-script and starter items above.
+- [ ] Capability selection at generation (Kafka with outbox, Redis cache, Keycloak, generated API clients, web UI): unselected patterns are absent from the generated code rather than disabled by configuration.
+- [ ] Versioned template releases with semantic versions, a changelog, an upgrade guide per major version and a long-term-support line.
+- [ ] Template update merge requests: a scheduled job in each generated project compares its template version with the latest release and opens a merge request with the changes, migration notes and marked conflicts.
+- [ ] Conformance check runnable in any generated project's CI: reports where the project departs from the template's security, observability and testing guarantees, as a score with explanations.
+
+### Compliance Evidence
+
+- [ ] OWASP ASVS level 2 mapping: each requirement points to the implementing code or configuration and to the test that proves it; generated projects inherit the mapping, and CI reports met, missing and not-applicable requirements.
+- [ ] Threat model (STRIDE) of the reference flow with a data-flow diagram, regenerated for the capabilities a project selects.
+- [ ] Release evidence pack: SBOM, image signatures, test and coverage reports, Sonar gate, dependency and container scan results, the ASVS report and the threat model in one signed archive attached to each release (builds on the SBOM and signing item above).
+- [ ] Secure development lifecycle template mapped to ISO/IEC 27001:2022 controls 8.25–8.29: review rules, branch protection, release approval and vulnerability-fix deadlines, with the CI checks that enforce them.
+- [ ] Production-readiness review generated from automated checks (probes, resources, SLOs, alerts, runbooks, backups, disruption budgets) with a pass or fail report in CI.
+
+### Enterprise Patterns (minimal domain, tested failure modes)
+
+- [ ] Multi-tenancy pattern: tenant resolution from a token claim, PostgreSQL row-level security compared with schema per tenant, tenant-aware cache keys and Kafka headers, and tests proving cross-tenant access is denied.
+- [ ] Idempotency keys for creating requests (`Idempotency-Key` header with stored responses), tested with concurrent retries.
+- [ ] Zero-downtime schema changes (expand and contract) proven by a test that runs old and new versions against the same database during a rolling deployment.
+- [ ] Relationship-based authorization with a policy engine beside role checks, added only with an example that roles cannot express.
+- [ ] Internationalization pattern for the Angular UI and Problem Details messages (French and English).
+- [ ] Generic Kubernetes target: generated projects deploy to any conformant cluster without the reference platform's onboarding contract, which stays an optional profile.
+
+### Adoption And Offer
+
+- [ ] **ADR — licensing:** the template is GPL 3.0 (`LICENSE` added 2026-10-05; `pom.xml` still declares no license). Code copied from a GPL template into proprietary services delivered to clients would have to be released under the GPL, which blocks most enterprise adoption. Choose a permissive license for the template and generated code, or a generator exception, then update `LICENSE`, the README and the build metadata.
+- [ ] Versioned documentation site with a pattern catalog: for each pattern, the problem, the failure mode it handles, the code, the tests, the runbook and how to remove it.
+- [ ] Guided failure-mode demos built on the fault-injection tests above (broker loss, duplicate events, database restart, identity-provider outage), with the expected Grafana and log views, usable in workshops.
+- [ ] Measure and publish the time from generation to a first verified production deployment.
+- [ ] Commercial offer around the free template: support subscription, architecture reviews of generated services and training based on the guided demos.

@@ -18,6 +18,11 @@ Bugs, failing checks, security findings, and code smells found while working on 
 
 Parts of tasks that cannot advance without the owner's decision or information. Only the part needing input is set aside here; the rest of the task keeps moving. Answer under the item, and the next agent run applies the answer and removes the entry.
 
+- [ ] Which license should the template and generated code use? Options: (a) Apache 2.0, permissive with a patent grant, the usual choice for enterprise starters; (b) MIT, shortest permissive text, no patent grant; (c) keep GPL 3.0 and add a generator exception so generated services can stay proprietary; (d) keep GPL 3.0 unchanged and accept that enterprise adoption is blocked. *(task: Adoption And Offer › ADR — licensing; asked by: Coding Agent)*
+  - Answer:
+- [ ] Where does the Argo CD `ComparisonError: Object 'Kind' is missing` come from now? Every pinned `int`/`uat`/`prod` revision has a `kustomization.yaml`, so Argo CD should build with Kustomize and never parse `settings.json`, and all three environments render cleanly with `kustomize build` (every object has a `kind`). Please paste the current Application condition message (`kubectl -n infra get application swirl-demo-app-int -o jsonpath='{.status.conditions}'`) or say whether the platform forces the directory source type. *(task: Kubernetes And Delivery › Argo CD ComparisonError; asked by: Coding Agent)*
+  - Answer:
+
 ## Priority: Delivery And Data Correctness
 
 - [ ] Replace the order database/Kafka dual write with a transactional outbox and a small relay implementation; provide polling and CDC variants as documented alternatives.
@@ -74,7 +79,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Add ephemeral preview environments and automated teardown for pull requests.
 - [ ] Add policy-as-code checks for Kubernetes manifests and container security contexts.
 - [ ] Add release promotion, rollback, provenance, and environment-approval examples without weakening Argo CD ownership.
-- [ ] Fix the `swirl-demo-app-int`/`-uat`/`-prod` Argo CD `ComparisonError: Object 'Kind' is missing`: the Application source directory also contains `infra/environments/<env>/settings.json`, which Argo CD parses as a manifest. Exclude it (`directory.exclude`) or move the settings outside the source path.
+- [ ] *(waiting in Needs Input)* Fix the `swirl-demo-app-int`/`-uat`/`-prod` Argo CD `ComparisonError: Object 'Kind' is missing`: the Application source directory also contains `infra/environments/<env>/settings.json`, which Argo CD parses as a manifest. Exclude it (`directory.exclude`) or move the settings outside the source path.
 
 ## Priority: Testing And Quality
 
@@ -134,7 +139,7 @@ Differentiators:
 
 ### Adoption And Offer
 
-- [ ] **ADR — licensing:** the template is GPL 3.0 (`LICENSE` added 2026-10-05; `pom.xml` still declares no license). Code copied from a GPL template into proprietary services delivered to clients would have to be released under the GPL, which blocks most enterprise adoption. Choose a permissive license for the template and generated code, or a generator exception, then update `LICENSE`, the README and the build metadata.
+- [ ] *(waiting in Needs Input)* **ADR — licensing:** the template is GPL 3.0 (`LICENSE` added 2026-10-05; `pom.xml` still declares no license). Code copied from a GPL template into proprietary services delivered to clients would have to be released under the GPL, which blocks most enterprise adoption. Choose a permissive license for the template and generated code, or a generator exception, then update `LICENSE`, the README and the build metadata.
 - [ ] Versioned documentation site with a pattern catalog: for each pattern, the problem, the failure mode it handles, the code, the tests, the runbook and how to remove it.
 - [ ] Guided failure-mode demos built on the fault-injection tests above (broker loss, duplicate events, database restart, identity-provider outage), with the expected Grafana and log views, usable in workshops.
 - [ ] Measure and publish the time from generation to a first verified production deployment.

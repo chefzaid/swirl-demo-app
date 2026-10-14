@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "kind": "snapshot",
+  "releaseVersion": "snapshot-9fd9b1e70af68840a1d0c997d339105170924ccb-903",
+  "sourceRevision": "9fd9b1e70af68840a1d0c997d339105170924ccb",
+  "pipelineId": "903",
+  "images": {
+    "swirlapp-user": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-user",
+      "digest": "sha256:0611e87691ab61cdd48b7178c172f04880775bc4ad690c459d4d508cac5a30c2"
+    },
+    "swirlapp-order": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-order",
+      "digest": "sha256:cce5adf6f10b3624b278052e818cf2497ce0b824f0ce5654bb084fd83ec203a3"
+    },
+    "swirlapp-web": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-web",
+      "digest": "sha256:a81c1de18ce31e129c9b3f915d828bde810372a99967349e906a48e2e85b2cab"
+    }
+  },
+  "sourceBranch": "dependabot/docker/swirlapp-web/container-images-8bdf3ee243"
+}

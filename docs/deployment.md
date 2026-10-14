@@ -9,7 +9,7 @@ the selected environment.
 ## Infrastructure Layout
 
 | Directory or file | Responsibility |
-|---|---|
+| --- | --- |
 | `infra/k8s/` | Shared application manifests and public configuration templates. |
 | `infra/overlays/ha/` | Optional application replica and disruption-budget profile. |
 | `infra/environments/<env>/` | Generated environment settings, runtime ConfigMaps, ingress and image digests. |
@@ -119,7 +119,7 @@ settings. The initial deployment defaults to `int`; set
 Public choices are stored in `infra/environments/<env>/settings.json`:
 
 | Setting | Purpose |
-|---|---|
+| --- | --- |
 | `appSubdomain` | The shared onboarding app label, default `demo`; `@` selects each environment's domain apex. |
 | `trustedProxyCIDRs` | Trusted ingress addresses for API rate limiting; first setup uses the target pod CIDR. |
 | `highAvailability` | Enables the [HA profile](#future-multi-node-ha-profile) on a prepared application cluster. |
@@ -158,7 +158,7 @@ onboarding run can verify and resume its own work.
 ## Delivery Flow
 
 | Environment | Trigger | Result |
-|---|---|---|
+| --- | --- | --- |
 | `int` | Every commit, on any branch. | Build, publish and deploy an immutable snapshot automatically. |
 | `uat` | **Publish** (`01-publish`) on a default-branch commit pipeline. | Publish a stable release, then `02-deploy-uat` deploys it automatically. |
 | `prod` | Manual **New pipeline** on the default branch with `DEPLOYMENT_ENVIRONMENT=prod`. | Promote the release running on `uat`; nothing is built. |

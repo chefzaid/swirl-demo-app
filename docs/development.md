@@ -93,7 +93,7 @@ docker compose -f infra/compose/compose.yaml ps
 Open <http://localhost:4200> and use:
 
 | Surface | Username | Password |
-|---|---|---|
+| --- | --- | --- |
 | Swirl Demo App | `user` | `password` |
 | Keycloak admin at <http://localhost:8180/auth/admin> | `admin` | `admin` |
 
@@ -102,7 +102,7 @@ These credentials and the `swirl-demo-app-smoke` client secret in the imported r
 Useful endpoints:
 
 | URL | Purpose |
-|---|---|
+| --- | --- |
 | <http://localhost:4200> | application |
 | <http://localhost:4200/api/docs> | aggregated Swagger UI |
 | <http://localhost:4200/api/users/openapi> | user OpenAPI document |
@@ -228,7 +228,7 @@ The roadmap keeps a stricter application-only dev-container direction: environme
 ## Important Environment Variables
 
 | Variable | Purpose | Complete-local value |
-|---|---|---|
+| --- | --- | --- |
 | `SPRING_PROFILES_ACTIVE` | Spring profile | `prod` |
 | `DB_HOST`, `DB_PORT`, `DB_NAME` | PostgreSQL location | `postgres`, `5432`, `swirl_demo_app_db` |
 | `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL credential | disposable `swirl-demo-app` values |

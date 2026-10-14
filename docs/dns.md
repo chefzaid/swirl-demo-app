@@ -13,7 +13,7 @@ The central `infra/deployment-environments` ConfigMap records each environment's
 `infra/environments/<env>/settings.json` to reconcile the selected proxied A, AAAA or CNAME record:
 
 | Environment | Example hostname | Destination |
-|---|---|---|
+| --- | --- | --- |
 | `int` | `demo-int.example.com` | Registered integration ingress address. |
 | `uat` | `demo-uat.example.com` | Registered acceptance ingress address. |
 | `prod` | `demo.example.com` | Registered production ingress address. |

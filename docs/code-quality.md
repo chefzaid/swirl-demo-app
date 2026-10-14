@@ -31,7 +31,7 @@ Sonar administrator credential for its CI scan.
 Manual scans remain available alongside automatic analysis:
 
 | Trigger | When it runs |
-|---|---|
+| --- | --- |
 | Manual scan | Start a default-branch pipeline with `SONAR_SCAN_ONLY=true` whenever a fresh analysis is needed. |
 | Normal CI | Default-branch pipelines run `02-quality` automatically in both standard and full mode. |
 | Discovery: first scan | The platform requests a scan when a discovered repository has no completed analysis. |
@@ -68,7 +68,7 @@ automatic scans. They do not require a new discovery run.
 the application in the same analysis:
 
 | Component | Source paths | Analysis inputs |
-|---|---|---|
+| --- | --- | --- |
 | Java backend and shared code | `swirlapp-common/src/main`, `swirlapp-user/src/main`, `swirlapp-order/src/main` | Compiled classes from all three modules, Maven dependency JARs and service JaCoCo XML reports |
 | Angular frontend | `swirlapp-web/src` | TypeScript, HTML and CSS source, plus `swirlapp-web/coverage/swirlapp-web/lcov.info` |
 

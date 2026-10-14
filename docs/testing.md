@@ -59,6 +59,15 @@ npm run test:e2e:install
 npm run test:e2e
 ```
 
+Markdown style and internal links in `README.md`, `TODO.md`, and `docs/` (the build job runs both):
+
+```bash
+npx --yes markdownlint-cli2@0.23.3
+python3 infra/scripts/check-doc-links.py
+```
+
+Rules live in `.markdownlint-cli2.jsonc`. The link check fails on a relative link to a missing file or heading anchor; external URLs are not fetched.
+
 With Mask:
 
 ```bash

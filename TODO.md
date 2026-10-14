@@ -84,7 +84,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Add accessibility testing for the Angular critical path and automated checks for keyboard navigation and semantic labels.
 - [ ] Add visual regression tests for the deliberately small UI surface.
 - [ ] Extend the existing automatic Sonar reporting with Java 25-specific analyzer validation, OWASP Dependency-Check, and opt-in enforcement of quality gates.
-- [ ] Add Markdown linting and internal-link validation for `README.md`, `TODO.md`, and `docs/`.
+- [x] Add Markdown linting and internal-link validation for `README.md`, `TODO.md`, and `docs/`.
 
 ## Priority: Template Experience
 

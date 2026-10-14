@@ -1,0 +1,8 @@
+{
+  // Prose keeps one sentence or clause per line, so line length is not enforced.
+  "config": {
+    "default": true,
+    "MD013": false
+  },
+  "globs": ["*.md", "docs/**/*.md"]
+}

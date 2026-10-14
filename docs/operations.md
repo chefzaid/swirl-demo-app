@@ -15,7 +15,7 @@ Public addresses use the settings saved by
 [onboarding](deployment.md#add-or-reconfigure-this-repository):
 
 | Surface | URL |
-|---|---|
+| --- | --- |
 | application | `https://<APP_HOST>` |
 | API documentation | `https://<APP_HOST>/api/docs` |
 | Grafana dashboard, after telemetry integration | `https://grafana.<PUBLIC_DOMAIN>/d/swirl-demo-app-<env>-overview` |
@@ -27,7 +27,7 @@ Public addresses use the settings saved by
 Cluster-only:
 
 | Surface | Address |
-|---|---|
+| --- | --- |
 | user service | `swirlapp-user.<namespace>.svc.cluster.local:8080` |
 | order service | `swirlapp-order.<namespace>.svc.cluster.local:8081` |
 | web service | `swirlapp-web.<namespace>.svc.cluster.local:80` |

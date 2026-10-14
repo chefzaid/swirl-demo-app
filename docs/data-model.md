@@ -41,7 +41,7 @@ erDiagram
 Both entities inherit these persistence fields from `swirlapp-common`:
 
 | Field | Type | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `version` | `long` | JPA optimistic-lock value; internal and omitted from API DTOs |
 | `createdBy` | `String` | authenticated principal that created the row, or `system` |
 | `createdDate` | `Instant` | creation timestamp |
@@ -59,7 +59,7 @@ Owner: `swirlapp-user`
 Table: `app_users`
 
 | Column | Constraint | API behavior |
-|---|---|---|
+| --- | --- | --- |
 | `id` | identity primary key | returned as resource identifier |
 | `name` | required, maximum 120 characters | trimmed before storage |
 | `username` | required, unique, maximum 80 characters | validated, trimmed, lowercased with `Locale.ROOT` |
@@ -79,7 +79,7 @@ Owner: `swirlapp-order`
 Table: `orders`
 
 | Column | Constraint | API behavior |
-|---|---|---|
+| --- | --- | --- |
 | `id` | identity primary key | returned as resource identifier and Kafka key |
 | `user_id` | required | logical reference validated asynchronously by `swirlapp-user` |
 | `user_name` | optional | populated from an approved result; null for pending/rejected orders |
@@ -105,7 +105,7 @@ The result listener accepts only `APPROVED` and `REJECTED` events. It verifies o
 `OrderEvent` is an immutable Java record:
 
 | Field | Type | Meaning |
-|---|---|---|
+| --- | --- | --- |
 | `orderId` | `Long` | persisted order identifier and Kafka record key |
 | `userId` | `Long` | logical user reference |
 | `productId` | `Long` | product reference carried through validation |
@@ -192,7 +192,7 @@ UAT and production profiles:
 Migration locations and history tables:
 
 | Service | Migration location | History table |
-|---|---|---|
+| --- | --- | --- |
 | `swirlapp-user` | `swirlapp-user/src/main/resources/db/migration` | `flyway_schema_history_users` |
 | `swirlapp-order` | `swirlapp-order/src/main/resources/db/migration` | `flyway_schema_history_orders` |
 

@@ -24,6 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import dev.swirlit.demo.common.audit.AuditTrail;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,16 +42,18 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
     @Mock
     private KafkaTemplate<Object, Object> kafkaTemplate;
+    @Mock
+    private AuditTrail auditTrail;
     private OrderService orderService;
 
     @BeforeEach
     void setUp() {
-        orderService = new OrderService(orderRepository, kafkaTemplate, true, Constants.ORDER_TOPIC);
+        orderService = new OrderService(orderRepository, kafkaTemplate, auditTrail, true, Constants.ORDER_TOPIC);
     }
 
     @Test
     void publishesOnlyToSelectedEnvironment() {
-        orderService = new OrderService(orderRepository, kafkaTemplate, true, "swirl-demo-app.uat.order_topic");
+        orderService = new OrderService(orderRepository, kafkaTemplate, auditTrail, true, "swirl-demo-app.uat.order_topic");
         Order order = new Order(1L, 2L);
         order.setId(7L);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
@@ -57,6 +61,7 @@ class OrderServiceTest {
                 .thenReturn(new java.util.concurrent.CompletableFuture<>());
         orderService.createOrder(new CreateOrderRequest(1L, 2L));
         verify(kafkaTemplate).send(eq("swirl-demo-app.uat.order_topic"), eq("7"), any(OrderEvent.class));
+        verify(auditTrail).changed("order.created", "order", 7L);
     }
 
     @Test
@@ -95,7 +100,7 @@ class OrderServiceTest {
 
     @Test
     void createOrderSkipsKafkaWhenMessagingIsDisabled() {
-        orderService = new OrderService(orderRepository, kafkaTemplate, false, Constants.ORDER_TOPIC);
+        orderService = new OrderService(orderRepository, kafkaTemplate, auditTrail, false, Constants.ORDER_TOPIC);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         orderService.createOrder(new CreateOrderRequest(1L, 1001L));
@@ -188,6 +193,7 @@ class OrderServiceTest {
         orderService.deleteOrder(7L);
 
         verify(orderRepository).delete(existing);
+        verify(auditTrail).changed("order.deleted", "order", 7L);
     }
 
     private static Order order(Long id) {

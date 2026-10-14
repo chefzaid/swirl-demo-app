@@ -280,7 +280,7 @@ Not implemented:
 
 Email is displayed by the demo and cannot be irreversibly hashed. Platform volume/backup encryption should protect data at rest; application-level envelope encryption with managed KMS is appropriate when the threat model requires field confidentiality from database operators or backups.
 
-Auditing timestamps and principals are not a complete security audit trail. Sensitive actions need immutable, access-controlled audit events with retention and review policy.
+Entity auditing (timestamps and principals on each row) records only the latest change. The [audit trail](#audit-trail) records every change and every rejected request.
 
 ## Kafka And Event Security
 
@@ -401,6 +401,20 @@ It must not log:
 Stack traces are kept for unexpected failures (`Unhandled request failure`) because diagnosis needs them, so log access must stay restricted to operators. The `dev` and `test` profiles log Spring MVC at DEBUG, which prints request bodies; never enable them against real data.
 
 `GlobalExceptionHandlerLoggingTest` and `NotificationServiceTest` capture log output and fail if a rejected value or personal data reaches it. Add a test of the same kind with any new log statement that touches user input.
+
+### Audit trail
+
+Three records answer different questions, and none replaces another:
+
+| Record | Answers | Where |
+| --- | --- | --- |
+| Entity auditing | who created and last changed this row, and when | `created_by`, `created_date`, `last_modified_by`, and `last_modified_date` columns |
+| Application audit trail | who changed what, and which requests were refused | `dev.swirlit.demo.audit` logger |
+| Platform logs | what the service was doing (diagnostics) | every other logger, plus ingress and Kubernetes logs |
+
+`AuditTrail` (in `swirlapp-common`) writes one entry per user or order creation, update, and deletion after its transaction commits, per rejected bearer token (`authentication.failed`), and per request refused by authorization (`authorization.denied`). In JSON logs each entry carries `audit.action`, `audit.resource_type`, `audit.resource_id`, `audit.actor` (the token subject, `anonymous`, or `system`), `audit.outcome`, and the `requestId`. Entries follow the redaction policy above: no tokens, names, usernames, email addresses, or request bodies.
+
+Log lines are not immutable. Route the audit logger to its own index or stream with restricted write access and a retention period set by your compliance needs; `SecurityAuditTest` and `AuditTrailTest` pin what is recorded.
 
 The custom database health indicator includes record counts in health details. Spring uses `show-details: when-authorized`; review operational role configuration before exposing details beyond trusted cluster callers.
 

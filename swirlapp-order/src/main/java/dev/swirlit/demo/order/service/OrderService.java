@@ -3,6 +3,7 @@ package dev.swirlit.demo.order.service;
 import java.time.Instant;
 import java.util.List;
 
+import dev.swirlit.demo.common.audit.AuditTrail;
 import dev.swirlit.demo.common.domain.OrderStatus;
 import dev.swirlit.demo.common.event.OrderEvent;
 import dev.swirlit.demo.common.util.Constants;
@@ -29,19 +30,23 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+    private static final String RESOURCE = "order";
 
     private final OrderRepository orderRepository;
     private final KafkaTemplate<Object, Object> kafkaTemplate;
+    private final AuditTrail auditTrail;
     private final boolean messagingEnabled;
     private final String orderTopic;
 
     public OrderService(
             OrderRepository orderRepository,
             KafkaTemplate<Object, Object> kafkaTemplate,
+            AuditTrail auditTrail,
             @Value("${app.messaging.enabled:false}") boolean messagingEnabled,
             @Value("${app.messaging.topics.order:" + Constants.ORDER_TOPIC + "}") String orderTopic) {
         this.orderRepository = orderRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.auditTrail = auditTrail;
         this.messagingEnabled = messagingEnabled;
         this.orderTopic = orderTopic;
     }
@@ -62,6 +67,7 @@ public class OrderService {
     @CacheEvict(cacheNames = "orders", allEntries = true)
     public Order createOrder(CreateOrderRequest request) {
         Order saved = orderRepository.save(new Order(request.userId(), request.productId()));
+        auditTrail.changed("order.created", RESOURCE, saved.getId());
         publishPendingOrder(saved);
         return saved;
     }
@@ -78,6 +84,7 @@ public class OrderService {
         order.setProductId(request.productId());
         order.setUserName(null);
         order.setStatus(OrderStatus.PENDING);
+        auditTrail.changed("order.updated", RESOURCE, orderId);
         publishPendingOrder(order);
         return order;
     }
@@ -86,6 +93,7 @@ public class OrderService {
     @CacheEvict(cacheNames = "orders", allEntries = true)
     public void deleteOrder(Long orderId) {
         orderRepository.delete(findOrder(orderId));
+        auditTrail.changed("order.deleted", RESOURCE, orderId);
     }
 
     private Order findOrder(Long orderId) {

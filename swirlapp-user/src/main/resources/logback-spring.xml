@@ -28,6 +28,7 @@
                     <message/>
                     <mdc/>
                     <arguments/>
+                    <keyValuePairs/>
                     <stackTrace/>
                     <pattern>
                         <pattern>{"app":"swirlapp-user"}</pattern>

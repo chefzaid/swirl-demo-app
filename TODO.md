@@ -71,7 +71,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [x] Add log redaction tests and a documented policy for tokens, personal data, request bodies, and exception details.
 - [ ] Load `infra/observability/slo-rules.yaml` into each environment's Prometheus once the platform's rule-loading mechanism is known *(waiting in Needs Input)*.
 - [ ] Add optional log/metric anomaly detection only after stable baselines and actionable alert ownership are defined.
-- [ ] Add audit events for security-sensitive actions and document separation between entity auditing, application audit trails, and platform logs.
+- [x] Add audit events for security-sensitive actions and document separation between entity auditing, application audit trails, and platform logs.
 - [ ] Add backup/restore drills for PostgreSQL and persistent Kafka/Redis data, with recovery-point and recovery-time targets.
 - [ ] Add load, soak, and capacity baselines with reproducible k6 or Gatling scenarios.
 

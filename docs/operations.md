@@ -145,6 +145,7 @@ Useful fields:
 - `thread_name`
 - `message`
 - `requestId` from MDC
+- `audit.*` fields on [audit trail](security.md#audit-trail) entries (`logger_name` `dev.swirlit.demo.audit`)
 - Kubernetes namespace, pod, and container fields added by the collector
 
 Direct logs:

@@ -72,6 +72,7 @@ Implemented data behavior:
 - H2 databases, schema SQL, and deterministic seed data for the dependency-free development profile
 - optimistic locking through a shared JPA `@Version` field
 - JPA auditing with created/modified principals and timestamps
+- [audit trail](security.md#audit-trail) entries for user and order changes, rejected tokens, and denied requests
 - authenticated principal resolution with a `system` fallback for non-authenticated work
 - sorted, bounded collection queries
 - custom database health indicators

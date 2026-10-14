@@ -3,6 +3,7 @@ package dev.swirlit.demo.user.service;
 import java.util.List;
 import java.util.Locale;
 
+import dev.swirlit.demo.common.audit.AuditTrail;
 import dev.swirlit.demo.common.exception.ResourceConflictException;
 import dev.swirlit.demo.user.domain.User;
 import dev.swirlit.demo.user.dto.CreateUserRequest;
@@ -20,10 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
+    private static final String RESOURCE = "user";
 
-    public UserService(UserRepository userRepository) {
+    private final UserRepository userRepository;
+    private final AuditTrail auditTrail;
+
+    public UserService(UserRepository userRepository, AuditTrail auditTrail) {
         this.userRepository = userRepository;
+        this.auditTrail = auditTrail;
     }
 
     @Transactional(readOnly = true)
@@ -50,8 +55,9 @@ public class UserService {
             throw new ResourceConflictException("The email address is already in use");
         }
 
-        User user = new User(request.name().trim(), username, email);
-        return userRepository.save(user);
+        User saved = userRepository.save(new User(request.name().trim(), username, email));
+        auditTrail.changed("user.created", RESOURCE, saved.getId());
+        return saved;
     }
 
     @Transactional
@@ -70,6 +76,7 @@ public class UserService {
         user.setName(request.name().trim());
         user.setUsername(username);
         user.setEmail(email);
+        auditTrail.changed("user.updated", RESOURCE, userId);
         return user;
     }
 
@@ -77,6 +84,7 @@ public class UserService {
     @CacheEvict(cacheNames = "users", allEntries = true)
     public void deleteUser(Long userId) {
         userRepository.delete(findUser(userId));
+        auditTrail.changed("user.deleted", RESOURCE, userId);
     }
 
     private User findUser(Long userId) {

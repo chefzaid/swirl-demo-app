@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import dev.swirlit.demo.common.audit.AuditTrail;
 import dev.swirlit.demo.common.exception.ResourceConflictException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,11 +32,13 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private AuditTrail auditTrail;
     private UserService userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository);
+        userService = new UserService(userRepository, auditTrail);
     }
 
     @Test
@@ -56,10 +59,16 @@ class UserServiceTest {
 
     @Test
     void createUserNormalizesInput() {
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User saved = invocation.getArgument(0);
+            saved.setId(5L);
+            return saved;
+        });
 
-        userService.createUser(new CreateUserRequest(" Ada ", "ada", "ADA@EXAMPLE.TEST "));
+        User created = userService.createUser(new CreateUserRequest(" Ada ", "ada", "ADA@EXAMPLE.TEST "));
 
+        assertEquals(5L, created.getId());
+        verify(auditTrail).changed("user.created", "user", 5L);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         org.mockito.Mockito.verify(userRepository).save(captor.capture());
         assertEquals("Ada", captor.getValue().getName());
@@ -102,6 +111,7 @@ class UserServiceTest {
         assertEquals("Ada Byron", updated.getName());
         assertEquals("ada.byron", updated.getUsername());
         assertEquals("ada.byron@example.test", updated.getEmail());
+        verify(auditTrail).changed("user.updated", "user", 1L);
     }
 
     @Test
@@ -137,5 +147,6 @@ class UserServiceTest {
         userService.deleteUser(1L);
 
         verify(userRepository).delete(existing);
+        verify(auditTrail).changed("user.deleted", "user", 1L);
     }
 }

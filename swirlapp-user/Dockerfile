@@ -11,7 +11,7 @@ COPY swirlapp-common/src swirlapp-common/src
 COPY swirlapp-user/src swirlapp-user/src
 RUN mvn -B -pl swirlapp-user -am package -DskipTests
 
-FROM docker.io/library/amazoncorretto:25-alpine@sha256:dc20d7066848919d19d2a7b5f1f4e2a48f8e32fc7328a5ae683d579bafa2f818
+FROM docker.io/library/amazoncorretto:27-alpine@sha256:6fba5f9f2f4730e2d3e81055ce0378a8587c12a48611ee545c5db04c3a28f889
 RUN apk upgrade --no-cache \
     && addgroup -S -g 10001 app && adduser -S -D -H -u 10001 -G app app
 WORKDIR /app

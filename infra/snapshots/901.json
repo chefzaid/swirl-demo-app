@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "kind": "snapshot",
+  "releaseVersion": "snapshot-f3e69ca6d865cac716c881762f1b0718349daeea-901",
+  "sourceRevision": "f3e69ca6d865cac716c881762f1b0718349daeea",
+  "pipelineId": "901",
+  "images": {
+    "swirlapp-user": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-user",
+      "digest": "sha256:5bf6ead4c32379422086948b78a1cfa21de0dc60d807d59cc4848e9330c07727"
+    },
+    "swirlapp-order": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-order",
+      "digest": "sha256:ba0496ad086edf4de6ff6f1c61a789e0126476ea4f1e8e5ac0f6db416eb092d8"
+    },
+    "swirlapp-web": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-web",
+      "digest": "sha256:5bf7dac85806bc152a56a8ddf82e139d541e9aa1909d22eb0b3bd161d81121c8"
+    }
+  },
+  "sourceBranch": "dependabot/docker/swirlapp-user/library/amazoncorretto-27-alpine"
+}

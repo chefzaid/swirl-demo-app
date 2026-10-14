@@ -1,14 +1,18 @@
 package dev.swirlit.demo.user.service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 import dev.swirlit.demo.common.domain.OrderStatus;
+import dev.swirlit.demo.common.event.EventIds;
 import dev.swirlit.demo.common.event.OrderEvent;
 import dev.swirlit.demo.common.util.Constants;
 import dev.swirlit.demo.user.domain.User;
 import jakarta.persistence.EntityNotFoundException;
 
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,9 +22,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,7 +52,7 @@ class OrderListenerTest {
         OrderEvent input = event(10L, 1L);
         successfulPublish();
 
-        orderListener.consume(input);
+        orderListener.consume(input, null);
 
         verify(notificationService).notifyUser(user, input);
         assertPublishedStatus(10L, OrderStatus.APPROVED, "Ada Lovelace");
@@ -59,7 +63,7 @@ class OrderListenerTest {
         when(userService.getUser(2L)).thenThrow(new EntityNotFoundException("missing"));
         successfulPublish();
 
-        orderListener.consume(event(11L, 2L));
+        orderListener.consume(event(11L, 2L), null);
 
         assertPublishedStatus(11L, OrderStatus.REJECTED, null);
     }
@@ -68,9 +72,9 @@ class OrderListenerTest {
     void consumeRetriesProcessingFailureInsteadOfRejectingOrder() {
         when(userService.getUser(3L)).thenThrow(new IllegalStateException("boom"));
 
-        assertThrows(IllegalStateException.class, () -> orderListener.consume(event(12L, 3L)));
+        assertThrows(IllegalStateException.class, () -> orderListener.consume(event(12L, 3L), null));
 
-        verify(kafkaTemplate, never()).send(any(), any(), any());
+        verify(kafkaTemplate, never()).send(any(ProducerRecord.class));
     }
 
     @Test
@@ -78,16 +82,45 @@ class OrderListenerTest {
         orderListener = listener("swirl-demo-app.int.order_result_topic");
         when(userService.getUser(1L)).thenReturn(new User("Ada", "ada", "ada@example.test"));
         successfulPublish();
-        orderListener.consume(event(10L, 1L));
-        verify(kafkaTemplate).send(eq("swirl-demo-app.int.order_result_topic"), eq("10"), any(OrderEvent.class));
-        verify(kafkaTemplate, never()).send(eq(Constants.ORDER_RESULT_TOPIC), any(), any());
+        orderListener.consume(event(10L, 1L), null);
+        assertEquals("swirl-demo-app.int.order_result_topic", publishedRecord().topic());
+    }
+
+    @Test
+    void resultsCarryAnIdDerivedFromTheRequestSoRepeatsAreRecognised() {
+        when(userService.getUser(1L)).thenReturn(new User("Ada", "ada", "ada@example.test"));
+        successfulPublish();
+
+        orderListener.consume(event(10L, 1L), "order-outbox-5".getBytes(StandardCharsets.UTF_8));
+
+        Header header = publishedRecord().headers().lastHeader(EventIds.HEADER);
+        assertEquals("order-outbox-5:result", new String(header.value(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void resultsOfRequestsWithoutAnIdCarryNone() {
+        when(userService.getUser(1L)).thenReturn(new User("Ada", "ada", "ada@example.test"));
+        successfulPublish();
+
+        orderListener.consume(event(10L, 1L), null);
+
+        assertNull(publishedRecord().headers().lastHeader(EventIds.HEADER));
     }
 
     private void assertPublishedStatus(Long orderId, OrderStatus status, String userName) {
-        ArgumentCaptor<OrderEvent> captor = ArgumentCaptor.forClass(OrderEvent.class);
-        verify(kafkaTemplate).send(eq(Constants.ORDER_RESULT_TOPIC), eq(orderId.toString()), captor.capture());
-        assertEquals(status, captor.getValue().status());
-        assertEquals(userName, captor.getValue().userName());
+        ProducerRecord<Object, Object> record = publishedRecord();
+        assertEquals(Constants.ORDER_RESULT_TOPIC, record.topic());
+        assertEquals(orderId.toString(), record.key());
+        OrderEvent result = (OrderEvent) record.value();
+        assertEquals(status, result.status());
+        assertEquals(userName, result.userName());
+    }
+
+    @SuppressWarnings("unchecked")
+    private ProducerRecord<Object, Object> publishedRecord() {
+        ArgumentCaptor<ProducerRecord<Object, Object>> captor = ArgumentCaptor.forClass(ProducerRecord.class);
+        verify(kafkaTemplate).send(captor.capture());
+        return captor.getValue();
     }
 
     private static OrderEvent event(Long orderId, Long userId) {
@@ -99,6 +132,6 @@ class OrderListenerTest {
     }
 
     private void successfulPublish() {
-        when(kafkaTemplate.send(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(kafkaTemplate.send(any(ProducerRecord.class))).thenReturn(CompletableFuture.completedFuture(null));
     }
 }

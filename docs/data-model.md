@@ -153,11 +153,13 @@ Important consistency boundary:
 2. `OutboxRelay` publishes pending outbox rows to Kafka and marks them published once Kafka acknowledges them.
 3. A send that fails leaves the row pending for the next poll, so a crash or broker outage delays the event instead of losing it.
 
-Publication is at least once: a relay crash between Kafka's acknowledgement and the database commit republishes that batch. See [ADR 0011](adr/0011-transactional-outbox.md) for the trade-offs and the change-data-capture alternative.
+Publication is at least once: a relay crash between Kafka's acknowledgement and the database commit republishes that batch. Duplicates are recognised by event ID, as described below. See [ADR 0011](adr/0011-transactional-outbox.md) for the trade-offs and the change-data-capture alternative.
 
 `order_outbox` columns: `id`, `topic`, `event_key` (the order ID), `payload` (the `OrderEvent` JSON), `created_at`, `published_at` (null while pending), and `attempts`. Published rows are deleted after seven days.
 
-Consumer behavior is idempotent for repeated final results in current process state, but there is no durable inbox table. A durable processed-event key is planned for stronger duplicate protection.
+Every request record carries a `swirl-event-id` header taken from its outbox row, and the user service answers with the same ID plus `:result`. `OrderResultListener` stores each applied result ID in `order_inbox` (`event_id`, `processed_at`) in the transaction that updates the order, and skips a result whose ID is already there. Deduplication therefore survives restarts and covers republished requests as well as redelivered results; `swirl_events_duplicates_total` counts the skips. Records without the header (from older producers during a rolling upgrade) fall back to the state checks, which ignore exact duplicates and superseded results.
+
+Inbox entries are deleted with the outbox rows after seven days. Keep that retention longer than the result topic's retention plus the longest consumer outage, or a very late duplicate is no longer recognised and falls back to the state checks.
 
 ## Caching Rules
 

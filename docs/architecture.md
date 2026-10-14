@@ -189,7 +189,6 @@ Statuses:
 
 Create decisions before implementing:
 
-- durable inbox/deduplication
 - HTTP resilience reference adapter
 - distributed rate limiting and edge ownership
 - role/authority mapping and method authorization

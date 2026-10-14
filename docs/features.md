@@ -115,7 +115,7 @@ Implemented Kafka behavior:
 - rejection only for the business case where a referenced user does not exist
 - propagation of transient processing failures for retry instead of turning them into false business rejections
 - order-result identity and status validation
-- idempotent handling of duplicate final results
+- idempotent handling of duplicate final results, backed by an [inbox table](data-model.md#transactions-and-consistency) keyed by event ID so it survives restarts
 - edited orders return to `PENDING` and publish a fresh validation request
 - [transactional outbox](adr/0011-transactional-outbox.md): order validation requests are recorded with the order change and published by a relay that retries until Kafka acknowledges them, with backlog metrics and alerting
 - late results for superseded edits or deleted orders are ignored safely

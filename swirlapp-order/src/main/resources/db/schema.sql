@@ -20,3 +20,8 @@ CREATE TABLE IF NOT EXISTS order_outbox (
     published_at TIMESTAMP WITH TIME ZONE,
     attempts INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS order_inbox (
+    event_id VARCHAR(255) PRIMARY KEY,
+    processed_at TIMESTAMP WITH TIME ZONE NOT NULL
+);

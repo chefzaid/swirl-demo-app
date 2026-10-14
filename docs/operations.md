@@ -206,6 +206,7 @@ Spring Boot defaults:
 | Consume latency | `spring_kafka_listener_seconds` | `spring_kafka_listener_id`, `error` |
 | Consumer lag | `kafka_consumer_fetch_manager_records_lag_max` | `client_id`, `topic`, `partition` |
 | Listener failures (each failed attempt) | `swirl_events_failed_deliveries_total` | `topic` |
+| Duplicates the inbox skipped | `swirl_events_duplicates_total` | `consumer` |
 | Records sent to a DLT | `swirl_events_dead_lettered_total` | `topic` (source topic) |
 | Cache hits and misses | `cache_gets_total` | `cache`, `result` |
 | Cache outages that fell through | `swirl_cache_errors_total` | `cache`, `operation` |
@@ -419,7 +420,7 @@ The workloads currently have one replica. Before scaling:
 - confirm database connection capacity against Hikari pools
 - add PodDisruptionBudgets/topology spread as needed
 - load test the ingress and service resources
-- understand that duplicate deliveries (no durable inbox yet) become more visible under failures and concurrency
+- expect `swirl_events_duplicates_total` to rise briefly after rebalances and relay restarts; the inbox absorbs those duplicates
 
 Kafka topics have three partitions, which caps useful parallel consumption per consumer group at three active consumers unless partitioning changes.
 

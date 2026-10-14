@@ -101,7 +101,7 @@ mask build all
 ### User service
 
 - `UserServiceTest`: bounded reads, not-found behavior, create/edit normalization, duplicate username/email rejection, deletion, persistence, and cache-oriented service behavior
-- `OrderListenerTest`: approved result, missing-user rejection, synchronous result publication, and propagation of transient failures
+- `OrderListenerTest`: approved result, missing-user rejection, synchronous result publication, result event IDs derived from the request ID, and propagation of transient failures
 - `NotificationServiceTest`: notification logs carry IDs, never names, usernames, or email addresses
 - `UserControllerTest`: create/get/list/edit/delete responses, invalid bodies, invalid IDs/limits, malformed JSON, and private entity-field exclusion
 - `CacheConfigTest`: Redis serialization and TTL configuration
@@ -116,6 +116,8 @@ mask build all
 ### Order service
 
 - `OrderServiceTest`: bounded reads, not-found behavior, create/edit/delete flow, edit revalidation, and the event each change records
+- `OrderResultListenerTest` also covers the inbox: an applied result is recorded, and a known event ID is skipped and counted
+- `EventRetentionTest`: published outbox rows and inbox entries older than the retention are purged
 - `OrderEventOutboxTest` and `OutboxRelayTest`: events are stored per environment topic and keyed by order, nothing is stored without messaging, acknowledged events are marked published, rejected or unreadable ones stay pending, old rows are purged, and the backlog is exported
 - `OrderResultListenerTest`: approval/rejection, duplicate results, deleted orders, superseded edit results, invalid status/state, and retryable behavior
 - `OrderControllerTest`: create/get/list/edit/delete responses and input/path/query error contracts

@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import dev.swirlit.demo.common.event.EventIds;
 import dev.swirlit.demo.common.event.OrderEvent;
 import dev.swirlit.demo.order.domain.OutboxEvent;
 import dev.swirlit.demo.order.repository.OutboxEventRepository;
@@ -16,6 +17,7 @@ import dev.swirlit.demo.order.repository.OutboxEventRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +49,6 @@ public class OutboxRelay {
     private final JsonMapper jsonMapper;
     private final TransactionTemplate transactionTemplate;
     private final int batchSize;
-    private final Duration retention;
     private final Clock clock;
     private final Counter published;
     private final Counter failed;
@@ -59,21 +60,19 @@ public class OutboxRelay {
             JsonMapper jsonMapper,
             TransactionTemplate transactionTemplate,
             MeterRegistry meterRegistry,
-            @Value("${app.messaging.outbox.batch-size:100}") int batchSize,
-            @Value("${app.messaging.outbox.retention:7d}") Duration retention) {
+            @Value("${app.messaging.outbox.batch-size:100}") int batchSize) {
         this(outboxEventRepository, kafkaTemplate, jsonMapper, transactionTemplate, meterRegistry, batchSize,
-                retention, Clock.systemUTC());
+                Clock.systemUTC());
     }
 
     OutboxRelay(OutboxEventRepository outboxEventRepository, KafkaTemplate<Object, Object> kafkaTemplate,
             JsonMapper jsonMapper, TransactionTemplate transactionTemplate, MeterRegistry meterRegistry,
-            int batchSize, Duration retention, Clock clock) {
+            int batchSize, Clock clock) {
         this.outboxEventRepository = outboxEventRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.jsonMapper = jsonMapper;
         this.transactionTemplate = transactionTemplate;
         this.batchSize = batchSize;
-        this.retention = retention;
         this.clock = clock;
         this.published = Counter.builder("swirl.outbox.published").description("Outbox events published to Kafka")
                 .register(meterRegistry);
@@ -89,13 +88,6 @@ public class OutboxRelay {
         Integer count = transactionTemplate.execute(status -> publish(
                 outboxEventRepository.lockUnpublished(Limit.of(batchSize))));
         return count == null ? 0 : count;
-    }
-
-    @Scheduled(cron = "${app.messaging.outbox.cleanup-cron:0 17 3 * * *}")
-    public int deletePublished() {
-        Integer deleted = transactionTemplate.execute(status ->
-                outboxEventRepository.deletePublishedBefore(clock.instant().minus(retention)));
-        return deleted == null ? 0 : deleted;
     }
 
     private int publish(List<OutboxEvent> batch) {
@@ -121,7 +113,9 @@ public class OutboxRelay {
     private CompletableFuture<SendResult<Object, Object>> send(OutboxEvent event) {
         try {
             OrderEvent payload = jsonMapper.readValue(event.getPayload(), OrderEvent.class);
-            return kafkaTemplate.send(event.getTopic(), event.getKey(), payload);
+            ProducerRecord<Object, Object> record = new ProducerRecord<>(event.getTopic(), event.getKey(), payload);
+            EventIds.write(record.headers(), EventIds.ofOutboxRow(event.getId()));
+            return kafkaTemplate.send(record);
         } catch (RuntimeException exception) {
             return CompletableFuture.failedFuture(exception);
         }

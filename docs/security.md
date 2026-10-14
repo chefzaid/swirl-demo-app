@@ -26,11 +26,11 @@ Implemented controls:
 - Vault and External Secrets for deployed credentials
 - non-root, read-only, capability-dropped containers
 - network restrictions for application ingress
-- security integration tests for anonymous and JWT-authenticated requests
+- security integration tests for anonymous and JWT-authenticated requests, plus an authorization matrix for roles
 
 Important limitations:
 
-- no business roles or method-level authorities yet
+- one role-gated operation (deleting users) and no ownership rules; deployed realms do not grant the role yet
 - no distributed/global rate limit
 - API documentation is public unless an environment turns it off
 - Prometheus endpoint is unauthenticated inside the cluster
@@ -133,7 +133,15 @@ Every other request requires authentication.
 
 Ingress exposes API documentation and the exact `/health/user` and `/health/order` health summaries used by CI. Other Actuator routes, including metrics, remain private to cluster services.
 
-Current access policy is authenticated-or-public; there are no roles, scopes, ownership rules, or `@PreAuthorize` examples. That is acceptable only because the demonstration domain has one shared directory/order space. A real application must add resource-specific authorization before storing multi-user data.
+Every other request needs an authenticated caller, and one operation also needs a role:
+
+- `RealmRoleAuthoritiesConverter` (in `swirlapp-common`) grants each Keycloak realm role in the token's `realm_access.roles` claim as a `ROLE_<role>` authority, next to the default `SCOPE_<scope>` authorities. It applies whenever `app.security.enabled` is `true`, which also turns on `@PreAuthorize`.
+- `DELETE /api/users/{id}` carries `@PreAuthorize("@userAccess.canDeleteUsers(authentication)")`. `UserAccess` passes callers holding the realm role named by `APP_SECURITY_ROLES_USER_ADMIN`; while that variable is blank, any authenticated caller may delete. A denied call returns a `403` Problem Details response and an `authorization.denied` audit entry, and never reaches the service.
+- Local Compose sets `APP_SECURITY_ROLES_USER_ADMIN=user-admin`, and the disposable realm grants `user-admin` to its demonstration user.
+
+Deployed environments leave the variable blank: the shared realm has no such role, and the production client leaves the `roles` scope out of its tokens. Requiring the role there needs the role in the realm, the `roles` scope (or an equivalent mapper) on each environment's web client, and the role assigned to the right people before the variable is set.
+
+Put rules that need configuration or data behind a bean such as `UserAccess` rather than a literal `hasRole(...)`, so a test can call them directly and the expression stays readable. There are no ownership rules: the demonstration domain has one shared directory and order space. A real application must add resource-specific authorization before storing multi-user data.
 
 `app.security.enabled=false` is the developer escape hatch. It is the default profile behavior and must not be enabled in an internet-facing environment.
 
@@ -434,7 +442,7 @@ Current tests verify:
 - frontend guard/interceptor/auth initialization
 - real Authorization Code + PKCE browser login
 
-The next authorization suite should add roles and wrong-role cases. Threat-focused tests should add CORS, security headers, token edge cases, redaction, and edge/global throttling.
+`UserAuthorizationMatrixTest` covers anonymous, forged-token, authenticated, wrong-role, and permitted callers over real HTTP. Threat-focused tests should add CORS, security headers, token edge cases, redaction, and edge/global throttling.
 
 ## Security Review Checklist
 

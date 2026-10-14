@@ -86,6 +86,9 @@ spring:
 app:
   security:
     enabled: false
+    roles:
+      # Realm role needed to delete users; blank lets any authenticated caller delete.
+      user-admin: ${APP_SECURITY_ROLES_USER_ADMIN:}
   messaging:
     enabled: ${KAFKA_ENABLED:false}
     # true takes pods out of service while Kafka is unreachable; false keeps accepting orders as PENDING.

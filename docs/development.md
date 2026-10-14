@@ -245,6 +245,7 @@ The roadmap keeps a stricter application-only dev-container direction: environme
 | `MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT` | OTLP/HTTP collector URL for spans, for example `http://otel-collector:4318/v1/traces`; unset keeps trace IDs in logs only | unset |
 | `MANAGEMENT_TRACING_SAMPLING_PROBABILITY` | share of traces exported | `0.1` |
 | `APP_MESSAGING_REQUIRED` | take pods out of service while Kafka is unreachable instead of accepting orders as `PENDING` | `false` |
+| `APP_SECURITY_ROLES_USER_ADMIN` | Keycloak realm role required to delete users; blank lets any authenticated caller delete | blank (`user-admin` in Compose) |
 | `APP_API_DOCS_ENABLED` | publish Swagger UI and OpenAPI documents; the `uat`/`prod` profiles default to `false` | `true` |
 | `RATE_LIMIT_REQUESTS_PER_MINUTE` | per-instance API limit | default `120` |
 

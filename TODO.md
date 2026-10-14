@@ -27,6 +27,8 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] How does the platform's Prometheus load alert rules? Options: (a) a `PrometheusRule` resource (Prometheus Operator), which the app would ship with its manifests; (b) a ConfigMap with a label the platform's Prometheus watches (please name the label); (c) the platform team adds `infra/observability/slo-rules.yaml` to its own `rule_files`. *(task: Observability › Load SLO rules; asked by: Coding Agent)*
   - Answer:
 - [ ] Which OTLP endpoint should deployed environments send traces to, and at what sampling rate? The services propagate trace context and log `traceId` already; setting `MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT` (for example `http://otel-collector.observability:4318/v1/traces`) turns span export on. If the platform has no collector yet, say so and the item stays parked. *(task: Observability › Export spans; asked by: Coding Agent)*
+
+- [ ] Should deleting users require a role in `int`/`uat`/`prod`? Locally it now needs the `user-admin` realm role; deployed environments leave `APP_SECURITY_ROLES_USER_ADMIN` blank, so any signed-in user can still delete. Options: (a) keep it open to every signed-in user; (b) require `user-admin`, which needs the role in the shared realm, the `roles` scope on each environment's web client, and the role assigned to named people; (c) use a Keycloak group instead (the production client already sends `groups`). *(task: Security › Role-gated user deletion; asked by: Coding Agent)*
   - Answer:
 
 ## Priority: Delivery And Data Correctness
@@ -40,8 +42,8 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 
 ## Priority: Security And API Governance
 
-- [ ] Add reusable role/authority mapping from Keycloak claims and method-level authorization examples with `@PreAuthorize`.
-- [ ] Add an authorization test matrix covering anonymous, authenticated, wrong-role, and permitted callers.
+- [x] Add reusable role/authority mapping from Keycloak claims and method-level authorization examples with `@PreAuthorize`.
+- [x] Add an authorization test matrix covering anonymous, authenticated, wrong-role, and permitted callers.
 - [x] Move OpenAPI access behind a production switch or operator authorization while leaving it convenient in development.
 - [ ] Turn public API documentation off in `uat` and `prod` (`"apiDocs": false` in their `settings.json`) once a release containing the `apiDocs` switch runs there; older web images reject the extra runtime-config key, so the switch stays on until then.
 - [ ] Add a distributed rate-limit implementation at the gateway or Redis layer; retain the in-process filter as the single-instance reference.

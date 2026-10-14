@@ -109,6 +109,7 @@ mask build all
 - `SecurityConfigTest`: anonymous API rejection, JWT-authenticated API access, CORS preflight, and valid Kafka producer settings in a full application context
 - `UserArchitectureTest`: the shared `ArchitectureRules` for the user service
 - `UserApiHttpTest`: over real HTTP, create/list/delete with duplicate rejection, CORS preflight for allowed and foreign origins, and public probes beside a protected API
+- `UserAuthorizationMatrixTest`: over real HTTP with Keycloak-shaped tokens, anonymous, forged, authenticated, wrong-role, and permitted callers each get the expected status, and denied deletes never reach the service
 - `SecurityAuditTest`: denied anonymous requests and rejected bearer tokens reach the audit trail without the token
 - `MessagingReadinessTest`: a `DEGRADED` messaging contributor keeps readiness at 200, a `DOWN` one turns it to 503, and liveness ignores both
 - `LatencyObjectiveMetricsTest` and `TracingTest`: request timers publish the 300 ms objective bucket; incoming `traceparent` headers reach the logging MDC and outgoing Kafka records

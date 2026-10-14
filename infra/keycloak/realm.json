@@ -5,6 +5,14 @@
   "sslRequired": "external",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "user-admin",
+        "description": "May delete users when the user service requires this role"
+      }
+    ]
+  },
   "clients": [
     {
       "clientId": "swirlapp-web",
@@ -71,6 +79,7 @@
       "email": "user@example.com",
       "enabled": true,
       "emailVerified": true,
+      "realmRoles": ["default-roles-swirl-demo-app", "user-admin"],
       "credentials": [
         {
           "type": "password",

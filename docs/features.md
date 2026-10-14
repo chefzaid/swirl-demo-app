@@ -54,6 +54,7 @@ Implemented API behavior:
 - `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`, and `Retry-After` response headers
 - SpringDoc OpenAPI documents for each service and one aggregated Swagger UI
 - explicit CORS origins, methods, request headers, and exposed response headers
+- Keycloak realm roles mapped to `ROLE_*` authorities, and a [`@PreAuthorize` rule](security.md#backend-authorization) that can require a role to delete users
 - HTTP compression and forwarded-header support
 
 The APIs demonstrate Richardson Maturity Model level 2 resource and HTTP semantics. A single order can also be read as HAL-FORMS, with links and edit/delete affordances, as an opt-in [hypermedia example](architecture.md#hypermedia-example); the rest of the API stays at level 2.
@@ -260,12 +261,11 @@ GitLab is the CI/CD source of truth; GitHub is the public mirror.
 Do not present these as implemented:
 
 - change-data-capture outbox relay (the polling relay is implemented)
-- durable consumer inbox/deduplication store
 - distributed or edge-global rate limiting
-- method-level roles or business authorization policies
+- ownership rules or business authorization policies beyond the user-delete role
 - application-level field encryption or KMS integration
 - synchronous HTTP resilience patterns such as circuit breakers or bulkheads
-- general-purpose `@Async` jobs or scheduled cleanup
+- general-purpose `@Async` jobs or leader-elected scheduled maintenance
 - service mesh, saga, or API gateway owned by this repository
 - Testcontainers, contract tests, load tests, or chaos tests
 - canary rollout or environment overlays

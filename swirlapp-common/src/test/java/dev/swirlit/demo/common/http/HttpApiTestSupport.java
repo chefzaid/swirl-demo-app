@@ -1,6 +1,8 @@
 package dev.swirlit.demo.common.http;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -29,11 +31,22 @@ public final class HttpApiTestSupport {
 
     /** Makes a mocked decoder accept {@link #TOKEN} for {@link #SUBJECT} and reject every other token. */
     public static void acceptOnlyTestToken(JwtDecoder jwtDecoder) {
+        acceptTokens(jwtDecoder, Map.of(TOKEN, List.of()));
+    }
+
+    /**
+     * Makes a mocked decoder accept each token in {@code realmRolesByToken} for {@link #SUBJECT}, carrying the
+     * listed Keycloak realm roles, and reject every other token.
+     */
+    public static void acceptTokens(JwtDecoder jwtDecoder, Map<String, List<String>> realmRolesByToken) {
         when(jwtDecoder.decode(anyString())).thenAnswer(invocation -> {
-            if (!TOKEN.equals(invocation.getArgument(0))) {
+            String token = invocation.getArgument(0);
+            List<String> roles = realmRolesByToken.get(token);
+            if (roles == null) {
                 throw new BadJwtException("unknown token");
             }
-            return Jwt.withTokenValue(TOKEN).header("alg", "RS256").subject(SUBJECT)
+            return Jwt.withTokenValue(token).header("alg", "RS256").subject(SUBJECT)
+                    .claim("realm_access", Map.of("roles", roles))
                     .issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(300)).build();
         });
     }

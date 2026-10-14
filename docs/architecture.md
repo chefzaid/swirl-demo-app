@@ -54,6 +54,8 @@ Each deployable service owns:
 
 Service-owned entities do not live in the shared module. Services share an event contract, not repositories or direct database access.
 
+ArchUnit tests enforce these boundaries in every build; see the [testing guide](testing.md#backend-test-map). A new service adds one `*ArchitectureTest` that includes the shared `ArchitectureRules`.
+
 ## Frontend Architecture
 
 `swirlapp-web` is a standalone Angular application with:

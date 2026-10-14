@@ -22,7 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,12 +44,12 @@ class OrderServiceTest {
 
     @BeforeEach
     void setUp() {
-        orderService = new OrderService(orderRepository, kafkaTemplate, true);
+        orderService = new OrderService(orderRepository, kafkaTemplate, true, Constants.ORDER_TOPIC);
     }
 
     @Test
     void publishesOnlyToSelectedEnvironment() {
-        ReflectionTestUtils.setField(orderService, "orderTopic", "swirl-demo-app.uat.order_topic");
+        orderService = new OrderService(orderRepository, kafkaTemplate, true, "swirl-demo-app.uat.order_topic");
         Order order = new Order(1L, 2L);
         order.setId(7L);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
@@ -96,7 +95,7 @@ class OrderServiceTest {
 
     @Test
     void createOrderSkipsKafkaWhenMessagingIsDisabled() {
-        orderService = new OrderService(orderRepository, kafkaTemplate, false);
+        orderService = new OrderService(orderRepository, kafkaTemplate, false, Constants.ORDER_TOPIC);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         orderService.createOrder(new CreateOrderRequest(1L, 1001L));

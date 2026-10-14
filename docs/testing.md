@@ -10,6 +10,7 @@ Backend layers:
 - Spring MVC slice tests for request validation, status codes, Problem Details, and response DTO privacy
 - full Spring Boot + MockMvc security tests for anonymous and JWT-authenticated access
 - Mockito fakes for repositories, Kafka templates, and infrastructure dependencies
+- ArchUnit rules for module boundaries, service layering, and coding conventions
 - JaCoCo verification during the Maven `verify` phase
 
 Frontend layers:
@@ -72,6 +73,8 @@ mask build all
 
 - `RequestIdFilterTest`: accepted request IDs, unsafe-value replacement, response header, and MDC behavior
 - `RateLimitFilterTest`: allowed requests, response headers, and `429` rejection after the configured limit
+- `ArchitectureRules`: shared ArchUnit rules, published in the module's test JAR: each module depends only on itself and `swirlapp-common`; controllers, services, and repositories stay layered; domain classes stay independent; no field injection, `java.util.logging`, or standard streams
+- `CommonArchitectureTest`: the shared module never depends on a service module
 
 ### User service
 
@@ -81,6 +84,7 @@ mask build all
 - `CacheConfigTest`: Redis serialization and TTL configuration
 - `DatabaseHealthIndicatorTest`: healthy and failed repository access
 - `SecurityConfigTest`: anonymous API rejection, JWT-authenticated API access, CORS preflight, and valid Kafka producer settings in a full application context
+- `UserArchitectureTest`: the shared `ArchitectureRules` for the user service
 
 ### Order service
 
@@ -90,6 +94,7 @@ mask build all
 - `CacheConfigTest`: Redis serialization and TTL configuration
 - `DatabaseHealthIndicatorTest`: healthy and failed repository access
 - `SecurityConfigTest`: anonymous API rejection, JWT-authenticated API access, CORS preflight, and valid Kafka producer settings in a full application context
+- `OrderArchitectureTest`: the shared `ArchitectureRules` for the order service
 
 ## Direct Maven Workflows
 

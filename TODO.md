@@ -78,7 +78,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 
 ## Priority: Testing And Quality
 
-- [ ] Add ArchUnit rules for shared-module and service boundaries.
+- [x] Add ArchUnit rules for shared-module and service boundaries.
 - [ ] Add mutation testing for service and event-state logic.
 - [ ] Add REST-assured or full-context HTTP integration tests against packaged applications.
 - [ ] Add accessibility testing for the Angular critical path and automated checks for keyboard navigation and semantic labels.

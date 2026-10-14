@@ -21,20 +21,20 @@ public class OrderListener {
     private final UserService userService;
     private final NotificationService notificationService;
     private final KafkaTemplate<Object, Object> kafkaTemplate;
-
-    @Value("${app.messaging.topics.result:order_result_topic}")
-    private String resultTopic = Constants.ORDER_RESULT_TOPIC;
+    private final String resultTopic;
 
     public OrderListener(
             UserService userService,
             NotificationService notificationService,
-            KafkaTemplate<Object, Object> kafkaTemplate) {
+            KafkaTemplate<Object, Object> kafkaTemplate,
+            @Value("${app.messaging.topics.result:" + Constants.ORDER_RESULT_TOPIC + "}") String resultTopic) {
         this.userService = userService;
         this.notificationService = notificationService;
         this.kafkaTemplate = kafkaTemplate;
+        this.resultTopic = resultTopic;
     }
 
-    @KafkaListener(topics = "${app.messaging.topics.order:order_topic}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${app.messaging.topics.order:" + Constants.ORDER_TOPIC + "}", groupId = "${spring.kafka.consumer.group-id}")
     public void consume(OrderEvent event) {
         OrderEvent result;
         try {

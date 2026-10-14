@@ -33,17 +33,17 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final KafkaTemplate<Object, Object> kafkaTemplate;
     private final boolean messagingEnabled;
-
-    @Value("${app.messaging.topics.order:order_topic}")
-    private String orderTopic = Constants.ORDER_TOPIC;
+    private final String orderTopic;
 
     public OrderService(
             OrderRepository orderRepository,
             KafkaTemplate<Object, Object> kafkaTemplate,
-            @Value("${app.messaging.enabled:false}") boolean messagingEnabled) {
+            @Value("${app.messaging.enabled:false}") boolean messagingEnabled,
+            @Value("${app.messaging.topics.order:" + Constants.ORDER_TOPIC + "}") String orderTopic) {
         this.orderRepository = orderRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.messagingEnabled = messagingEnabled;
+        this.orderTopic = orderTopic;
     }
 
     @Transactional(readOnly = true)

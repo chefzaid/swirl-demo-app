@@ -9,14 +9,13 @@ import dev.swirlit.demo.common.util.Constants;
 import dev.swirlit.demo.user.domain.User;
 import jakarta.persistence.EntityNotFoundException;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,8 +34,12 @@ class OrderListenerTest {
     private NotificationService notificationService;
     @Mock
     private KafkaTemplate<Object, Object> kafkaTemplate;
-    @InjectMocks
     private OrderListener orderListener;
+
+    @BeforeEach
+    void setUp() {
+        orderListener = listener(Constants.ORDER_RESULT_TOPIC);
+    }
 
     @Test
     void consumeApprovesKnownUser() {
@@ -72,7 +75,7 @@ class OrderListenerTest {
 
     @Test
     void publishesResultOnlyToSelectedEnvironment() {
-        ReflectionTestUtils.setField(orderListener, "resultTopic", "swirl-demo-app.int.order_result_topic");
+        orderListener = listener("swirl-demo-app.int.order_result_topic");
         when(userService.getUser(1L)).thenReturn(new User("Ada", "ada", "ada@example.test"));
         successfulPublish();
         orderListener.consume(event(10L, 1L));
@@ -89,6 +92,10 @@ class OrderListenerTest {
 
     private static OrderEvent event(Long orderId, Long userId) {
         return new OrderEvent(orderId, userId, 1001L, null, OrderStatus.PENDING, Instant.now());
+    }
+
+    private OrderListener listener(String resultTopic) {
+        return new OrderListener(userService, notificationService, kafkaTemplate, resultTopic);
     }
 
     private void successfulPublish() {

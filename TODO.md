@@ -59,7 +59,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Provide a bounded `@Async` executor example with context propagation, backpressure, shutdown behavior, and a job-status resource; do not use unbounded fire-and-forget work.
 - [ ] Add a scheduled maintenance example for records with explicit retention semantics, leader election, idempotency, and dry-run support.
 - [x] Define cache behavior for Redis outages, stampede prevention, eviction/versioning, and stale-data tradeoffs.
-- [ ] Add graceful Kafka degradation and readiness semantics that distinguish optional messaging from a required dependency.
+- [x] Add graceful Kafka degradation and readiness semantics that distinguish optional messaging from a required dependency.
 - [ ] Add a dynamic feature-flag SPI with local configuration and an optional OpenFeature/FF4J provider, safe defaults, targeting tests, change auditing, and a clear distinction from user entitlements.
 - [ ] Add fault-injection and recovery tests for database, Kafka, Redis, and identity-provider outages.
 

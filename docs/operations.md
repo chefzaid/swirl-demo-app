@@ -89,7 +89,17 @@ curl http://127.0.0.1:18080/actuator/health
 
 Use a separate terminal and stop the port-forward after inspection.
 
-Each service has a custom `database` health contributor that performs a repository count. Redis is also a health contributor in production. Kafka listener health semantics are not yet customized, so use consumer lag and logs as well as application readiness.
+Each service has a custom `database` health contributor that performs a repository count. Redis is also a health contributor in production.
+
+The `messaging` contributor asks the Kafka cluster for its ID in the background every 10 seconds, so probes never wait on the broker. It is part of the readiness group, and what an outage does depends on `APP_MESSAGING_REQUIRED`:
+
+| Kafka | `APP_MESSAGING_REQUIRED=false` (default) | `APP_MESSAGING_REQUIRED=true` |
+| --- | --- | --- |
+| reachable | `UP` | `UP` |
+| unreachable | `DEGRADED` (HTTP 200): pods stay ready, orders are accepted and stay `PENDING`, and a send fails after 5 seconds instead of holding the request | `DOWN` (HTTP 503): readiness takes pods out of service |
+| messaging disabled | `UNKNOWN`, ignored | `UNKNOWN`, ignored |
+
+Liveness never includes Kafka, so a broker outage does not restart pods. The deployment smoke check expects `UP`, so a release deployed during a Kafka outage fails its smoke check even when messaging is optional.
 
 ## What Healthy Looks Like
 
@@ -268,7 +278,7 @@ Symptoms:
 
 Checks:
 
-- both application pods are ready
+- both application pods are ready, and `/actuator/health` does not report `messaging` as `DEGRADED` or `DOWN`
 - `KAFKA_ENABLED=true`
 - bootstrap address is reachable
 - user and order consumer groups are active

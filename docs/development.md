@@ -242,6 +242,7 @@ The roadmap keeps a stricter application-only dev-container direction: environme
 | `JWT_ISSUER_URI` | token issuer visible to clients | local proxied Keycloak issuer |
 | `JWT_JWK_SET_URI` | internal key-set URL | Keycloak service URL |
 | `CORS_ALLOWED_ORIGINS` | browser origins | `http://localhost:4200` |
+| `APP_MESSAGING_REQUIRED` | take pods out of service while Kafka is unreachable instead of accepting orders as `PENDING` | `false` |
 | `APP_API_DOCS_ENABLED` | publish Swagger UI and OpenAPI documents; the `uat`/`prod` profiles default to `false` | `true` |
 | `RATE_LIMIT_REQUESTS_PER_MINUTE` | per-instance API limit | default `120` |
 

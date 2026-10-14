@@ -67,6 +67,8 @@ spring:
         delivery.timeout.ms: 30000
         request.timeout.ms: 10000
         max.in.flight.requests.per.connection: 5
+        # Fail a send within 5 s when the broker is unreachable instead of holding the request thread for 60 s.
+        max.block.ms: 5000
     # Observations time each publish (spring.kafka.template) and each handled record (spring.kafka.listener).
     template:
       observation-enabled: true
@@ -80,6 +82,8 @@ app:
     enabled: false
   messaging:
     enabled: ${KAFKA_ENABLED:false}
+    # true takes pods out of service while Kafka is unreachable; false keeps accepting orders as PENDING.
+    required: ${APP_MESSAGING_REQUIRED:false}
     topics:
       order: ${KAFKA_TOPIC_PREFIX:}order_topic
       result: ${KAFKA_TOPIC_PREFIX:}order_result_topic
@@ -103,6 +107,16 @@ management:
       probes:
         enabled: true
       show-details: when-authorized
+      # Optional messaging reports DEGRADED when Kafka is unreachable: still HTTP 200, so pods stay ready.
+      status:
+        order: down,out-of-service,degraded,up,unknown
+        http-mapping:
+          down: 503
+          out-of-service: 503
+          degraded: 200
+      group:
+        readiness:
+          include: readinessState,messaging
   health:
     redis:
       enabled: false

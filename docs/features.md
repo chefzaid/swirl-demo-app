@@ -103,6 +103,7 @@ Implemented Kafka behavior:
 - matching dead-letter topics
 - declarative topic creation when messaging is enabled
 - feature switch through `app.messaging.enabled` / `KAFKA_ENABLED`
+- [readiness semantics](operations.md#health-and-readiness) that keep pods serving while optional messaging is down (`DEGRADED`) or take them out of service when `APP_MESSAGING_REQUIRED=true`; sends fail after 5 seconds instead of blocking requests
 - producers configured with `acks=all`, idempotence, bounded delivery time, and retries
 - producer request and delivery timeouts validated together against Kafka client defaults
 - record-level listener acknowledgement

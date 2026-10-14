@@ -76,4 +76,4 @@ See the [Development Guide](./docs/development.md) for dependency-free local dev
 
 ## License
 
-GPL 3.0. See [LICENSE](./LICENSE).
+GPL 3.0, for the template and the code it generates. See [LICENSE](./LICENSE) and [ADR 0013](./docs/adr/0013-gpl-license.md) for what that means for services built from it.

@@ -21,8 +21,6 @@ Bugs, failing checks, security findings, and code smells found while working on 
 
 Parts of tasks that cannot advance without the owner's decision or information. Only the part needing input is set aside here; the rest of the task keeps moving. Answer under the item, and the next agent run applies the answer and removes the entry.
 
-- [ ] Which license should the template and generated code use? Options: (a) Apache 2.0, permissive with a patent grant, the usual choice for enterprise starters; (b) MIT, shortest permissive text, no patent grant; (c) keep GPL 3.0 and add a generator exception so generated services can stay proprietary; (d) keep GPL 3.0 unchanged and accept that enterprise adoption is blocked. *(task: Adoption And Offer › ADR — licensing; asked by: Coding Agent)*
-  - Answer:
 - [ ] Where does the Argo CD `ComparisonError: Object 'Kind' is missing` come from now? Every pinned `int`/`uat`/`prod` revision has a `kustomization.yaml`, so Argo CD should build with Kustomize and never parse `settings.json`, and all three environments render cleanly with `kustomize build` (every object has a `kind`). Please paste the current Application condition message (`kubectl -n infra get application swirl-demo-app-int -o jsonpath='{.status.conditions}'`) or say whether the platform forces the directory source type. *(task: Kubernetes And Delivery › Argo CD ComparisonError; asked by: Coding Agent)*
   - Answer:
 - [ ] How does the platform's Prometheus load alert rules? Options: (a) a `PrometheusRule` resource (Prometheus Operator), which the app would ship with its manifests; (b) a ConfigMap with a label the platform's Prometheus watches (please name the label); (c) the platform team adds `infra/observability/slo-rules.yaml` to its own `rule_files`. *(task: Observability › Load SLO rules; asked by: Coding Agent)*
@@ -30,9 +28,6 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Which OTLP endpoint should deployed environments send traces to, and at what sampling rate? The services propagate trace context and log `traceId` already; setting `MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT` (for example `http://otel-collector.observability:4318/v1/traces`) turns span export on. If the platform has no collector yet, say so and the item stays parked. *(task: Observability › Export spans; asked by: Coding Agent)*
 
 - [ ] Should an environment use the canary overlay (`infra/overlays/canary`)? It needs the Argo Rollouts controller and CRDs, which the platform does not install. Options: (a) keep it as an example only; (b) install Argo Rollouts in `swirl-cloud` and add a `canary` setting to `settings.json` so `render-deployment.py` can select the overlay per environment, starting with `int`. *(task: Kubernetes And Delivery › Canary deployment; asked by: Infra Agent)*
-  - Answer:
-
-- [ ] Should deleting users require a role in `int`/`uat`/`prod`? Locally it now needs the `user-admin` realm role; deployed environments leave `APP_SECURITY_ROLES_USER_ADMIN` blank, so any signed-in user can still delete. Options: (a) keep it open to every signed-in user; (b) require `user-admin`, which needs the role in the shared realm, the `roles` scope on each environment's web client, and the role assigned to named people; (c) use a Keycloak group instead (the production client already sends `groups`). *(task: Security › Role-gated user deletion; asked by: Coding Agent)*
   - Answer:
 
 ## Priority: Delivery And Data Correctness
@@ -156,7 +151,7 @@ Differentiators:
 
 ### Adoption And Offer
 
-- [ ] *(waiting in Needs Input)* **ADR — licensing:** the template is GPL 3.0 (`LICENSE` added 2026-10-05; `pom.xml` still declares no license). Code copied from a GPL template into proprietary services delivered to clients would have to be released under the GPL, which blocks most enterprise adoption. Choose a permissive license for the template and generated code, or a generator exception, then update `LICENSE`, the README and the build metadata.
+- [x] **ADR — licensing:** the owner kept GPL 3.0 unchanged for the template and generated code ([ADR 0013](docs/adr/0013-gpl-license.md)); `pom.xml` now declares it.
 - [ ] Versioned documentation site with a pattern catalog: for each pattern, the problem, the failure mode it handles, the code, the tests, the runbook and how to remove it.
 - [ ] Guided failure-mode demos built on the fault-injection tests above (broker loss, duplicate events, database restart, identity-provider outage), with the expected Grafana and log views, usable in workshops.
 - [ ] Measure and publish the time from generation to a first verified production deployment.

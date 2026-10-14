@@ -36,7 +36,8 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 
 - [ ] Add reusable role/authority mapping from Keycloak claims and method-level authorization examples with `@PreAuthorize`.
 - [ ] Add an authorization test matrix covering anonymous, authenticated, wrong-role, and permitted callers.
-- [ ] Move OpenAPI access behind a production switch or operator authorization while leaving it convenient in development.
+- [x] Move OpenAPI access behind a production switch or operator authorization while leaving it convenient in development.
+- [ ] Turn public API documentation off in `uat` and `prod` (`"apiDocs": false` in their `settings.json`) once a release containing the `apiDocs` switch runs there; older web images reject the extra runtime-config key, so the switch stays on until then.
 - [ ] Add a distributed rate-limit implementation at the gateway or Redis layer; retain the in-process filter as the single-instance reference.
 - [ ] Add API versioning and compatibility policy, generated frontend clients, and contract-drift checks in CI.
 - [ ] Add an optional HATEOAS affordance example and explain when Richardson level 3 is worth the client coupling; keep OpenAPI documentation distinct from hypermedia controls.

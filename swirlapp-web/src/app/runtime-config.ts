@@ -5,6 +5,8 @@ export interface RuntimeConfig {
   readonly keycloakUrl: string;
   readonly keycloakRealm: string;
   readonly keycloakClientId: string;
+  /** Whether the backend publishes Swagger UI; absent means published. */
+  readonly apiDocsEnabled: boolean;
 }
 
 export const RUNTIME_CONFIG = new InjectionToken<RuntimeConfig | null>('Swirl Demo App runtime configuration', {
@@ -23,8 +25,13 @@ export function validateRuntimeConfig(value: unknown, origin: string): RuntimeCo
   }
   const config = value as Record<string, unknown>;
   const fields = ['keycloakClientId', 'keycloakRealm', 'keycloakUrl'];
-  if (Object.keys(config).sort().join(',') !== fields.join(',')) {
-    throw new Error('Runtime configuration must contain only keycloakUrl, keycloakRealm and keycloakClientId.');
+  const keys = Object.keys(config).filter(key => key !== 'apiDocsEnabled').sort();
+  if (keys.join(',') !== fields.join(',')) {
+    throw new Error('Runtime configuration must contain keycloakUrl, keycloakRealm and keycloakClientId, and optionally apiDocsEnabled.');
+  }
+  const apiDocsEnabled = config['apiDocsEnabled'] ?? true;
+  if (typeof apiDocsEnabled !== 'boolean') {
+    throw new Error('Runtime configuration apiDocsEnabled must be a boolean.');
   }
   const keycloakUrl = config['keycloakUrl'];
   const keycloakRealm = config['keycloakRealm'];
@@ -42,7 +49,8 @@ export function validateRuntimeConfig(value: unknown, origin: string): RuntimeCo
   return Object.freeze({
     keycloakUrl: url.toString().replace(/\/$/, ''),
     keycloakRealm,
-    keycloakClientId
+    keycloakClientId,
+    apiDocsEnabled
   });
 }
 

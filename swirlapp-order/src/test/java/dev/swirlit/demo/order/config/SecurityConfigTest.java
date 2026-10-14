@@ -59,6 +59,12 @@ class SecurityConfigTest {
     }
 
     @Test
+    void servesApiDocsAnonymouslyWhenEnabled() throws Exception {
+        mockMvc.perform(get("/api/orders/openapi"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void allowsAuthenticatedApiRequest() throws Exception {
         when(orderService.getAllOrders(100)).thenReturn(List.of());
 

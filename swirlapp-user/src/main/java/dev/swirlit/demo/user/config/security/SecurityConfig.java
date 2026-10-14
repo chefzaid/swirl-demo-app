@@ -1,5 +1,6 @@
 package dev.swirlit.demo.user.config.security;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -21,18 +22,22 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            @Value("${app.security.enabled:false}") boolean securityEnabled) {
+            @Value("${app.security.enabled:false}") boolean securityEnabled,
+            @Value("${springdoc.api-docs.enabled:true}") boolean apiDocsEnabled) {
         // APIs authenticate only Authorization bearer tokens, never browser cookies or sessions.
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         if (securityEnabled) {
+            List<String> publicPaths = new ArrayList<>(List.of(
+                    "/actuator/health/**", "/actuator/info", "/actuator/prometheus"));
+            if (apiDocsEnabled) {
+                publicPaths.addAll(List.of("/api/docs/**", "/api/swagger-ui/**", "/swagger-ui/**",
+                        "/api/users/openapi/**"));
+            }
             http.authorizeHttpRequests(requests -> requests
-                            .requestMatchers(
-                                    "/actuator/health/**", "/actuator/info", "/actuator/prometheus",
-                                    "/api/docs/**", "/api/swagger-ui/**", "/swagger-ui/**",
-                                    "/api/users/openapi/**")
+                            .requestMatchers(publicPaths.toArray(String[]::new))
                             .permitAll()
                             .anyRequest().authenticated())
                     .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()));

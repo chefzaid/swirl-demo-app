@@ -25,10 +25,12 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16.5 9.4-9-5.2M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16ZM3.3 7 12 12l8.7-5M12 22V12" /></svg>
             <span>Orders</span>
           </a>
-          <a href="/api/docs" target="_blank" rel="noopener" class="nav-link nav-docs">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8" /></svg>
-            <span>API</span>
-          </a>
+          @if (apiDocsEnabled) {
+            <a href="/api/docs" target="_blank" rel="noopener" class="nav-link nav-docs">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8" /></svg>
+              <span>API</span>
+            </a>
+          }
         </nav>
         <button (click)="logout()" class="logout-button" type="button">
           <span>Sign out</span>

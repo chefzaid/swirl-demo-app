@@ -6,17 +6,23 @@ const identity = {
   keycloakRealm: 'people',
   keycloakClientId: 'swirlapp-web'
 };
+const published = { ...identity, apiDocsEnabled: true };
 
 describe('runtime configuration', () => {
   it('accepts another installation without changing the application code', () => {
-    expect(validateRuntimeConfig(identity, 'https://portal.example.test')).toEqual(identity);
+    expect(validateRuntimeConfig(identity, 'https://portal.example.test')).toEqual(published);
     const next = { ...identity, keycloakUrl: 'https://identity.example.org/auth', keycloakRealm: 'staff' };
-    expect(validateRuntimeConfig(next, 'https://app.example.org')).toEqual(next);
+    expect(validateRuntimeConfig(next, 'https://app.example.org')).toEqual({ ...next, apiDocsEnabled: true });
+  });
+
+  it('lets an environment hide the API documentation link', () => {
+    expect(validateRuntimeConfig({ ...identity, apiDocsEnabled: false }, 'https://portal.example.test'))
+      .toEqual({ ...identity, apiDocsEnabled: false });
   });
 
   it('resolves the local Compose identity against the browser origin', () => {
     expect(validateRuntimeConfig({ ...identity, keycloakUrl: '/auth' }, 'http://web:8080'))
-      .toEqual({ ...identity, keycloakUrl: 'http://web:8080/auth' });
+      .toEqual({ ...published, keycloakUrl: 'http://web:8080/auth' });
   });
 
   it.each([
@@ -24,6 +30,7 @@ describe('runtime configuration', () => {
     [],
     {},
     { ...identity, authEnabled: false },
+    { ...identity, apiDocsEnabled: 'false' },
     { ...identity, keycloakRealm: '' },
     { ...identity, keycloakRealm: '../other' },
     { ...identity, keycloakClientId: 17 },
@@ -38,7 +45,7 @@ describe('runtime configuration', () => {
 
   it('loads configuration without cache or redirect fallback', async () => {
     const fetchConfig = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify(identity)));
-    await expect(loadRuntimeConfig('https://portal.example.test', fetchConfig)).resolves.toEqual(identity);
+    await expect(loadRuntimeConfig('https://portal.example.test', fetchConfig)).resolves.toEqual(published);
     expect(fetchConfig).toHaveBeenCalledWith('/runtime-config.json', expect.objectContaining({
       cache: 'no-store', credentials: 'same-origin', redirect: 'error', signal: expect.any(AbortSignal)
     }));

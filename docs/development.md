@@ -242,6 +242,7 @@ The roadmap keeps a stricter application-only dev-container direction: environme
 | `JWT_ISSUER_URI` | token issuer visible to clients | local proxied Keycloak issuer |
 | `JWT_JWK_SET_URI` | internal key-set URL | Keycloak service URL |
 | `CORS_ALLOWED_ORIGINS` | browser origins | `http://localhost:4200` |
+| `APP_API_DOCS_ENABLED` | publish Swagger UI and OpenAPI documents; the `uat`/`prod` profiles default to `false` | `true` |
 | `RATE_LIMIT_REQUESTS_PER_MINUTE` | per-instance API limit | default `120` |
 
 Spring relaxed binding also allows direct overrides such as `APP_SECURITY_ENABLED=false` and `APP_MESSAGING_ENABLED=false` for controlled smoke tests.

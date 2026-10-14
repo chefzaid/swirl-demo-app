@@ -92,6 +92,7 @@ services:
       JWT_ISSUER_URI: http://localhost:4200/auth/realms/swirl-demo-app
       JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/swirl-demo-app/protocol/openid-connect/certs
       CORS_ALLOWED_ORIGINS: http://localhost:4200
+      APP_API_DOCS_ENABLED: "true"
     depends_on:
       postgres:
         condition: service_healthy

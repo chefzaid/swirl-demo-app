@@ -126,7 +126,7 @@ def release_manifest(value, registry, project, environment="int"):
 def settings(root, selected, environment):
     path = root / "infra/environments" / environment / "settings.json"
     value = json.loads(path.read_text()) if path.is_file() else {}
-    require(isinstance(value, dict) and not set(value) - {"appSubdomain", "trustedProxyCIDRs", "highAvailability", "databaseName"},
+    require(isinstance(value, dict) and not set(value) - {"appSubdomain", "trustedProxyCIDRs", "highAvailability", "databaseName", "apiDocs"},
             "Unsupported environment deployment setting")
     label = value.get("appSubdomain", "demo")
     require(label == "@" or isinstance(label, str) and LABEL.fullmatch(label), "Invalid application subdomain")
@@ -140,10 +140,12 @@ def settings(root, selected, environment):
     for part in cidrs.split(","):
         ipaddress.ip_network(part.strip(), strict=False)
     require(isinstance(value.get("highAvailability", False), bool), "highAvailability must be boolean")
+    api_docs = value.get("apiDocs", True)
+    require(isinstance(api_docs, bool), "apiDocs must be boolean")
     database = value.get("databaseName", "swirl_demo_app_" + environment)
     require(database == "swirl_demo_app_" + environment or environment == "prod" and database == "swirl_demo_app_db",
             "databaseName must be this environment's database; only prod can explicitly adopt legacy swirl_demo_app_db")
-    return host, cidrs, value.get("highAvailability", False), database, label
+    return host, cidrs, value.get("highAvailability", False), database, label, api_docs
 
 
 def output_file(root, name, content):
@@ -170,7 +172,7 @@ def render(root, inventory, environment, release, revision, repository_url=None,
     namespace = selected["namespace"]
     registry = public_string(services["registry"]["host"], "registry host")
     release_manifest(release, registry, project, environment)
-    host, cidrs, ha, database, app_label = settings(root, selected, environment)
+    host, cidrs, ha, database, app_label, api_docs = settings(root, selected, environment)
     central_tls = selected.get("mode", "remote") == "local" and inventory["platform"].get("hostnameStyle", "nested") == "suffix"
     tls = {"hosts": [host]}
     if not central_tls:
@@ -182,6 +184,9 @@ def render(root, inventory, environment, release, revision, repository_url=None,
     require(re.fullmatch(r"[A-Za-z0-9_.-]+", realm) and realm != "master", "Invalid application realm")
     client = f"swirl-demo-app-{environment}-web"
     web = {"keycloakUrl": identity_url, "keycloakRealm": realm, "keycloakClientId": client}
+    if not api_docs:
+        # Emitted only when disabled: web images older than this setting reject unknown runtime keys.
+        web["apiDocsEnabled"] = False
     metadata = {"environment": environment, "application": f"swirl-demo-app-{environment}", "host": host,
                 "repository": repository_url, "project": f"applications-{environment}",
                 "url": "https://" + host, "runtimeConfig": web, "revision": revision, "databaseName": database,
@@ -201,6 +206,7 @@ def render(root, inventory, environment, release, revision, repository_url=None,
         "JWT_JWK_SET_URI": identity_url + "/realms/" + realm + "/protocol/openid-connect/certs",
         "JWT_AUDIENCE": client, "CORS_ALLOWED_ORIGINS": "https://" + host,
         "APP_RATE_LIMIT_TRUSTED_PROXY_CIDRS": cidrs,
+        "APP_API_DOCS_ENABLED": str(api_docs).lower(),
     }
     for name, value in backend.items():
         public_string(value, name)
@@ -283,7 +289,7 @@ def render(root, inventory, environment, release, revision, repository_url=None,
                          "spec": {"replacePath": {"path": "/actuator/health"}}}
     output_file(root, relative / "settings.json", json.dumps({
         "appSubdomain": app_label,
-        "trustedProxyCIDRs": cidrs, "highAvailability": ha, "databaseName": database}, indent=2) + "\n")
+        "trustedProxyCIDRs": cidrs, "highAvailability": ha, "databaseName": database, "apiDocs": api_docs}, indent=2) + "\n")
     output_file(root, relative / "health-ingress.yaml", yaml.safe_dump_all([health_ingress, health_middleware], sort_keys=False))
     output_file(root, relative / "backend-runtime.properties", "# Public environment settings; credentials come from Vault.\n" +
                 "".join(f"{key}={value}\n" for key, value in backend.items()))

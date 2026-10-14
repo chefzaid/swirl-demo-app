@@ -126,12 +126,11 @@ With `app.security.enabled=true`, the services permit these without a bearer tok
 - `/actuator/health/**`
 - `/actuator/info`
 - `/actuator/prometheus`
-- `/api/docs/**`
-- `/api/swagger-ui/**`
-- `/swagger-ui/**`
-- each service's OpenAPI document
+- `/api/docs/**`, `/api/swagger-ui/**`, `/swagger-ui/**`, and each service's OpenAPI document, while `APP_API_DOCS_ENABLED` is `true`
 
 Every other request requires authentication.
+
+`APP_API_DOCS_ENABLED` is the production switch for API documentation. The default profile and the local Compose stack publish it; the `uat` and `prod` Spring profiles default to `false`, which turns SpringDoc off and leaves the documentation paths behind authentication. Deployed environments set it from the `apiDocs` [environment setting](deployment.md#add-or-reconfigure-this-repository), which also hides the frontend's API link.
 
 Ingress exposes API documentation and the exact `/health/user` and `/health/order` health summaries used by CI. Other Actuator routes, including metrics, remain private to cluster services.
 

@@ -115,6 +115,7 @@ info:
 
 springdoc:
   api-docs:
+    enabled: ${APP_API_DOCS_ENABLED:true}
     path: /api/orders/openapi
   swagger-ui:
     enabled: false
@@ -183,3 +184,8 @@ management:
   health:
     redis:
       enabled: true
+
+# API documentation is off in deployed profiles unless the environment opts in.
+springdoc:
+  api-docs:
+    enabled: ${APP_API_DOCS_ENABLED:false}

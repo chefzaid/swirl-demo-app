@@ -286,6 +286,24 @@ class RenderingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exact source"):
             RENDER.render(self.root, INVENTORY, "int", snapshot, "a" * 40)
 
+    def test_api_docs_switch_reaches_backend_and_web_configuration(self):
+        environment = self.root / "infra/environments/prod"
+        metadata = RENDER.render(self.root, INVENTORY, "prod", RELEASE, "a" * 40)
+        self.assertIn("APP_API_DOCS_ENABLED=true\n", (environment / "backend-runtime.properties").read_text())
+        self.assertNotIn("apiDocsEnabled", metadata["runtimeConfig"])
+        settings = json.loads((environment / "settings.json").read_text())
+        self.assertTrue(settings["apiDocs"])
+        settings["apiDocs"] = False
+        (environment / "settings.json").write_text(json.dumps(settings))
+        for _ in range(2):
+            metadata = RENDER.render(self.root, INVENTORY, "prod", RELEASE, "a" * 40)
+            self.assertIn("APP_API_DOCS_ENABLED=false\n", (environment / "backend-runtime.properties").read_text())
+            self.assertIs(False, json.loads((environment / "web-runtime-config.json").read_text())["apiDocsEnabled"])
+            self.assertIs(False, metadata["runtimeConfig"]["apiDocsEnabled"])
+        (environment / "settings.json").write_text(json.dumps({"apiDocs": "no"}))
+        with self.assertRaisesRegex(ValueError, "apiDocs must be boolean"):
+            RENDER.render(self.root, INVENTORY, "prod", RELEASE, "a" * 40)
+
     def test_explicit_legacy_database_adoption_survives_production_rerenders(self):
         settings = self.root / "infra/environments/prod/settings.json"
         settings.parent.mkdir(parents=True)

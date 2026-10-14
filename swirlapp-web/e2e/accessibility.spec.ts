@@ -18,6 +18,9 @@ async function serveFixtures(page: Page): Promise<void> {
 }
 
 async function expectNoViolations(page: Page): Promise<void> {
+  // Axe reads computed colors mid-fade, and headless WebKit may not advance a
+  // transition at all, so measure the settled colors with transitions off.
+  await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; }' });
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();

@@ -126,6 +126,15 @@ groups:
           summary: "{{ $labels.app }} in {{ $labels.namespace }} sent records from {{ $labels.topic }} to the dead-letter topic"
           description: "{{ $value }} records exhausted their retries in the last 15 minutes."
           runbook: docs/slo.md#event-backlog-alerts
+      - alert: SwirlOutboxBacklog
+        expr: max by (namespace, app) (swirl_outbox_pending{app="swirlapp-order"}) > 100
+        for: 10m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.app }} in {{ $labels.namespace }} has {{ $value }} order events waiting in the outbox"
+          description: "The outbox relay has not caught up for 10 minutes; orders stay PENDING until their events publish."
+          runbook: docs/operations.md#order-events-are-waiting-in-the-outbox
       - alert: SwirlCacheFailing
         expr: sum by (namespace, app, cache) (rate(swirl_cache_errors_total{app=~"swirlapp-(user|order)"}[5m])) > 0
         for: 10m

@@ -327,8 +327,8 @@ Shared services must also remain available: PostgreSQL needs a replicated primar
 Redis needs failover, Kafka needs replicated brokers/topics, and Keycloak and
 network routing must survive the tested failure. Application replicas do not
 provide those guarantees. Flyway migrations must support rolling deployments;
-rate limits remain per API process. Database commits and Kafka publication remain
-separate operations, so replicas do not solve the missing transactional outbox.
+rate limits remain per API process. Every order replica runs the outbox relay;
+`SKIP LOCKED` gives each one a different batch.
 
 Before relying on HA, verify JWT requests across replicas, cache invalidation,
 Kafka rebalance and duplicate handling, then drain one eligible application node

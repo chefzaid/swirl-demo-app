@@ -41,6 +41,7 @@ incident and clears quickly once it ends.
 | `SwirlHeapNearLimit` | a pod uses over 90% of its maximum heap for 15 minutes | ticket |
 | `SwirlConsumerLagHigh` | a consumer is over 1000 records behind for 10 minutes | ticket |
 | `SwirlEventsDeadLettered` | any record reached a dead-letter topic in the last 15 minutes | ticket |
+| `SwirlOutboxBacklog` | over 100 order events wait in the outbox for 10 minutes | ticket |
 | `SwirlCacheFailing` | cache operations keep failing for 10 minutes | ticket |
 
 `page` alerts need a person now; `ticket` alerts need attention within working

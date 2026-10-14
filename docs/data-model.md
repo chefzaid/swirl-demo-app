@@ -149,13 +149,13 @@ Current transaction boundaries:
 
 Important consistency boundary:
 
-1. `swirlapp-order` inserts the order in a database transaction.
-2. After the database commit succeeds, it sends the Kafka event from application code.
-3. Those two operations are not one atomic commit.
+1. `swirlapp-order` inserts or changes the order and, in the same transaction, inserts its event into `order_outbox`.
+2. `OutboxRelay` publishes pending outbox rows to Kafka and marks them published once Kafka acknowledges them.
+3. A send that fails leaves the row pending for the next poll, so a crash or broker outage delays the event instead of losing it.
 
-Kafka producer idempotence prevents duplicate records caused by producer retries, but it does not solve a process failure between the database commit and publish. A transactional outbox is the planned reusable solution.
+Publication is at least once: a relay crash between Kafka's acknowledgement and the database commit republishes that batch. See [ADR 0011](adr/0011-transactional-outbox.md) for the trade-offs and the change-data-capture alternative.
 
-Because publication starts after commit, synchronous or asynchronous producer failures are logged without turning a successfully created database resource into a misleading HTTP failure. The order remains `PENDING` for operational diagnosis until a durable outbox is implemented.
+`order_outbox` columns: `id`, `topic`, `event_key` (the order ID), `payload` (the `OrderEvent` JSON), `created_at`, `published_at` (null while pending), and `attempts`. Published rows are deleted after seven days.
 
 Consumer behavior is idempotent for repeated final results in current process state, but there is no durable inbox table. A durable processed-event key is planned for stronger duplicate protection.
 

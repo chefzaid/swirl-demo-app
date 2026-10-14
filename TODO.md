@@ -31,7 +31,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 
 ## Priority: Delivery And Data Correctness
 
-- [ ] Replace the order database/Kafka dual write with a transactional outbox and a small relay implementation; provide polling and CDC variants as documented alternatives.
+- [x] Replace the order database/Kafka dual write with a transactional outbox and a small relay implementation; provide polling and CDC variants as documented alternatives.
 - [ ] Add an inbox or processed-event store so consumer idempotency survives restarts and duplicate events can be measured.
 - [ ] Add DLT inspection, replay, quarantine, and retention tooling with an operator-safe runbook.
 - [ ] Define event schema compatibility rules and demonstrate versioned events with backward-compatible consumers.

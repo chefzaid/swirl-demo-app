@@ -115,7 +115,8 @@ mask build all
 
 ### Order service
 
-- `OrderServiceTest`: bounded reads, not-found behavior, create/edit/delete flow, edit revalidation, feature-switched publishing, and publication failures
+- `OrderServiceTest`: bounded reads, not-found behavior, create/edit/delete flow, edit revalidation, and the event each change records
+- `OrderEventOutboxTest` and `OutboxRelayTest`: events are stored per environment topic and keyed by order, nothing is stored without messaging, acknowledged events are marked published, rejected or unreadable ones stay pending, old rows are purged, and the backlog is exported
 - `OrderResultListenerTest`: approval/rejection, duplicate results, deleted orders, superseded edit results, invalid status/state, and retryable behavior
 - `OrderControllerTest`: create/get/list/edit/delete responses and input/path/query error contracts
 - `CacheConfigTest`: Redis serialization and TTL configuration

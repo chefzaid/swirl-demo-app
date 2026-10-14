@@ -41,7 +41,7 @@ Callers observe a temporary `PENDING` state and may need to refresh/poll.
 
 Three partitions cap active consumption parallelism per group at three.
 
-Producer idempotence does not make the database insert and event publish atomic. A process can fail between them and strand an order. The accepted future direction is transactional outbox, followed by a durable inbox if restart-safe deduplication is required.
+Producer idempotence does not make the database insert and event publish atomic. A process can fail between them and strand an order. [ADR 0011](0011-transactional-outbox.md) closes that gap with a transactional outbox; a durable inbox remains the next step if restart-safe deduplication is required.
 
 DLT records require inspection/retention/replay operations that are not yet automated.
 

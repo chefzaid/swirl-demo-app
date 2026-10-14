@@ -2,11 +2,10 @@ package dev.swirlit.demo.order.service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
+import dev.swirlit.demo.common.audit.AuditTrail;
 import dev.swirlit.demo.common.domain.OrderStatus;
 import dev.swirlit.demo.common.event.OrderEvent;
-import dev.swirlit.demo.common.util.Constants;
 import dev.swirlit.demo.order.domain.Order;
 import dev.swirlit.demo.order.dto.CreateOrderRequest;
 import dev.swirlit.demo.order.dto.UpdateOrderRequest;
@@ -21,16 +20,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-
-import dev.swirlit.demo.common.audit.AuditTrail;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,27 +35,14 @@ class OrderServiceTest {
     @Mock
     private OrderRepository orderRepository;
     @Mock
-    private KafkaTemplate<Object, Object> kafkaTemplate;
+    private OrderEventOutbox outbox;
     @Mock
     private AuditTrail auditTrail;
     private OrderService orderService;
 
     @BeforeEach
     void setUp() {
-        orderService = new OrderService(orderRepository, kafkaTemplate, auditTrail, true, Constants.ORDER_TOPIC);
-    }
-
-    @Test
-    void publishesOnlyToSelectedEnvironment() {
-        orderService = new OrderService(orderRepository, kafkaTemplate, auditTrail, true, "swirl-demo-app.uat.order_topic");
-        Order order = new Order(1L, 2L);
-        order.setId(7L);
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
-        when(kafkaTemplate.send(eq("swirl-demo-app.uat.order_topic"), eq("7"), any(OrderEvent.class)))
-                .thenReturn(new java.util.concurrent.CompletableFuture<>());
-        orderService.createOrder(new CreateOrderRequest(1L, 2L));
-        verify(kafkaTemplate).send(eq("swirl-demo-app.uat.order_topic"), eq("7"), any(OrderEvent.class));
-        verify(auditTrail).changed("order.created", "order", 7L);
+        orderService = new OrderService(orderRepository, outbox, auditTrail);
     }
 
     @Test
@@ -81,71 +62,6 @@ class OrderServiceTest {
     }
 
     @Test
-    void createOrderSavesPendingOrderAndPublishesEvent() {
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
-            Order value = invocation.getArgument(0);
-            value.setId(7L);
-            return value;
-        });
-        when(kafkaTemplate.send(eq(Constants.ORDER_TOPIC), eq("7"), any(OrderEvent.class)))
-                .thenReturn(new CompletableFuture<>());
-
-        Order result = orderService.createOrder(new CreateOrderRequest(2L, 2001L));
-
-        assertEquals(OrderStatus.PENDING, result.getStatus());
-        ArgumentCaptor<OrderEvent> event = ArgumentCaptor.forClass(OrderEvent.class);
-        verify(kafkaTemplate).send(eq(Constants.ORDER_TOPIC), eq("7"), event.capture());
-        assertEquals(2L, event.getValue().userId());
-    }
-
-    @Test
-    void createOrderSkipsKafkaWhenMessagingIsDisabled() {
-        orderService = new OrderService(orderRepository, kafkaTemplate, auditTrail, false, Constants.ORDER_TOPIC);
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        orderService.createOrder(new CreateOrderRequest(1L, 1001L));
-
-        verify(kafkaTemplate, never()).send(any(), any(), any());
-    }
-
-    @Test
-    void createOrderPublishesOnlyAfterTransactionCommit() {
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
-            Order value = invocation.getArgument(0);
-            value.setId(7L);
-            return value;
-        });
-        when(kafkaTemplate.send(eq(Constants.ORDER_TOPIC), eq("7"), any(OrderEvent.class)))
-                .thenReturn(new CompletableFuture<>());
-
-        TransactionSynchronizationManager.initSynchronization();
-        try {
-            orderService.createOrder(new CreateOrderRequest(2L, 2001L));
-            verify(kafkaTemplate, never()).send(any(), any(), any());
-
-            TransactionSynchronizationManager.getSynchronizations()
-                    .forEach(synchronization -> synchronization.afterCommit());
-
-            verify(kafkaTemplate).send(eq(Constants.ORDER_TOPIC), eq("7"), any(OrderEvent.class));
-        } finally {
-            TransactionSynchronizationManager.clearSynchronization();
-        }
-    }
-
-    @Test
-    void createOrderDoesNotReportFailureAfterCommitWhenPublisherInitializationFails() {
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
-            Order value = invocation.getArgument(0);
-            value.setId(7L);
-            return value;
-        });
-        when(kafkaTemplate.send(eq(Constants.ORDER_TOPIC), eq("7"), any(OrderEvent.class)))
-                .thenThrow(new IllegalStateException("producer configuration failed"));
-
-        assertDoesNotThrow(() -> orderService.createOrder(new CreateOrderRequest(2L, 2001L)));
-    }
-
-    @Test
     void getOrderRejectsUnknownId() {
         when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -153,24 +69,41 @@ class OrderServiceTest {
     }
 
     @Test
-    void updateOrderResetsValidationAndPublishesNewEvent() {
+    void createOrderSavesPendingOrderAndRecordsItsEvent() {
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order value = invocation.getArgument(0);
+            value.setId(7L);
+            return value;
+        });
+
+        Order result = orderService.createOrder(new CreateOrderRequest(2L, 2001L));
+
+        assertEquals(OrderStatus.PENDING, result.getStatus());
+        OrderEvent event = recordedEvent();
+        assertEquals(7L, event.orderId());
+        assertEquals(2L, event.userId());
+        assertEquals(2001L, event.productId());
+        assertEquals(OrderStatus.PENDING, event.status());
+        verify(auditTrail).changed("order.created", "order", 7L);
+    }
+
+    @Test
+    void updateOrderResetsValidationAndRecordsANewEvent() {
         Order existing = order(7L);
         existing.setStatus(OrderStatus.APPROVED);
         existing.setUserName("Ada Lovelace");
         when(orderRepository.findById(7L)).thenReturn(Optional.of(existing));
-        when(kafkaTemplate.send(eq(Constants.ORDER_TOPIC), eq("7"), any(OrderEvent.class)))
-                .thenReturn(new CompletableFuture<>());
 
         Order updated = orderService.updateOrder(7L, new UpdateOrderRequest(2L, 2002L));
 
         assertEquals(2L, updated.getUserId());
         assertEquals(2002L, updated.getProductId());
         assertEquals(OrderStatus.PENDING, updated.getStatus());
-        assertEquals(null, updated.getUserName());
-        ArgumentCaptor<OrderEvent> event = ArgumentCaptor.forClass(OrderEvent.class);
-        verify(kafkaTemplate).send(eq(Constants.ORDER_TOPIC), eq("7"), event.capture());
-        assertEquals(2L, event.getValue().userId());
-        assertEquals(2002L, event.getValue().productId());
+        assertNull(updated.getUserName());
+        OrderEvent event = recordedEvent();
+        assertEquals(2L, event.userId());
+        assertEquals(2002L, event.productId());
+        verify(auditTrail).changed("order.updated", "order", 7L);
     }
 
     @Test
@@ -182,7 +115,7 @@ class OrderServiceTest {
         Order updated = orderService.updateOrder(7L, new UpdateOrderRequest(1L, 1001L));
 
         assertEquals(OrderStatus.APPROVED, updated.getStatus());
-        verify(kafkaTemplate, never()).send(any(), any(), any());
+        verify(outbox, never()).enqueue(any());
     }
 
     @Test
@@ -194,6 +127,12 @@ class OrderServiceTest {
 
         verify(orderRepository).delete(existing);
         verify(auditTrail).changed("order.deleted", "order", 7L);
+    }
+
+    private OrderEvent recordedEvent() {
+        ArgumentCaptor<OrderEvent> event = ArgumentCaptor.forClass(OrderEvent.class);
+        verify(outbox).enqueue(event.capture());
+        return event.getValue();
     }
 
     private static Order order(Long id) {

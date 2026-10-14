@@ -96,7 +96,7 @@ The `messaging` contributor asks the Kafka cluster for its ID in the background 
 | Kafka | `APP_MESSAGING_REQUIRED=false` (default) | `APP_MESSAGING_REQUIRED=true` |
 | --- | --- | --- |
 | reachable | `UP` | `UP` |
-| unreachable | `DEGRADED` (HTTP 200): pods stay ready, orders are accepted and stay `PENDING`, and a send fails after 5 seconds instead of holding the request | `DOWN` (HTTP 503): readiness takes pods out of service |
+| unreachable | `DEGRADED` (HTTP 200): pods stay ready, orders are accepted and stay `PENDING` while their events wait in the outbox | `DOWN` (HTTP 503): readiness takes pods out of service |
 | messaging disabled | `UNKNOWN`, ignored | `UNKNOWN`, ignored |
 
 Liveness never includes Kafka, so a broker outage does not restart pods. The deployment smoke check expects `UP`, so a release deployed during a Kafka outage fails its smoke check even when messaging is optional.
@@ -209,6 +209,7 @@ Spring Boot defaults:
 | Records sent to a DLT | `swirl_events_dead_lettered_total` | `topic` (source topic) |
 | Cache hits and misses | `cache_gets_total` | `cache`, `result` |
 | Cache outages that fell through | `swirl_cache_errors_total` | `cache`, `operation` |
+| Outbox backlog and throughput | `swirl_outbox_pending`, `swirl_outbox_published_total`, `swirl_outbox_failed_total` | none |
 | Rate-limit rejections (429) | `swirl_rate_limit_rejections_total` | none |
 
 Kafka series appear only when messaging is enabled, and cache series only in
@@ -299,11 +300,17 @@ Interpretation:
 
 The repository does not yet provide an operator-safe replay command. Preserve the original record and headers, identify/fix the cause, and use platform Kafka procedures. Track replay manually to prevent duplicates. Durable replay tooling is in the roadmap.
 
-### An order exists but no request event was published
+### Order events are waiting in the outbox
 
-The current database insert and Kafka send are not atomic. If the service process fails after commit but before a successful publish, an order can remain `PENDING` without a record.
+Every order change records its event in `order_outbox` in the same transaction, so an order cannot lose its event; it can only wait for the relay. `SwirlOutboxBacklog` fires when `swirl_outbox_pending` stays above 100.
 
-Confirm with order creation logs and Kafka records. There is no automatic reconciliation today. Avoid mutating production records without an incident-specific, reviewed recovery plan. The transactional outbox roadmap item is the permanent fix.
+Checks:
+
+- `messaging` health and the order logs: `Could not publish outbox event id=... attempt=...` names the failing row and the exception type
+- the oldest pending rows: `SELECT id, event_key, attempts, created_at FROM order_outbox WHERE published_at IS NULL ORDER BY id LIMIT 20`
+- a row whose `attempts` keeps rising while others publish has a payload or topic Kafka rejects; fix the cause rather than deleting the row, because the order stays `PENDING` until its event is published
+
+The relay retries every second once Kafka is back; no manual replay is needed.
 
 ### Authentication redirects or JWT validation fail
 
@@ -412,7 +419,7 @@ The workloads currently have one replica. Before scaling:
 - confirm database connection capacity against Hikari pools
 - add PodDisruptionBudgets/topology spread as needed
 - load test the ingress and service resources
-- understand that outbox/inbox gaps become more visible under failures and concurrency
+- understand that duplicate deliveries (no durable inbox yet) become more visible under failures and concurrency
 
 Kafka topics have three partitions, which caps useful parallel consumption per consumer group at three active consumers unless partitioning changes.
 

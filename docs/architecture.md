@@ -90,7 +90,7 @@ The UI stays deliberately small so infrastructure and delivery behavior remain v
 
 1. authenticated caller creates an order.
 2. `swirlapp-order` persists it as `PENDING`.
-3. when messaging is enabled, `swirlapp-order` publishes keyed `OrderEvent` to `order_topic`.
+3. when messaging is enabled, the same transaction records a keyed `OrderEvent` in the `order_outbox` table, and `OutboxRelay` publishes it to `order_topic` within about a second.
 4. `swirlapp-user` resolves the user.
 5. missing user becomes a normal `REJECTED` result; transient failures propagate for retry.
 6. `swirlapp-user` awaits result publication to `order_result_topic`.
@@ -98,7 +98,7 @@ The UI stays deliberately small so infrastructure and delivery behavior remain v
 8. exact duplicates are ignored; a pending order becomes approved or rejected.
 9. affected cache data is evicted.
 
-The initial database commit and Kafka publication are not atomic. This is a documented outbox roadmap item.
+The order change and its event commit together; publication is at least once ([ADR 0011](./adr/0011-transactional-outbox.md)).
 
 ### Deployment
 
@@ -183,12 +183,13 @@ Statuses:
 - [ADR 0008: Keep Verification Layered And Continuous](./adr/0008-code-quality-and-verification.md)
 - [ADR 0009: Use Explicit Delivery Jobs And Non-Blocking Verification](./adr/0009-explicit-delivery-jobs.md)
 - [ADR 0010: Trace Through Micrometer Observation With The OpenTelemetry Bridge](./adr/0010-opentelemetry-tracing.md)
+- [ADR 0011: Publish Order Events Through A Polling Transactional Outbox](./adr/0011-transactional-outbox.md)
 
 ## Proposed ADRs For Roadmap Work
 
 Create decisions before implementing:
 
-- transactional outbox relay and durable inbox/deduplication
+- durable inbox/deduplication
 - HTTP resilience reference adapter
 - distributed rate limiting and edge ownership
 - role/authority mapping and method authorization

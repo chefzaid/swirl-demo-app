@@ -69,6 +69,12 @@ spring:
         max.in.flight.requests.per.connection: 5
         # Fail a send within 5 s when the broker is unreachable instead of holding the request thread for 60 s.
         max.block.ms: 5000
+    # Each observed send looks up the cluster ID until it first succeeds; bound that lookup while Kafka is down.
+    admin:
+      operation-timeout: 5s
+      properties:
+        default.api.timeout.ms: 5000
+        request.timeout.ms: 5000
     # Observations time each publish (spring.kafka.template) and each handled record (spring.kafka.listener).
     template:
       observation-enabled: true

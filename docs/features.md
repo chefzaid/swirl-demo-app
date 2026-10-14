@@ -104,7 +104,7 @@ Implemented Kafka behavior:
 - matching dead-letter topics
 - declarative topic creation when messaging is enabled
 - feature switch through `app.messaging.enabled` / `KAFKA_ENABLED`
-- [readiness semantics](operations.md#health-and-readiness) that keep pods serving while optional messaging is down (`DEGRADED`) or take them out of service when `APP_MESSAGING_REQUIRED=true`; sends fail after 5 seconds instead of blocking requests
+- [readiness semantics](operations.md#health-and-readiness) that keep pods serving while optional messaging is down (`DEGRADED`) or take them out of service when `APP_MESSAGING_REQUIRED=true`; API requests never wait on Kafka because order events go through the outbox
 - producers configured with `acks=all`, idempotence, bounded delivery time, and retries
 - producer request and delivery timeouts validated together against Kafka client defaults
 - record-level listener acknowledgement
@@ -117,12 +117,12 @@ Implemented Kafka behavior:
 - order-result identity and status validation
 - idempotent handling of duplicate final results
 - edited orders return to `PENDING` and publish a fresh validation request
-- order validation requests are published after the database transaction commits
+- [transactional outbox](adr/0011-transactional-outbox.md): order validation requests are recorded with the order change and published by a relay that retries until Kafka acknowledges them, with backlog metrics and alerting
 - late results for superseded edits or deleted orders are ignored safely
 - rejection of invalid order state transitions
 - local single-node Kafka 4.3 in KRaft mode
 
-The initial order insert and Kafka publish are not atomic. A transactional outbox is intentionally listed in [TODO.md](../TODO.md) rather than hidden behind an unsafe in-process retry.
+Order changes and their events commit together; Kafka delivery is at least once, and consumers ignore duplicates within their current state.
 
 ## Authentication And Security
 
@@ -259,7 +259,7 @@ GitLab is the CI/CD source of truth; GitHub is the public mirror.
 
 Do not present these as implemented:
 
-- transactional outbox or atomic database/event publication
+- change-data-capture outbox relay (the polling relay is implemented)
 - durable consumer inbox/deduplication store
 - distributed or edge-global rate limiting
 - method-level roles or business authorization policies

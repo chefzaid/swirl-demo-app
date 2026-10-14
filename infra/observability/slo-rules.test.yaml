@@ -97,6 +97,8 @@ tests:
         values: '0 0 2x18'
       - series: 'swirl_cache_errors_total{namespace="apps",app="swirlapp-user",pod="user-1",cache="users",operation="get"}'
         values: '0+5x20'
+      - series: 'swirl_outbox_pending{namespace="apps",app="swirlapp-order",pod="order-1"}'
+        values: '250x20'
     alert_rule_test:
       - eval_time: 20m
         alertname: SwirlTargetDown
@@ -146,3 +148,11 @@ tests:
               summary: "swirlapp-user in apps has been reading users without its cache for 10 minutes"
               description: "Cache operations fail and fall through to the database; check Redis."
               runbook: docs/slo.md#saturation-and-target-alerts
+      - eval_time: 20m
+        alertname: SwirlOutboxBacklog
+        exp_alerts:
+          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-order}
+            exp_annotations:
+              summary: "swirlapp-order in apps has 250 order events waiting in the outbox"
+              description: "The outbox relay has not caught up for 10 minutes; orders stay PENDING until their events publish."
+              runbook: docs/operations.md#order-events-are-waiting-in-the-outbox

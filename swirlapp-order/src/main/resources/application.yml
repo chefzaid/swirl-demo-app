@@ -109,6 +109,11 @@ management:
   info:
     env:
       enabled: true
+  metrics:
+    distribution:
+      # Fixed buckets let Prometheus count requests inside the latency objective (docs/slo.md).
+      slo:
+        "[http.server.requests]": 300ms,1s
 
 info:
   app:

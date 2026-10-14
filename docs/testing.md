@@ -302,6 +302,13 @@ python3 infra/scripts/check-manifest-policy.py
 
 Every Deployment, StatefulSet, DaemonSet, Job and CronJob must run as non-root with a `RuntimeDefault` seccomp profile and no service-account token, without host namespaces; every container must block privilege escalation, use a read-only root filesystem, drop all capabilities, request CPU and memory, limit memory, and pin its image; long-running containers also need liveness and readiness probes. Pass Kustomize directories as arguments to check others.
 
+Validate the Prometheus alert rules and replay their unit tests (the build job runs both; see [Service Levels And Alerts](slo.md#loading-and-testing-the-rules)):
+
+```bash
+promtool check rules infra/observability/slo-rules.yaml
+promtool test rules infra/observability/slo-rules.test.yaml
+```
+
 The [delivery flow](deployment.md#delivery-flow) defines CI job dependencies and
 release gates. `infra/scripts/test-deployment.py` verifies real Kustomize output
 for local, remote and mixed targets, namespace-specific ingress and secret

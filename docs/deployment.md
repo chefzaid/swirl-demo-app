@@ -11,6 +11,7 @@ the selected environment.
 | Directory or file | Responsibility |
 | --- | --- |
 | `infra/k8s/` | Shared application manifests and public configuration templates. |
+| `infra/observability/` | Prometheus SLO recording and alert rules with their `promtool` tests; not deployed by Kustomize. |
 | `infra/overlays/ha/` | Optional application replica and disruption-budget profile. |
 | `infra/environments/<env>/` | Generated environment settings, runtime ConfigMaps, ingress and image digests. |
 | `infra/argocd/application.yaml` | Onboarding template; do not apply it to deploy an environment. |

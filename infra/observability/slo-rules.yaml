@@ -1,0 +1,137 @@
+# Prometheus recording and alerting rules for the objectives in docs/slo.md.
+# Validate with: promtool check rules infra/observability/slo-rules.yaml
+# Unit tests:    promtool test rules infra/observability/slo-rules.test.yaml
+groups:
+  - name: swirl-demo-app-sli
+    rules:
+      # Availability SLI: share of API requests answered with a 5xx.
+      - record: swirl:api_error_ratio:rate5m
+        expr: |
+          sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*",status=~"5.."}[5m]))
+          / sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*"}[5m]))
+      - record: swirl:api_error_ratio:rate30m
+        expr: |
+          sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*",status=~"5.."}[30m]))
+          / sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*"}[30m]))
+      - record: swirl:api_error_ratio:rate1h
+        expr: |
+          sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*",status=~"5.."}[1h]))
+          / sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*"}[1h]))
+      - record: swirl:api_error_ratio:rate6h
+        expr: |
+          sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*",status=~"5.."}[6h]))
+          / sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*"}[6h]))
+      # Latency SLI: share of API requests slower than 300 ms (the bucket the services publish).
+      - record: swirl:api_slow_ratio:rate5m
+        expr: |
+          1 - sum by (namespace, app) (rate(http_server_requests_seconds_bucket{app=~"swirlapp-(user|order)",uri!~"/actuator.*",le="0.3"}[5m]))
+          / sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*"}[5m]))
+      - record: swirl:api_slow_ratio:rate30m
+        expr: |
+          1 - sum by (namespace, app) (rate(http_server_requests_seconds_bucket{app=~"swirlapp-(user|order)",uri!~"/actuator.*",le="0.3"}[30m]))
+          / sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*"}[30m]))
+      - record: swirl:api_slow_ratio:rate1h
+        expr: |
+          1 - sum by (namespace, app) (rate(http_server_requests_seconds_bucket{app=~"swirlapp-(user|order)",uri!~"/actuator.*",le="0.3"}[1h]))
+          / sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*"}[1h]))
+      - record: swirl:api_slow_ratio:rate6h
+        expr: |
+          1 - sum by (namespace, app) (rate(http_server_requests_seconds_bucket{app=~"swirlapp-(user|order)",uri!~"/actuator.*",le="0.3"}[6h]))
+          / sum by (namespace, app) (rate(http_server_requests_seconds_count{app=~"swirlapp-(user|order)",uri!~"/actuator.*"}[6h]))
+
+  - name: swirl-demo-app-alerts
+    rules:
+      # Multi-window burn rates: 14.4x spends 2% of a 30-day budget in an hour, 6x spends 5% in six hours.
+      - alert: SwirlApiErrorBudgetFastBurn
+        expr: swirl:api_error_ratio:rate1h > 14.4 * 0.005 and swirl:api_error_ratio:rate5m > 14.4 * 0.005
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "{{ $labels.app }} in {{ $labels.namespace }} is burning its availability budget fast"
+          description: "{{ $value | humanizePercentage }} of API requests failed with 5xx over the last 5 minutes."
+          runbook: docs/slo.md#availability-alerts
+      - alert: SwirlApiErrorBudgetSlowBurn
+        expr: swirl:api_error_ratio:rate6h > 6 * 0.005 and swirl:api_error_ratio:rate30m > 6 * 0.005
+        for: 15m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.app }} in {{ $labels.namespace }} is steadily burning its availability budget"
+          description: "{{ $value | humanizePercentage }} of API requests failed with 5xx over the last 30 minutes."
+          runbook: docs/slo.md#availability-alerts
+      - alert: SwirlApiLatencyBudgetFastBurn
+        expr: swirl:api_slow_ratio:rate1h > 14.4 * 0.05 and swirl:api_slow_ratio:rate5m > 14.4 * 0.05
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "{{ $labels.app }} in {{ $labels.namespace }} is burning its latency budget fast"
+          description: "{{ $value | humanizePercentage }} of API requests took longer than 300 ms over the last 5 minutes."
+          runbook: docs/slo.md#latency-alerts
+      - alert: SwirlApiLatencyBudgetSlowBurn
+        expr: swirl:api_slow_ratio:rate6h > 6 * 0.05 and swirl:api_slow_ratio:rate30m > 6 * 0.05
+        for: 15m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.app }} in {{ $labels.namespace }} is steadily burning its latency budget"
+          description: "{{ $value | humanizePercentage }} of API requests took longer than 300 ms over the last 30 minutes."
+          runbook: docs/slo.md#latency-alerts
+      - alert: SwirlTargetDown
+        expr: up{app=~"swirlapp-(user|order)"} == 0
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "{{ $labels.app }} pod {{ $labels.pod }} in {{ $labels.namespace }} cannot be scraped"
+          description: "Prometheus has not scraped this target for 5 minutes."
+          runbook: docs/slo.md#saturation-and-target-alerts
+      - alert: SwirlDatabasePoolSaturated
+        expr: max by (namespace, app) (hikaricp_connections_pending{app=~"swirlapp-(user|order)"}) > 0
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.app }} in {{ $labels.namespace }} is waiting for database connections"
+          description: "{{ $value }} requests have waited for a pooled connection for 5 minutes."
+          runbook: docs/slo.md#saturation-and-target-alerts
+      - alert: SwirlHeapNearLimit
+        expr: |
+          max by (namespace, app, pod) (
+            sum by (namespace, app, pod) (jvm_memory_used_bytes{app=~"swirlapp-(user|order)",area="heap"})
+            / sum by (namespace, app, pod) (jvm_memory_max_bytes{app=~"swirlapp-(user|order)",area="heap"} > 0)
+          ) > 0.9
+        for: 15m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.app }} pod {{ $labels.pod }} has used over 90% of its heap for 15 minutes"
+          description: "Heap use is {{ $value | humanizePercentage }} of the maximum."
+          runbook: docs/slo.md#saturation-and-target-alerts
+      - alert: SwirlConsumerLagHigh
+        expr: max by (namespace, app, topic) (kafka_consumer_fetch_manager_records_lag_max{app=~"swirlapp-(user|order)"}) > 1000
+        for: 10m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.app }} in {{ $labels.namespace }} is more than 1000 records behind on {{ $labels.topic }}"
+          description: "The consumer has lagged for 10 minutes; events are processed late."
+          runbook: docs/slo.md#event-backlog-alerts
+      - alert: SwirlEventsDeadLettered
+        expr: sum by (namespace, app, topic) (increase(swirl_events_dead_lettered_total{app=~"swirlapp-(user|order)"}[15m])) > 0
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.app }} in {{ $labels.namespace }} sent records from {{ $labels.topic }} to the dead-letter topic"
+          description: "{{ $value }} records exhausted their retries in the last 15 minutes."
+          runbook: docs/slo.md#event-backlog-alerts
+      - alert: SwirlCacheFailing
+        expr: sum by (namespace, app, cache) (rate(swirl_cache_errors_total{app=~"swirlapp-(user|order)"}[5m])) > 0
+        for: 10m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.app }} in {{ $labels.namespace }} has been reading {{ $labels.cache }} without its cache for 10 minutes"
+          description: "Cache operations fail and fall through to the database; check Redis."
+          runbook: docs/slo.md#saturation-and-target-alerts

@@ -13,7 +13,7 @@ data:
       "tags": ["swirl-demo-app", "spring-boot", "provisioned"],
       "timezone": "browser",
       "schemaVersion": 41,
-      "version": 1,
+      "version": 2,
       "refresh": "30s",
       "time": {"from": "now-6h", "to": "now"},
       "templating": {
@@ -134,6 +134,66 @@ data:
           "datasource": {"type": "prometheus", "uid": "prometheus"},
           "targets": [{"refId": "A", "expr": "kube_pod_container_status_restarts_total{namespace=\"apps\"}", "legendFormat": "{{pod}} / {{container}}", "instant": true, "format": "table"}],
           "options": {"showHeader": true}
+        },
+        {
+          "id": 11,
+          "type": "timeseries",
+          "title": "API 5xx Ratio (objective 0.5%)",
+          "gridPos": {"x": 0, "y": 27, "w": 8, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "sum by (app) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\",status=~\"5..\"}[5m])) / sum by (app) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m]))", "legendFormat": "{{app}}"}],
+          "fieldConfig": {"defaults": {"unit": "percentunit", "custom": {"thresholdsStyle": {"mode": "line"}}, "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 0.005}]}}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
+        },
+        {
+          "id": 12,
+          "type": "timeseries",
+          "title": "API Requests Slower Than 300 ms (objective 5%)",
+          "gridPos": {"x": 8, "y": 27, "w": 8, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "1 - sum by (app) (rate(http_server_requests_seconds_bucket{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\",le=\"0.3\"}[5m])) / sum by (app) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m]))", "legendFormat": "{{app}}"}],
+          "fieldConfig": {"defaults": {"unit": "percentunit", "custom": {"thresholdsStyle": {"mode": "line"}}, "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 0.05}]}}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
+        },
+        {
+          "id": 13,
+          "type": "timeseries",
+          "title": "Kafka Consumer Lag",
+          "gridPos": {"x": 16, "y": 27, "w": 8, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "max by (app, topic) (kafka_consumer_fetch_manager_records_lag_max{namespace=\"apps\",app=~\"$application\"})", "legendFormat": "{{app}} {{topic}}"}],
+          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
+        },
+        {
+          "id": 14,
+          "type": "timeseries",
+          "title": "Event Retries and Dead Letters (per 5 minutes)",
+          "gridPos": {"x": 0, "y": 35, "w": 8, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "sum by (app, topic) (increase(swirl_events_failed_deliveries_total{namespace=\"apps\",app=~\"$application\"}[5m]))", "legendFormat": "failed {{app}} {{topic}}"}, {"refId": "B", "expr": "sum by (app, topic) (increase(swirl_events_dead_lettered_total{namespace=\"apps\",app=~\"$application\"}[5m]))", "legendFormat": "dead-lettered {{app}} {{topic}}"}],
+          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
+        },
+        {
+          "id": 15,
+          "type": "timeseries",
+          "title": "Cache Hit Ratio",
+          "gridPos": {"x": 8, "y": 35, "w": 8, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "sum by (app, cache) (rate(cache_gets_total{namespace=\"apps\",app=~\"$application\",result=\"hit\"}[5m])) / sum by (app, cache) (rate(cache_gets_total{namespace=\"apps\",app=~\"$application\"}[5m]))", "legendFormat": "{{app}} {{cache}}"}],
+          "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
+        },
+        {
+          "id": 16,
+          "type": "timeseries",
+          "title": "Cache Errors and Rate-Limit Rejections",
+          "gridPos": {"x": 16, "y": 35, "w": 8, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "sum by (app, cache) (rate(swirl_cache_errors_total{namespace=\"apps\",app=~\"$application\"}[5m]))", "legendFormat": "cache errors {{app}} {{cache}}"}, {"refId": "B", "expr": "sum by (app) (rate(swirl_rate_limit_rejections_total{namespace=\"apps\",app=~\"$application\"}[5m]))", "legendFormat": "429 {{app}}"}],
+          "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
         }
       ]
     }

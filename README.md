@@ -44,6 +44,7 @@ and deliberate major-version changes.
 - [Code Quality And Template Onboarding](./docs/code-quality.md)
 - [Deployment Guide](./docs/deployment.md)
 - [Operations Runbook](./docs/operations.md)
+- [Service Levels And Alerts](./docs/slo.md)
 - [Security Reference](./docs/security.md)
 - [Infrastructure Layout](./docs/deployment.md#infrastructure-layout)
 

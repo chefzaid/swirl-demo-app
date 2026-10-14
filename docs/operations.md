@@ -177,7 +177,8 @@ Do not paste tokens, credentials, complete personal records, or browser test art
 
 On a remote target, the ConfigMap alone does not provision central Grafana or
 supply metric series. Its dashboard needs to be imported and backed by that
-environment's telemetry. SLO alerts are a roadmap item.
+environment's telemetry. The panels below the restarts table follow the
+[service-level objectives and alerts](slo.md).
 
 ### Application Metrics
 

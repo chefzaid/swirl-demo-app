@@ -24,6 +24,8 @@ Parts of tasks that cannot advance without the owner's decision or information. 
   - Answer:
 - [ ] Where does the Argo CD `ComparisonError: Object 'Kind' is missing` come from now? Every pinned `int`/`uat`/`prod` revision has a `kustomization.yaml`, so Argo CD should build with Kustomize and never parse `settings.json`, and all three environments render cleanly with `kustomize build` (every object has a `kind`). Please paste the current Application condition message (`kubectl -n infra get application swirl-demo-app-int -o jsonpath='{.status.conditions}'`) or say whether the platform forces the directory source type. *(task: Kubernetes And Delivery › Argo CD ComparisonError; asked by: Coding Agent)*
   - Answer:
+- [ ] How does the platform's Prometheus load alert rules? Options: (a) a `PrometheusRule` resource (Prometheus Operator), which the app would ship with its manifests; (b) a ConfigMap with a label the platform's Prometheus watches (please name the label); (c) the platform team adds `infra/observability/slo-rules.yaml` to its own `rule_files`. *(task: Observability › Load SLO rules; asked by: Coding Agent)*
+  - Answer:
 
 ## Priority: Delivery And Data Correctness
 
@@ -65,8 +67,9 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 
 - [ ] Add OpenTelemetry traces and propagate trace context across HTTP and Kafka alongside the existing request ID.
 - [x] Add reusable Micrometer business/event metrics for publish latency, consumer lag, retries, DLT records, cache behavior, and rate-limit rejections.
-- [ ] Define service-level indicators, objectives, Prometheus alerts, and Grafana alert views for availability, latency, errors, saturation, and event backlog.
+- [x] Define service-level indicators, objectives, Prometheus alerts, and Grafana alert views for availability, latency, errors, saturation, and event backlog.
 - [x] Add log redaction tests and a documented policy for tokens, personal data, request bodies, and exception details.
+- [ ] Load `infra/observability/slo-rules.yaml` into each environment's Prometheus once the platform's rule-loading mechanism is known *(waiting in Needs Input)*.
 - [ ] Add optional log/metric anomaly detection only after stable baselines and actionable alert ownership are defined.
 - [ ] Add audit events for security-sensitive actions and document separation between entity auditing, application audit trails, and platform logs.
 - [ ] Add backup/restore drills for PostgreSQL and persistent Kafka/Redis data, with recovery-point and recovery-time targets.

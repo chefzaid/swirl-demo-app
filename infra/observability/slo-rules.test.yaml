@@ -1,0 +1,148 @@
+# promtool test rules infra/observability/slo-rules.test.yaml
+rule_files:
+  - slo-rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - name: healthy traffic raises no alert
+    interval: 1m
+    input_series:
+      - series: 'http_server_requests_seconds_count{namespace="apps",app="swirlapp-user",uri="/api/users",status="200"}'
+        values: '0+600x90'
+      - series: 'http_server_requests_seconds_bucket{namespace="apps",app="swirlapp-user",uri="/api/users",status="200",le="0.3"}'
+        values: '0+590x90'
+      - series: 'http_server_requests_seconds_count{namespace="apps",app="swirlapp-user",uri="/api/users",status="500"}'
+        values: '0+1x90'
+      - series: 'http_server_requests_seconds_bucket{namespace="apps",app="swirlapp-user",uri="/api/users",status="500",le="0.3"}'
+        values: '0+1x90'
+      - series: 'http_server_requests_seconds_count{namespace="apps",app="swirlapp-user",uri="/actuator/health",status="503"}'
+        values: '0+600x90'
+      - series: 'up{namespace="apps",app="swirlapp-user",pod="user-1"}'
+        values: '1x90'
+    alert_rule_test:
+      - eval_time: 90m
+        alertname: SwirlApiErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 90m
+        alertname: SwirlApiLatencyBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 90m
+        alertname: SwirlTargetDown
+        exp_alerts: []
+    promql_expr_test:
+      # Actuator traffic is excluded, so 1 failure in 601 API requests is the whole error ratio.
+      - expr: round(swirl:api_error_ratio:rate5m, 0.0001)
+        eval_time: 90m
+        exp_samples:
+          - labels: '{namespace="apps",app="swirlapp-user"}'
+            value: 0.0017
+
+  - name: a 5xx spike pages through the fast-burn alert
+    interval: 1m
+    input_series:
+      - series: 'http_server_requests_seconds_count{namespace="apps",app="swirlapp-order",uri="/api/orders",status="200"}'
+        values: '0+80x70'
+      - series: 'http_server_requests_seconds_count{namespace="apps",app="swirlapp-order",uri="/api/orders",status="503"}'
+        values: '0+20x70'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: SwirlApiErrorBudgetFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              namespace: apps
+              app: swirlapp-order
+            exp_annotations:
+              summary: "swirlapp-order in apps is burning its availability budget fast"
+              description: "20% of API requests failed with 5xx over the last 5 minutes."
+              runbook: docs/slo.md#availability-alerts
+
+  - name: slow responses page through the latency fast-burn alert
+    interval: 1m
+    input_series:
+      - series: 'http_server_requests_seconds_count{namespace="apps",app="swirlapp-user",uri="/api/users",status="200"}'
+        values: '0+100x70'
+      - series: 'http_server_requests_seconds_bucket{namespace="apps",app="swirlapp-user",uri="/api/users",status="200",le="0.3"}'
+        values: '0+10x70'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: SwirlApiLatencyBudgetFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              namespace: apps
+              app: swirlapp-user
+            exp_annotations:
+              summary: "swirlapp-user in apps is burning its latency budget fast"
+              description: "90% of API requests took longer than 300 ms over the last 5 minutes."
+              runbook: docs/slo.md#latency-alerts
+
+  - name: target, saturation, backlog and cache alerts
+    interval: 1m
+    input_series:
+      - series: 'up{namespace="apps",app="swirlapp-order",pod="order-1"}'
+        values: '1 0x20'
+      - series: 'hikaricp_connections_pending{namespace="apps",app="swirlapp-order",pod="order-1",pool="HikariPool-1"}'
+        values: '3x20'
+      - series: 'jvm_memory_used_bytes{namespace="apps",app="swirlapp-order",pod="order-1",area="heap",id="G1 Old Gen"}'
+        values: '95x20'
+      - series: 'jvm_memory_max_bytes{namespace="apps",app="swirlapp-order",pod="order-1",area="heap",id="G1 Old Gen"}'
+        values: '100x20'
+      - series: 'jvm_memory_max_bytes{namespace="apps",app="swirlapp-order",pod="order-1",area="heap",id="G1 Eden Space"}'
+        values: '-1x20'
+      - series: 'kafka_consumer_fetch_manager_records_lag_max{namespace="apps",app="swirlapp-order",pod="order-1",topic="order_result_topic",client_id="c1"}'
+        values: '5000x20'
+      - series: 'swirl_events_dead_lettered_total{namespace="apps",app="swirlapp-user",pod="user-1",topic="order_topic"}'
+        values: '0 0 2x18'
+      - series: 'swirl_cache_errors_total{namespace="apps",app="swirlapp-user",pod="user-1",cache="users",operation="get"}'
+        values: '0+5x20'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: SwirlTargetDown
+        exp_alerts:
+          - exp_labels: {severity: page, namespace: apps, app: swirlapp-order, pod: order-1}
+            exp_annotations:
+              summary: "swirlapp-order pod order-1 in apps cannot be scraped"
+              description: "Prometheus has not scraped this target for 5 minutes."
+              runbook: docs/slo.md#saturation-and-target-alerts
+      - eval_time: 20m
+        alertname: SwirlDatabasePoolSaturated
+        exp_alerts:
+          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-order}
+            exp_annotations:
+              summary: "swirlapp-order in apps is waiting for database connections"
+              description: "3 requests have waited for a pooled connection for 5 minutes."
+              runbook: docs/slo.md#saturation-and-target-alerts
+      - eval_time: 20m
+        alertname: SwirlHeapNearLimit
+        exp_alerts:
+          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-order, pod: order-1}
+            exp_annotations:
+              summary: "swirlapp-order pod order-1 has used over 90% of its heap for 15 minutes"
+              description: "Heap use is 95% of the maximum."
+              runbook: docs/slo.md#saturation-and-target-alerts
+      - eval_time: 20m
+        alertname: SwirlConsumerLagHigh
+        exp_alerts:
+          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-order, topic: order_result_topic}
+            exp_annotations:
+              summary: "swirlapp-order in apps is more than 1000 records behind on order_result_topic"
+              description: "The consumer has lagged for 10 minutes; events are processed late."
+              runbook: docs/slo.md#event-backlog-alerts
+      - eval_time: 5m
+        alertname: SwirlEventsDeadLettered
+        exp_alerts:
+          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-user, topic: order_topic}
+            exp_annotations:
+              summary: "swirlapp-user in apps sent records from order_topic to the dead-letter topic"
+              description: "2 records exhausted their retries in the last 15 minutes."
+              runbook: docs/slo.md#event-backlog-alerts
+      - eval_time: 20m
+        alertname: SwirlCacheFailing
+        exp_alerts:
+          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-user, cache: users}
+            exp_annotations:
+              summary: "swirlapp-user in apps has been reading users without its cache for 10 minutes"
+              description: "Cache operations fail and fall through to the database; check Redis."
+              runbook: docs/slo.md#saturation-and-target-alerts

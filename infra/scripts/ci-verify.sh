@@ -23,6 +23,8 @@ build_application() {
   kubectl kustomize infra/overlays/ha >/dev/null
   python3 infra/scripts/test-manifest-policy.py
   python3 infra/scripts/check-manifest-policy.py
+  promtool check rules infra/observability/slo-rules.yaml
+  promtool test rules infra/observability/slo-rules.test.yaml
   kubectl create --dry-run=client --validate=false \
     -f infra/argocd/application.yaml >/dev/null
   mvn --batch-mode clean package -DskipTests \

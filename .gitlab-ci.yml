@@ -71,7 +71,7 @@ variables:
         - .cache/npm/
       policy: pull-push
   before_script:
-    - apk add --no-cache bash git jq kubectl nodejs npm python3 py3-yaml
+    - apk add --no-cache bash git jq kubectl nodejs npm prometheus python3 py3-yaml
     - export APP_VERSION="$(infra/scripts/current-version.sh)"
   script:
     - infra/scripts/ci-verify.sh build

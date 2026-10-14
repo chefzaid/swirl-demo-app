@@ -405,7 +405,7 @@ Not yet first-class:
 - durable DLT/replay and consumer restart tests
 - consumer-driven HTTP/event contracts
 - load, soak, and chaos suites
-- automated container and secret scanning beyond the current dependency and SonarQube reports
+- container image scanning, SAST, and DAST (the security job already scans dependencies, IaC, and secrets with Trivy)
 
 Track these in [TODO.md](../TODO.md), not as existing coverage.
 

@@ -20,6 +20,7 @@ class PlaywrightImageTest(unittest.TestCase):
         self.write(images.LOCKFILE, json.dumps({"packages": {"node_modules/@playwright/test": {"version": "1.64.0"}}}))
         self.write(".gitlab-ci.yml", f"e2e:\n  image:\n    name: mcr.microsoft.com/playwright:v1.64.0-noble{DIGEST}\n")
         self.write("infra/compose/compose.test.yaml", "test-runner:\n  image: mcr.microsoft.com/playwright:v1.64.0-noble\n")
+        self.write("infra/scripts/run-visual-tests.sh", "docker run mcr.microsoft.com/playwright:v1.64.0-noble npm run test:visual\n")
 
     def write(self, name, text):
         path = images.ROOT / name

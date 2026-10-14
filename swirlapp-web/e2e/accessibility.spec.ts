@@ -1,26 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-// Hermetic critical-path checks: the development build runs without
-// authentication, and the APIs answer from fixtures instead of live services.
-const users = [
-  { id: 1, name: 'Ada Lovelace', username: 'ada', email: 'ada@example.test' },
-  { id: 2, name: 'Grace Hopper', username: 'grace', email: 'grace@example.test' },
-];
-const orders = [
-  { id: 10, userId: 1, userName: 'Ada Lovelace', productId: 1001, status: 'APPROVED' },
-  { id: 11, userId: 2, userName: 'Grace Hopper', productId: 1002, status: 'PENDING' },
-];
-
-async function serveFixtures(page: Page): Promise<void> {
-  await page.route(/\/api\/users(\?.*)?$/, (route) => route.fulfill({ json: users }));
-  await page.route(/\/api\/orders(\?.*)?$/, (route) => route.fulfill({ json: orders }));
-}
+import { serveFixtures, turnOffTransitions } from './fixtures';
 
 async function expectNoViolations(page: Page): Promise<void> {
-  // Axe reads computed colors mid-fade, and headless WebKit may not advance a
-  // transition at all, so measure the settled colors with transitions off.
-  await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; }' });
+  await turnOffTransitions(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();

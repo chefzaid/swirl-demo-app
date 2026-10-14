@@ -155,7 +155,7 @@ variables:
     - cd swirlapp-web
     - npm ci
   script:
-    - npm run test:e2e
+    - npm run test:e2e:ci
   artifacts:
     name: "swirl-demo-app-e2e-$CI_COMMIT_SHORT_SHA"
     expose_as: "Playwright E2E report"

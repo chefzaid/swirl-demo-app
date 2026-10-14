@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 LOCKFILE = "swirlapp-web/package-lock.json"
-RUNNERS = (".gitlab-ci.yml", "infra/compose/compose.test.yaml")
+RUNNERS = (".gitlab-ci.yml", "infra/compose/compose.test.yaml", "infra/scripts/run-visual-tests.sh")
 IMAGE = re.compile(r"mcr\.microsoft\.com/playwright(?::v([0-9][^\s@\"'-]*)-[a-z]+)?(@sha256:[0-9a-f]{64})?")
 
 

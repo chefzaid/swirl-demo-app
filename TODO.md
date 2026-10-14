@@ -101,7 +101,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [x] Add mutation testing for service and event-state logic.
 - [x] Add REST-assured or full-context HTTP integration tests against packaged applications.
 - [x] Add accessibility testing for the Angular critical path and automated checks for keyboard navigation and semantic labels.
-- [ ] Add visual regression tests for the deliberately small UI surface.
+- [x] Add visual regression tests for the deliberately small UI surface. `e2e/visual.spec.ts` compares the login, user, and order screens in Chromium, Firefox, and WebKit against baselines made in the pinned Playwright image, and the optional E2E job runs it.
 - [ ] Extend the existing automatic Sonar reporting with Java 25-specific analyzer validation, OWASP Dependency-Check, and opt-in enforcement of quality gates.
 - [x] Add Markdown linting and internal-link validation for `README.md`, `TODO.md`, and `docs/`.
 

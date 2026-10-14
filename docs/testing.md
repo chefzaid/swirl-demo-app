@@ -21,7 +21,7 @@ Frontend layers:
 - auth guard and interceptor tests
 - public runtime-configuration validation and startup failures
 - notification and error behavior tests
-- Playwright smoke journey and WCAG 2.2 AA accessibility checks against the development UI
+- Playwright smoke journey, WCAG 2.2 AA accessibility checks, and visual regression screenshots against the development UI
 - Playwright live/full-stack journey through Keycloak and both secured APIs
 
 Deployment layers:
@@ -216,6 +216,28 @@ cd swirlapp-web
 npm run test:e2e
 ```
 
+### Visual regression
+
+`e2e/visual.spec.ts` compares full-page screenshots of the login, user, and
+order screens, served from the same fixtures, with committed baselines in
+`e2e/visual.spec.ts-snapshots/` for Chromium, Firefox, and WebKit. A pixel
+counts as changed when its color moves by more than about five levels per
+channel, which ignores antialiasing noise but catches layout, text, and theme
+color changes; any changed pixel fails the check, and the report holds the
+expected, actual, and diff images. Fonts and rendering differ between systems,
+so the baselines are only valid in the pinned Playwright Linux image that CI
+uses. Run the check in that image, and rewrite the baselines that differ after
+an intended UI change or a Playwright upgrade:
+
+```bash
+infra/scripts/run-visual-tests.sh
+infra/scripts/run-visual-tests.sh --update
+```
+
+Review the rewritten images before committing them. The script keeps the
+container's Linux `node_modules` in a named volume and returns ownership of the
+reports and baselines it writes to you.
+
 ### Authenticated integration
 
 `e2e/live-cluster.spec.ts`:
@@ -253,12 +275,13 @@ Browser projects:
 
 CI retries failures twice with one worker and forbids committed focused tests.
 
-The E2E job in `.gitlab-ci.yml` and the Compose `test-runner` use the
-`mcr.microsoft.com/playwright` image of the locked `@playwright/test` release,
-because each image carries only its own release's browser builds. When an
-upgrade raises `@playwright/test`, change both image tags in the same commit and
-pin the CI image's new digest; the build job's `check-playwright-images.py`
-fails until they match.
+The E2E job in `.gitlab-ci.yml`, the Compose `test-runner`, and
+`run-visual-tests.sh` use the Playwright image of the locked
+`@playwright/test` release, because each image carries only its own release's
+browser builds. When an upgrade raises `@playwright/test`, change the three
+image tags in the same commit, pin the CI image's new digest, and regenerate the
+visual baselines; the build job's `check-playwright-images.py` fails until the
+tags match.
 
 Artifacts:
 
@@ -381,7 +404,7 @@ Not yet first-class:
 - automated Flyway upgrade tests from every supported schema version
 - durable DLT/replay and consumer restart tests
 - consumer-driven HTTP/event contracts
-- load, soak, chaos, and visual-regression suites
+- load, soak, and chaos suites
 - automated container and secret scanning beyond the current dependency and SonarQube reports
 
 Track these in [TODO.md](../TODO.md), not as existing coverage.

@@ -211,6 +211,7 @@ Implemented verification layers:
 - frontend V8 coverage and JUnit-compatible CI output
 - Playwright browser tests for Chromium, Firefox, and WebKit
 - mocked local UI journeys and live Keycloak/API acceptance
+- visual regression screenshots of the login, user, and order screens in all three browsers
 - containerized full-stack acceptance through `infra/compose/compose.test.yaml`
 - production Angular build and Playwright TypeScript checks in GitLab CI
 - immutable JAR archiving after successful builds

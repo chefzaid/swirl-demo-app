@@ -1,0 +1,45 @@
+# Weekly grouped upgrades. Minor and patch updates of one ecosystem arrive as one
+# pull request; majors stay separate because they usually need code changes.
+# Branches sync to GitLab, whose pipeline verifies each upgrade before merge.
+version: 2
+
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      maven:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /swirlapp-web
+    schedule:
+      interval: weekly
+    groups:
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*"]
+      npm:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directories:
+      - /swirlapp-user
+      - /swirlapp-order
+      - /swirlapp-web
+      - /.devcontainer
+    schedule:
+      interval: weekly
+    groups:
+      container-images:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker-compose
+    directories:
+      - /infra/compose
+      - /.devcontainer
+    schedule:
+      interval: weekly
+    groups:
+      compose-images:
+        update-types: [minor, patch]

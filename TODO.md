@@ -98,7 +98,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Separate example-domain modules from reusable starters so adopters can remove users/orders without untangling infrastructure code.
 - [ ] Package request IDs, Problem Details, rate limiting, auditing, Kafka reliability, security defaults, and test fixtures as optional internal starters.
 - [ ] Add a third minimal reference service only if it proves a missing pattern such as synchronous resilience, saga compensation, or gRPC.
-- [ ] Add Renovate or Dependabot with grouped, verified platform upgrades.
+- [x] Add Renovate or Dependabot with grouped, verified platform upgrades.
 - [ ] Add a documented compatibility matrix and automated upgrade tests for supported Java, Node, browser, database, Kafka, and Kubernetes versions.
 
 ## Product Direction (added 2026-10-05)

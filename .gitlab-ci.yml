@@ -245,12 +245,17 @@ variables:
     - mkdir -p security-reports
     - trivy fs --offline-scan --include-dev-deps --scanners vuln,misconfig,secret --skip-dirs '**/.git' --skip-dirs '**/.cache' --skip-dirs '**/node_modules' --skip-dirs '**/target' --skip-dirs '**/dist' --skip-dirs '**/coverage' --format json --output security-reports/trivy.json .
     - trivy convert --scanners vuln,misconfig,secret --format sarif --output security-reports/trivy.sarif security-reports/trivy.json
+    # Inventory every Maven and npm dependency, including build-time ones, before the gate can stop the job.
+    - trivy fs --offline-scan --include-dev-deps --format cyclonedx --skip-dirs '**/.git' --skip-dirs '**/.cache' --skip-dirs '**/node_modules' --skip-dirs '**/target' --skip-dirs '**/dist' --skip-dirs '**/coverage' --output security-reports/sbom.cdx.json .
     - trivy convert --scanners vuln,misconfig,secret --severity HIGH,CRITICAL --format table --exit-code 1 security-reports/trivy.json
   allow_failure: true
   artifacts:
     name: "swirl-demo-app-security-$CI_COMMIT_SHORT_SHA"
     when: always
     expire_in: 7 days
+    reports:
+      cyclonedx:
+        - security-reports/sbom.cdx.json
     paths:
       - security-reports/
   rules:

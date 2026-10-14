@@ -1,5 +1,11 @@
 package dev.swirlit.demo.user.http;
 
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -88,5 +94,25 @@ class UserApiHttpTest {
                 .getStatusCode().value()).isEqualTo(200);
         assertThat(client.get().uri("/api/users").retrieve().toBodilessEntity()
                 .getStatusCode().value()).isEqualTo(401);
+    }
+
+    @Test
+    void oversizedBodiesAreRejectedWhetherOrNotTheyDeclareTheirLength() throws Exception {
+        String oversized = "{\"name\":\"" + "x".repeat(70_000) + "\"}";
+        URI users = URI.create("http://localhost:" + port + "/api/users");
+        try (HttpClient http = HttpClient.newHttpClient()) {
+            HttpResponse<String> declared = http.send(HttpRequest.newBuilder(users)
+                    .header(HttpHeaders.AUTHORIZATION, BEARER).header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(oversized)).build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> chunked = http.send(HttpRequest.newBuilder(users)
+                    .header(HttpHeaders.AUTHORIZATION, BEARER).header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofInputStream(
+                            () -> new ByteArrayInputStream(oversized.getBytes(StandardCharsets.UTF_8))))
+                    .build(), HttpResponse.BodyHandlers.ofString());
+
+            assertThat(declared.statusCode()).isEqualTo(413);
+            assertThat(chunked.statusCode()).isEqualTo(413);
+            assertThat(chunked.body()).contains("\"title\":\"Payload too large\"");
+        }
     }
 }

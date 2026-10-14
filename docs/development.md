@@ -248,6 +248,7 @@ The roadmap keeps a stricter application-only dev-container direction: environme
 | `APP_MESSAGING_EVENT_RETENTION_DRY_RUN` | log how many outbox and inbox rows the retention job would delete instead of deleting them | `false` |
 | `APP_MESSAGING_DEAD_LETTER_RETENTION` | how long new dead-letter topics keep records | `14d` |
 | `APP_SECURITY_ROLES_OPERATOR` | Keycloak realm role required to list and replay dead letters; blank lets any authenticated caller | blank |
+| `APP_REQUEST_SIZE_MAX` | largest accepted request body, as a Spring data size | `64KB` |
 | `APP_SECURITY_ROLES_USER_ADMIN` | Keycloak realm role required to delete users; blank lets any authenticated caller delete | blank (`user-admin` in Compose) |
 | `APP_API_DOCS_ENABLED` | publish Swagger UI and OpenAPI documents; the `uat`/`prod` profiles default to `false` | `true` |
 | `RATE_LIMIT_REQUESTS_PER_MINUTE` | per-instance API limit | default `120` |

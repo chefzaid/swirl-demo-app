@@ -8,6 +8,7 @@ echo "  mask install [back|front|all]  - install dependencies"
 echo "  mask test [back|front|all]     - run tests"
 echo "  mask coverage [back|front|all] - run coverage commands"
 echo "  mask build [back|front|all]    - build apps"
+echo "  mask mutation                  - run backend mutation tests"
 echo "  mask run [all|user|order|front] - run apps (default: all)"
 ```
 
@@ -55,6 +56,14 @@ elif [ "$target" = "front" ]; then
 else
   mvn clean verify && cd swirlapp-web && npm run test:coverage
 fi
+```
+
+## mutation
+
+```bash
+. ./infra/scripts/mask-helpers.sh
+use_java_25_if_available
+mvn -Pmutation verify
 ```
 
 ## build

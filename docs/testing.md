@@ -41,6 +41,12 @@ Backend reactor, tests, coverage report, and gate:
 mvn clean verify
 ```
 
+Mutation testing of the service and event-state classes with PIT (slower, so opt-in; fails below an 85 percent mutation score per module, reports in `*/target/pit-reports/`):
+
+```bash
+mvn -Pmutation verify
+```
+
 Frontend unit tests and production build:
 
 ```bash
@@ -336,7 +342,7 @@ Not yet first-class:
 - automated Flyway upgrade tests from every supported schema version
 - durable DLT/replay and consumer restart tests
 - consumer-driven HTTP/event contracts
-- mutation, load, soak, chaos, and visual-regression suites
+- load, soak, chaos, and visual-regression suites
 - automated container and secret scanning beyond the current dependency and SonarQube reports
 
 Track these in [TODO.md](../TODO.md), not as existing coverage.

@@ -297,6 +297,8 @@ Interpretation:
 - missing user should produce a normal `REJECTED` result
 - database/network/runtime failures should retry, not reject
 - malformed identity/status/state is non-retryable and moves toward DLT
+- a record the consumer cannot deserialize (invalid JSON, an unknown `OrderStatus` value) goes to the DLT at once with its original bytes, and the `springDeserializerExceptionValue` header records why; the partition keeps moving
+- a record with a newer `schemaVersion` than the consumer supports is dead-lettered; replay it after upgrading the consumer
 - result publication is awaited before the request record is acknowledged
 
 The repository does not yet provide an operator-safe replay command. Preserve the original record and headers, identify/fix the cause, and use platform Kafka procedures. Track replay manually to prevent duplicates. Durable replay tooling is in the roadmap.

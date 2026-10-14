@@ -91,14 +91,14 @@ mask build all
 - `RateLimitFilterTest`: allowed requests, response headers, and `429` rejection after the configured limit
 - `GlobalExceptionHandlerLoggingTest`: constraint violations log the SQL state, never the rejected values
 - `FailOpenCacheErrorHandlerTest`: an unreachable cache turns into logged misses, so cached reads and evicting writes still succeed, and counts each failure
-- `KafkaReliabilityConfigTest`: environment-scoped topics and dead-letter topics, and per-topic retry and dead-letter counters
+- `KafkaReliabilityConfigTest`: environment-scoped topics and dead-letter topics, per-topic retry and dead-letter counters, and unreadable records dead-lettered as their original bytes
 - `MessagingHealthIndicatorTest`: optional messaging degrades, required messaging goes down, and probes reuse the last background check
 - `AuditTrailTest`: audit entries name the token subject and resource ID, wait for the transaction to commit, and cover rejected tokens and denied requests
 - `HttpApiTestSupport`: shared client and token setup for the HTTP tests, published in the module's test JAR
 - `ArchitectureRules`: shared ArchUnit rules, published in the module's test JAR: each module depends only on itself and `swirlapp-common`; controllers, services, and repositories stay layered; domain classes stay independent; no field injection, `java.util.logging`, or standard streams
 - `CommonArchitectureTest`: the shared module never depends on a service module
 - `OrderEventTest`: new events carry the current schema version, unversioned payloads read as version 1, and only newer major versions are refused
-- `EventCompatibilityContract`: published in the test JAR and run by each service as `EventCompatibilityTest` with its own Kafka settings: written payloads carry no Java type header, and payloads from older producers or with unknown fields still read
+- `EventCompatibilityContract`: published in the test JAR and run by each service as `EventCompatibilityTest` with its own Kafka settings: written payloads carry no Java type header, payloads from older producers or with unknown fields still read, and unreadable payloads reach the error handler instead of failing the poll
 
 ### User service
 

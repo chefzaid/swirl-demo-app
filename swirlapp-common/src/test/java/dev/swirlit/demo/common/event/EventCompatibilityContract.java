@@ -2,16 +2,22 @@ package dev.swirlit.demo.common.event;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Map;
 
 import dev.swirlit.demo.common.domain.OrderStatus;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeaders;
+import org.apache.kafka.common.serialization.Deserializer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
-import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
+import org.springframework.kafka.support.serializer.SerializationUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,10 +67,30 @@ public abstract class EventCompatibilityContract {
                 Instant.parse("2026-10-14T10:00:00Z")));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"orderId\":7,\"status\":\"CANCELLED\"}",
+            "{\"orderId\":",
+            "not json"})
+    void handsUnreadableRecordsToTheErrorHandlerInsteadOfFailingThePoll(String payload) {
+        RecordHeaders headers = new RecordHeaders();
+
+        assertThat(read(payload, headers)).isNull();
+        assertThat(headers.lastHeader(SerializationUtils.VALUE_DESERIALIZER_EXCEPTION_HEADER)).isNotNull();
+    }
+
     private OrderEvent read(String json, Headers headers) {
-        try (JacksonJsonDeserializer<Object> deserializer = new JacksonJsonDeserializer<>()) {
-            deserializer.configure(kafkaProperties.buildConsumerProperties(), false);
+        try (Deserializer<Object> deserializer = configuredDeserializer()) {
             return (OrderEvent) deserializer.deserialize(TOPIC, headers, json.getBytes(StandardCharsets.UTF_8));
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Deserializer<Object> configuredDeserializer() {
+        Map<String, Object> properties = kafkaProperties.buildConsumerProperties();
+        Deserializer<Object> deserializer = BeanUtils.instantiateClass(
+                (Class<Deserializer<Object>>) properties.get(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG));
+        deserializer.configure(properties, false);
+        return deserializer;
     }
 }

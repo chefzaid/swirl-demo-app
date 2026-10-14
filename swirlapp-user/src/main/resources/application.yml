@@ -53,8 +53,11 @@ spring:
       group-id: ${KAFKA_CONSUMER_GROUP:${KAFKA_TOPIC_PREFIX:}user-service-group}
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      # Unreadable records surface in the listener's error handler and go to the dead-letter topic instead of
+      # failing every poll and stopping the partition.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
         spring.json.trusted.packages: dev.swirlit.demo.common.event
         spring.json.value.default.type: dev.swirlit.demo.common.event.OrderEvent
         # The payload alone defines the contract; a Java class name in a header would couple it to code layout.

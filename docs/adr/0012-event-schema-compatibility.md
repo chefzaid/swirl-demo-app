@@ -14,11 +14,12 @@ Both services deploy independently and roll pods one at a time, so for a while a
 | Change | Allowed within a version | How to ship it |
 | --- | --- | --- |
 | Add an optional field | yes | Deploy in any order; readers ignore fields they do not know, and a missing field reads as null |
-| Add a value to `OrderStatus` | only consumers first | Deploy every consumer that can read the value before any producer sends it |
+| Add a value to `OrderStatus` | only consumers first | Deploy every consumer that can read the value before any producer sends it; an older consumer dead-letters the record |
 | Remove, rename, or retype a field, or make one required | no | Raise `schemaVersion`, deploy consumers that read both versions, then switch producers |
 | Rename or move the Java record | yes | The payload carries no Java type; consumers read the topic's default type |
 
 - A consumer refuses a major version newer than `OrderEvent.SCHEMA_VERSION` with a non-retryable error, so the record goes to the dead-letter topic and can be replayed after the consumer is upgraded instead of being misread.
+- Consumers wrap the JSON deserializer in `ErrorHandlingDeserializer`, so a record they cannot read reaches the error handler and is dead-lettered with its original bytes instead of failing every poll on that partition.
 - A payload without `schemaVersion`, from a producer or outbox row older than the field, is version 1.
 - Producers set `spring.json.add.type.headers: false` and consumers `spring.json.use.type.headers: false`, so the JSON payload alone is the contract.
 - `EventCompatibilityContract` runs in each service with its own Kafka settings: it reads an old payload with a foreign type header, reads a payload with unknown fields, and checks the written payload carries no type header.

@@ -155,7 +155,12 @@ class RenderingTests(unittest.TestCase):
         RENDER.render(self.root, INVENTORY, "uat", RELEASE, "a" * 40)
         self.assertEqual(snapshot, {p: p.read_bytes() for p in settings.parent.iterdir()})
         rendered = subprocess.run(["kubectl", "kustomize", str(settings.parent)], text=True, capture_output=True, check=True)
-        self.assertTrue(all(item["spec"]["replicas"] == 2 for item in yaml.safe_load_all(rendered.stdout) if item["kind"] == "Deployment"))
+        resources = list(yaml.safe_load_all(rendered.stdout))
+        deployments = {item["metadata"]["name"] for item in resources if item["kind"] == "Deployment"}
+        autoscalers = {item["spec"]["scaleTargetRef"]["name"]: item["spec"]["minReplicas"]
+                       for item in resources if item["kind"] == "HorizontalPodAutoscaler"}
+        self.assertTrue(all("replicas" not in item["spec"] for item in resources if item["kind"] == "Deployment"))
+        self.assertEqual(dict.fromkeys(deployments, 2), autoscalers)
 
     def test_shared_cluster_resources_and_references_are_isolated_by_namespace(self):
         inventory = shared_inventory()

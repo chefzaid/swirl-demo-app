@@ -4,15 +4,15 @@ namespace: apps
 resources:
 - ../../k8s
 - disruption-budgets.yaml
+- autoscaling.yaml
 # Patches stay inline: standalone partial Deployments are scanned as complete
 # workloads and reported as missing their (inherited) security context.
 patches:
 - target:
     kind: Deployment
   patch: |-
-    - op: add
+    - op: remove
       path: /spec/replicas
-      value: 2
     - op: add
       path: /spec/minReadySeconds
       value: 5

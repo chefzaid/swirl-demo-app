@@ -310,8 +310,14 @@ schedules, troubleshooting and adaptation to another application.
 
 ## Future multi-node HA profile
 
-`infra/overlays/ha` runs two copies of each API and frontend, spreads Pods across
-hostnames and adds disruption budgets. Enable `highAvailability` in the selected
+`infra/overlays/ha` runs at least two copies of each API and frontend, spreads Pods across
+hostnames and adds disruption budgets. CPU-based HorizontalPodAutoscalers scale each
+workload between 2 and 4 replicas at 70 percent of its CPU request, waiting five
+minutes before scaling down; they need the metrics API (metrics-server) on the
+cluster. The overlay removes `spec.replicas` from the Deployments, so the
+autoscalers own the replica count and Argo CD self-healing does not undo a scale.
+Rolling updates add one Pod before removing one (`maxSurge: 1`,
+`maxUnavailable: 0`) and count a Pod as available after 5 ready seconds. Enable `highAvailability` in the selected
 environment's settings only after at least two eligible hosts and their ingress
 routing are ready. Other environments keep their own profile. The overlay
 inherits the selected digest and generated runtime configuration.

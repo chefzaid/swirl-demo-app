@@ -76,7 +76,8 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 
 - [ ] Add environment-specific Kustomize overlays or a Helm chart for names, domains, registry, replicas, and resource sizing.
 - [ ] Add an optional API-gateway profile for centralized routing, authentication policy, quotas, contract publication, and edge observability without replacing service-side controls.
-- [ ] Add HorizontalPodAutoscaler, PodDisruptionBudget, topology spread, and rolling/canary deployment examples.
+- [x] Add HorizontalPodAutoscaler, PodDisruptionBudget, topology spread, and rolling/canary deployment examples. The HA overlay carries the autoscalers, disruption budgets, topology spread and rolling-update settings; canary delivery is split out below.
+- [ ] Add a canary deployment example (for example Argo Rollouts with an analysis step on error rate), kept optional like the HA overlay.
 - [ ] Add explicit egress NetworkPolicies for PostgreSQL, Redis, Kafka, Keycloak, DNS, and approved external endpoints.
 - [ ] Add optional service-mesh documentation only when mTLS, traffic policy, or service-to-service telemetry is demonstrated.
 - [ ] Add ephemeral preview environments and automated teardown for pull requests.

@@ -43,6 +43,6 @@ Three partitions cap active consumption parallelism per group at three.
 
 Producer idempotence does not make the database insert and event publish atomic. A process can fail between them and strand an order. [ADR 0011](0011-transactional-outbox.md) closes that gap with a transactional outbox, and the order service records applied result IDs in an inbox so redelivered results are skipped across restarts.
 
-DLT records require inspection/retention/replay operations that are not yet automated.
+DLT records are kept for 14 days and can be listed and replayed through `/actuator/deadletters` ([runbook](../operations.md#inspect-and-replay-dead-letters)); bulk replay stays a manual, per-record decision.
 
 Event schema changes follow [ADR 0012](0012-event-schema-compatibility.md): additive within a major `schemaVersion`, and a newer major version is dead-lettered rather than misread.

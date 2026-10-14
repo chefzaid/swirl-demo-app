@@ -119,6 +119,7 @@ Implemented Kafka behavior:
 - idempotent handling of duplicate final results, backed by an [inbox table](data-model.md#transactions-and-consistency) keyed by event ID so it survives restarts
 - edited orders return to `PENDING` and publish a fresh validation request
 - [transactional outbox](adr/0011-transactional-outbox.md): order validation requests are recorded with the order change and published by a relay that retries until Kafka acknowledges them, with backlog metrics and alerting
+- [dead-letter inspection and replay](operations.md#inspect-and-replay-dead-letters) through `/actuator/deadletters`, with 14-day dead-letter retention, an operator role, and audit entries
 - a scheduled [retention job](data-model.md#event-contract) that purges old outbox and inbox rows on one replica at a time (ShedLock), deletes by age so repeated runs are harmless, and supports a dry run
 - late results for superseded edits or deleted orders are ignored safely
 - rejection of invalid order state transitions

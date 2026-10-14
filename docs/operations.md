@@ -301,7 +301,30 @@ Interpretation:
 - a record with a newer `schemaVersion` than the consumer supports is dead-lettered; replay it after upgrading the consumer
 - result publication is awaited before the request record is acknowledged
 
-The repository does not yet provide an operator-safe replay command. Preserve the original record and headers, identify/fix the cause, and use platform Kafka procedures. Track replay manually to prevent duplicates. Durable replay tooling is in the roadmap.
+### Inspect and replay dead letters
+
+Dead-letter topics are the quarantine: a record stays there, untouched, until someone replays it or the topic's retention (14 days, `APP_MESSAGING_DEAD_LETTER_RETENTION`) removes it. Kafka applies that retention only when it creates the topic; change an existing topic with the platform's Kafka tooling.
+
+Each service exposes `/actuator/deadletters` on its management port. The ingress does not route it, so reach it from inside the cluster, for example with `kubectl -n apps port-forward deploy/swirlapp-user 8080`. With API security on it needs a bearer token, and the realm role named by `APP_SECURITY_ROLES_OPERATOR` when that is set.
+
+1. List the newest records (20 by default, `?limit=` up to 200), newest first:
+
+   ```bash
+   curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/actuator/deadletters
+   ```
+
+   Each entry names the dead-letter topic, partition, offset, original topic, key (the order ID), `swirl-event-id`, and the failure class and message. Payloads are left out because results carry user names.
+2. Fix the cause first: deploy the consumer that reads a newer schema, restore the missing reference data, or correct the configuration. A record that fails deterministically only comes back.
+3. Replay one record to the topic it failed on:
+
+   ```bash
+   curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+     -d '{"topic":"order_topic.DLT","partition":0,"offset":7}' http://localhost:8080/actuator/deadletters
+   ```
+
+   The replay keeps the original bytes, key, and headers (including `swirl-event-id`), drops the dead-letter headers, and adds `swirl-replayed-from`. Consumers treat it like a redelivery, so replaying the same record twice is harmless: the order service's inbox skips a result it already applied. Each replay writes a `dead-letter.replayed` audit entry.
+
+A record that fails again lands back in the dead-letter topic with `replayedFrom` set, which shows it has already been tried.
 
 ### Order events are waiting in the outbox
 

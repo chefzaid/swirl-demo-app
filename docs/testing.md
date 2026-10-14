@@ -91,6 +91,8 @@ mask build all
 - `RateLimitFilterTest`: allowed requests, response headers, and `429` rejection after the configured limit
 - `GlobalExceptionHandlerLoggingTest`: constraint violations log the SQL state, never the rejected values
 - `FailOpenCacheErrorHandlerTest`: an unreachable cache turns into logged misses, so cached reads and evicting writes still succeed, and counts each failure
+- `DeadLettersTest`: newest dead letters across topics without payloads, replay of original bytes, key, and event ID to the source topic, and refusal of foreign topics, missing offsets, and unknown original topics
+- `GlobalExceptionHandlerStatusTest`: deliberate 4xx `ResponseStatusException`s keep their status, server errors stay generic, and denied access is 403
 - `KafkaReliabilityConfigTest`: environment-scoped topics and dead-letter topics, per-topic retry and dead-letter counters, and unreadable records dead-lettered as their original bytes
 - `MessagingHealthIndicatorTest`: optional messaging degrades, required messaging goes down, and probes reuse the last background check
 - `AuditTrailTest`: audit entries name the token subject and resource ID, wait for the transaction to commit, and cover rejected tokens and denied requests
@@ -112,6 +114,7 @@ mask build all
 - `UserArchitectureTest`: the shared `ArchitectureRules` for the user service
 - `UserApiHttpTest`: over real HTTP, create/list/delete with duplicate rejection, CORS preflight for allowed and foreign origins, and public probes beside a protected API
 - `UserAuthorizationMatrixTest`: over real HTTP with Keycloak-shaped tokens, anonymous, forged, authenticated, wrong-role, and permitted callers each get the expected status, and denied deletes never reach the service
+- `DeadLetterEndpointTest`: over real HTTP, `/actuator/deadletters` rejects anonymous callers, forbids callers without the operator role, and answers a replay of a foreign topic with 400
 - `SecurityAuditTest`: denied anonymous requests and rejected bearer tokens reach the audit trail without the token
 - `MessagingReadinessTest`: a `DEGRADED` messaging contributor keeps readiness at 200, a `DOWN` one turns it to 503, and liveness ignores both
 - `LatencyObjectiveMetricsTest` and `TracingTest`: request timers publish the 300 ms objective bucket; incoming `traceparent` headers reach the logging MDC and outgoing Kafka records

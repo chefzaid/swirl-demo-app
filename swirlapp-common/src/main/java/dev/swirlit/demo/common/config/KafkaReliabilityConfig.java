@@ -6,6 +6,7 @@ import java.util.Map;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
@@ -23,20 +24,33 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.listener.RetryListener;
 import org.springframework.util.backoff.FixedBackOff;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.config.TopicConfig;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "app.messaging.enabled", havingValue = "true")
 public class KafkaReliabilityConfig {
 
+    /**
+     * Declares the topics a new cluster needs. Dead-letter topics keep records for
+     * {@code app.messaging.dead-letter-retention} (14 days by default), long enough to inspect and replay them
+     * after a weekend; Kafka applies the setting only when it creates the topic.
+     */
     @Bean
     NewTopics applicationTopics(
             @Value("${app.messaging.topics.order:order_topic}") String orderTopic,
-            @Value("${app.messaging.topics.result:order_result_topic}") String resultTopic) {
+            @Value("${app.messaging.topics.result:order_result_topic}") String resultTopic,
+            @Value("${app.messaging.dead-letter-retention:14d}") java.time.Duration deadLetterRetention) {
         return new NewTopics(
                 TopicBuilder.name(orderTopic).partitions(3).build(),
                 TopicBuilder.name(resultTopic).partitions(3).build(),
-                TopicBuilder.name(orderTopic + ".DLT").partitions(3).build(),
-                TopicBuilder.name(resultTopic + ".DLT").partitions(3).build());
+                deadLetterTopic(orderTopic, deadLetterRetention),
+                deadLetterTopic(resultTopic, deadLetterRetention));
+    }
+
+    private static NewTopic deadLetterTopic(String sourceTopic, java.time.Duration retention) {
+        return TopicBuilder.name(sourceTopic + ".DLT").partitions(3)
+                .config(TopicConfig.RETENTION_MS_CONFIG, Long.toString(retention.toMillis()))
+                .build();
     }
 
     @Bean

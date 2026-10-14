@@ -389,6 +389,7 @@ Actuator health and metrics are unauthenticated at the Spring filter level for p
 
 - public ingress maps only `/health/user` and `/health/order` to the health summary
 - metrics and other Actuator routes use ClusterIP services
+- `/actuator/deadletters` additionally needs a bearer token, and the `APP_SECURITY_ROLES_OPERATOR` realm role when set, because it can replay records; it never returns payloads
 - NetworkPolicy restricts traffic to the declared application and ingress paths
 - an egress NetworkPolicy limits application pods to their datastores, DNS, the identity provider and public HTTPS; `check-manifest-policy.py` fails any target that ships NetworkPolicies without an egress policy covering every workload
 

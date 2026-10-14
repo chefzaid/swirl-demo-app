@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
@@ -112,6 +113,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     ProblemDetail handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException exception) {
         return problem(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported media type", "Use a supported Content-Type");
+    }
+
+    /** Keeps the status of a deliberate {@code ResponseStatusException}, such as actuator's bad-request errors. */
+    @ExceptionHandler(ResponseStatusException.class)
+    ProblemDetail handleResponseStatus(ResponseStatusException exception) {
+        HttpStatus status = HttpStatus.resolve(exception.getStatusCode().value());
+        if (status == null || status.is5xxServerError()) {
+            return handleUnexpected(exception);
+        }
+        String detail = exception.getReason() == null ? status.getReasonPhrase() : exception.getReason();
+        return problem(status, status.getReasonPhrase(), detail);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

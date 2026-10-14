@@ -95,6 +95,8 @@ app:
     roles:
       # Realm role needed to delete users; blank lets any authenticated caller delete.
       user-admin: ${APP_SECURITY_ROLES_USER_ADMIN:}
+      # Realm role needed to list and replay dead letters; blank lets any authenticated caller.
+      operator: ${APP_SECURITY_ROLES_OPERATOR:}
   messaging:
     enabled: ${KAFKA_ENABLED:false}
     # true takes pods out of service while Kafka is unreachable; false keeps accepting orders as PENDING.
@@ -116,7 +118,8 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        # deadletters is not routed by the ingress and needs a token (and the operator role, if set).
+        include: health,info,metrics,prometheus,deadletters
   endpoint:
     health:
       probes:

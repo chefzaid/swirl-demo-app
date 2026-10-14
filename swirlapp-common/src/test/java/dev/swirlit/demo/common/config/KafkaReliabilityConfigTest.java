@@ -1,7 +1,9 @@
 package dev.swirlit.demo.common.config;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -34,11 +36,16 @@ import static org.mockito.Mockito.when;
 class KafkaReliabilityConfigTest {
     @Test
     void topicsAndDeadLettersStayInTheSelectedEnvironment() {
-        var topics = new KafkaReliabilityConfig().applicationTopics("swirl-demo-app.int.order_topic", "swirl-demo-app.int.order_result_topic");
+        var topics = new KafkaReliabilityConfig().applicationTopics("swirl-demo-app.int.order_topic",
+                "swirl-demo-app.int.order_result_topic", Duration.ofDays(14));
         Collection<NewTopic> declared = ReflectionTestUtils.invokeMethod(topics, "getNewTopics");
         assertEquals(Set.of("swirl-demo-app.int.order_topic", "swirl-demo-app.int.order_result_topic",
                 "swirl-demo-app.int.order_topic.DLT", "swirl-demo-app.int.order_result_topic.DLT"),
                 declared.stream().map(NewTopic::name).collect(Collectors.toSet()));
+        assertEquals(Map.of("swirl-demo-app.int.order_topic.DLT", "1209600000",
+                "swirl-demo-app.int.order_result_topic.DLT", "1209600000"),
+                declared.stream().filter(topic -> topic.configs() != null && !topic.configs().isEmpty())
+                        .collect(Collectors.toMap(NewTopic::name, topic -> topic.configs().get("retention.ms"))));
     }
 
     @Test

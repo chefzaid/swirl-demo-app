@@ -14,6 +14,8 @@ Swirl Demo App is a reusable application template, not a product roadmap. New wo
 
 Bugs, failing checks, security findings, and code smells found while working on another task. Each entry names the file or area, what is wrong, and how to reproduce it.
 
+- [x] `swirlapp-web` coverage counts only files that some spec imports, so an untested file is invisible rather than reported at 0% (`NotificationComponent` showed up only once `AppComponent` gained a spec). Reproduce: `npm run test:coverage` lists no row for `src/main.ts` or any file no spec loads. Fixed: `angular.json` now includes `src/**/*.ts` and excludes only the bootstrap glue (`src/main.ts`, `src/environments/`).
+
 ## Needs Input
 
 Parts of tasks that cannot advance without the owner's decision or information. Only the part needing input is set aside here; the rest of the task keeps moving. Answer under the item, and the next agent run applies the answer and removes the entry.

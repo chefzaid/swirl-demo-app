@@ -116,6 +116,13 @@
             ],
             "buildTarget": ":build:testing",
             "runner": "vitest",
+            "coverageInclude": [
+              "src/**/*.ts"
+            ],
+            "coverageExclude": [
+              "src/main.ts",
+              "src/environments/**"
+            ],
             "coverageThresholds": {
               "statements": 85,
               "branches": 85,

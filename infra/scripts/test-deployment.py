@@ -328,6 +328,46 @@ class RenderingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "apiDocs must be boolean"):
             RENDER.render(self.root, INVENTORY, "prod", RELEASE, "a" * 40)
 
+    def test_edge_rate_limit_is_opt_in_and_runs_before_upload_buffering(self):
+        settings = self.root / "infra/environments/uat/settings.json"
+
+        def routes():
+            rendered = subprocess.run(["kubectl", "kustomize", str(settings.parent)], text=True, capture_output=True, check=True)
+            resources = list(yaml.safe_load_all(rendered.stdout))
+            chains = {item["metadata"]["name"]: item["metadata"]["annotations"]["traefik.ingress.kubernetes.io/router.middlewares"]
+                      for item in resources if item["kind"] == "Ingress"}
+            return chains, {item["metadata"]["name"]: item["spec"] for item in resources if item["kind"] == "Middleware"}
+
+        RENDER.render(self.root, shared_inventory(), "uat", RELEASE, "a" * 40)
+        chains, middlewares = routes()
+        self.assertEqual({"swirl-demo-app-ingress": "apps-uat-swirl-demo-app-upload-limit@kubernetescrd",
+                          "swirl-demo-app-health": "apps-uat-swirl-demo-app-health@kubernetescrd"}, chains)
+        self.assertNotIn("swirl-demo-app-rate-limit", middlewares)
+        stored = json.loads(settings.read_text())
+        self.assertNotIn("edgeRateLimit", stored)
+        settings.write_text(json.dumps({**stored, "edgeRateLimit": {"average": 20, "burst": 40}}))
+        for _ in range(2):
+            RENDER.render(self.root, shared_inventory(), "uat", RELEASE, "a" * 40)
+            chains, middlewares = routes()
+            self.assertEqual({"swirl-demo-app-ingress": "apps-uat-swirl-demo-app-rate-limit@kubernetescrd,"
+                                                        "apps-uat-swirl-demo-app-upload-limit@kubernetescrd",
+                              "swirl-demo-app-health": "apps-uat-swirl-demo-app-rate-limit@kubernetescrd,"
+                                                       "apps-uat-swirl-demo-app-health@kubernetescrd"}, chains)
+            self.assertEqual({"average": 20, "burst": 40, "period": "1s", "sourceCriterion": {"ipStrategy": {"depth": 1, "ipv6Subnet": 64}}},
+                             middlewares["swirl-demo-app-rate-limit"]["rateLimit"])
+            self.assertEqual({"average": 20, "burst": 40}, json.loads(settings.read_text())["edgeRateLimit"])
+        with self.assertRaisesRegex(ValueError, "platform cluster"):
+            RENDER.render(self.root, INVENTORY, "uat", RELEASE, "a" * 40)
+        for value in ([20, 40], {"average": 20}, {"average": 0, "burst": 1}, {"average": True, "burst": 1},
+                      {"average": 1.5, "burst": 2}, {"average": 1000001, "burst": 1}, {"average": 1, "burst": 1, "period": "1m"}):
+            settings.write_text(json.dumps({"edgeRateLimit": value}))
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "edgeRateLimit needs whole"):
+                RENDER.render(self.root, shared_inventory(), "uat", RELEASE, "a" * 40)
+        # 20/40 above is the largest accepted burst for that average.
+        settings.write_text(json.dumps({"edgeRateLimit": {"average": 20, "burst": 41}}))
+        with self.assertRaisesRegex(ValueError, "at most twice average"):
+            RENDER.render(self.root, shared_inventory(), "uat", RELEASE, "a" * 40)
+
     def test_explicit_legacy_database_adoption_survives_production_rerenders(self):
         settings = self.root / "infra/environments/prod/settings.json"
         settings.parent.mkdir(parents=True)

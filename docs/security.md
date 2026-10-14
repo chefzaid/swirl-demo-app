@@ -18,7 +18,7 @@ Implemented controls:
 - body/path/query validation and explicit DTO boundaries
 - Problem Details responses that do not expose stack traces
 - fail-fast conflict checks plus database constraints
-- per-principal/IP in-process rate limiting
+- per-principal/IP in-process rate limiting, plus opt-in per-visitor throttling at Traefik
 - request-ID validation and correlation
 - H2 console disabled and disallowed in production
 - HTTPS-only public ingress
@@ -31,7 +31,8 @@ Implemented controls:
 Important limitations:
 
 - one role-gated operation (deleting users) and no ownership rules; deployed realms do not grant the role yet
-- no distributed/global rate limit
+- no distributed rate limit: edge throttling is off by default and counts per Traefik pod
+- no bot challenge in the template; it belongs to the Cloudflare zone
 - API documentation is public unless an environment turns it off
 - Prometheus endpoint is unauthenticated inside the cluster
 - no application field encryption/KMS example
@@ -240,7 +241,82 @@ Limitations:
 - it is not a volumetric DDoS defense
 - proxy identity correctness depends on the trusted forwarded-header/ingress path
 
-Use Cloudflare/API-gateway or a shared distributed limiter for global enforcement. Keep the application filter as defense in depth.
+Use [edge throttling](#edge-throttling), Cloudflare, or a shared distributed limiter for wider enforcement. Keep the application filter as defense in depth.
+
+### Edge Throttling
+
+An environment can also throttle each visitor at Traefik, before a request
+reaches an application pod. It is off by default. Set `edgeRateLimit` in that
+environment's [settings](deployment.md#add-or-reconfigure-this-repository), for
+example `{"average": 50, "burst": 100}`. The renderer then chains the
+`swirl-demo-app-rate-limit` Middleware ahead of `swirl-demo-app-upload-limit`
+and the `/health/*` path rewrite, so Traefik answers a throttled request with
+`429` before it buffers the body or reaches a health check, which reads the
+database.
+
+Traefik keeps a separate bucket for each Ingress path (`/api/users`,
+`/api/orders`, the three documentation paths, `/`, and each `/health/*` route),
+so a visitor gets `average` requests per second, with bursts of up to `burst`
+requests, on every path. A request beyond the burst waits at most half the
+interval between two requests at the average rate, and is refused otherwise.
+Size `burst` to cover the requests one page load sends together on `/`, since a
+high `average` with a small `burst` still refuses page loads. Traefik also
+forgets a visitor after about 2 idle seconds and then starts a full bucket, so
+`burst` can be at most twice `average`; a page load that needs a larger burst
+needs a higher `average`.
+
+Traefik picks the bucket from the last `X-Forwarded-For` entry it receives, and
+groups IPv6 visitors by `/64`. The platform Traefik keeps that header only from
+the peers it trusts: the Cloudflare edge in direct mode, or the Tunnel on
+loopback in HA mode. Cloudflare appends the address that connected to it, so the
+last entry is the visitor. A request from any other peer arrives with the header
+stripped, and all such requests share one bucket. The setting therefore needs a
+platform that receives its public traffic through Cloudflare. A direct-mode
+install that skipped Cloudflare, as `SERVER_EXPOSURE=local` does by default,
+would put every visitor in one bucket and the renderer cannot tell, so leave the
+setting off there. A remote cluster's Traefik trusts no forwarding proxy, so the
+renderer refuses the setting for remote environments.
+
+Throttled responses come from Traefik, not the application. They carry
+`Retry-After` and `X-Retry-In` but no `RateLimit-*` headers or `X-Request-Id`,
+and `swirl_rate_limit_rejections_total` does not count them.
+
+Limitations:
+
+- each Traefik pod counts on its own; the platform's HA mode runs one Traefik
+  per control-plane node, so a visitor can reach the node count times the
+  setting, whatever this application's `highAvailability` setting is
+- Traefik keeps the counters in memory and starts them afresh on restart and on
+  every routing change in the cluster, such as any rollout or scaling event, so
+  treat the limit as approximate
+- it is a per-visitor ceiling, not a volumetric DDoS defense; that stays with
+  Cloudflare
+
+### Bot Protection
+
+The template ships no bot challenge. The platform's admission policy rejects
+`forwardAuth`, `errors`, and plugin Middlewares in application namespaces, so a
+challenge cannot run in Traefik. Add one on the Cloudflare zone, scoped to this
+application's host. Basic Bot Fight Mode does not fit: it covers the whole zone
+and cannot be skipped by WAF rules, and the platform's Cloudflare setup turns it
+off because it challenges Docker Registry clients. Use a WAF custom rule with a
+Managed Challenge action instead, or Super Bot Fight Mode with a skip rule.
+
+Challenge page loads only. API clients and uptime checks cannot solve a
+challenge, and neither can the SPA's own requests for lazily loaded scripts and
+`/runtime-config.json` once the visitor's clearance expires. For example,
+challenge this expression, whose extensions match the static files NGINX
+serves without falling back to the app shell:
+
+```text
+http.host eq "demo.example.com"
+and not starts_with(http.request.uri.path, "/api/")
+and not starts_with(http.request.uri.path, "/health/")
+and not http.request.uri.path.extension in {"css" "js" "json" "ico" "png" "svg" "woff" "woff2"}
+```
+
+The platform's Cloudflare reconcile updates only the rules it names, so a rule
+added for the application is kept.
 
 ## HTTPS And Browser Headers
 

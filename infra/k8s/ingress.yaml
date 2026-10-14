@@ -82,6 +82,27 @@ spec:
   buffering:
     maxRequestBodyBytes: 10485760
 ---
+# Opt-in edge throttling: render-deployment.py chains this ahead of the upload
+# limit only for environments whose settings.json sets edgeRateLimit, and drops
+# it everywhere else. See docs/security.md#edge-throttling.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: swirl-demo-app-rate-limit
+  namespace: apps
+spec:
+  rateLimit:
+    average: 50
+    burst: 100
+    period: 1s
+    sourceCriterion:
+      ipStrategy:
+        # The platform Traefik keeps X-Forwarded-For only from its trusted edge
+        # (Cloudflare, or the Tunnel on loopback), whose last entry is the visitor.
+        depth: 1
+        # One IPv6 visitor usually holds a whole /64.
+        ipv6Subnet: 64
+---
 apiVersion: traefik.io/v1alpha1
 kind: ServersTransport
 metadata:

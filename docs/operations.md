@@ -430,10 +430,13 @@ When a caller receives `429`:
 
 - inspect `RateLimit-*` and `Retry-After`
 - correlate with `X-Request-Id`
+- a `429` with `X-Retry-In` but no `RateLimit-*` headers comes from the environment's
+  [edge throttling](security.md#edge-throttling); check its `edgeRateLimit` setting
+  and the Traefik access logs, since the application never saw the request
 - confirm traffic source and whether the caller is retrying too aggressively
 - do not raise limits until an abuse or capacity assessment is made
 
-With multiple replicas, each pod has independent counters. Global enforcement belongs at Cloudflare/API gateway or a shared store; the current limiter is defense in depth, not a complete DDoS control.
+With multiple replicas, each pod has independent counters. Wider enforcement belongs at Traefik, Cloudflare/API gateway or a shared store; the current limiter is defense in depth, not a complete DDoS control.
 
 ## Scaling Notes
 

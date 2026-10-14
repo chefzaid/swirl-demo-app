@@ -135,6 +135,7 @@ Public choices are stored in `infra/environments/<env>/settings.json`:
 | `appSubdomain` | The shared onboarding app label, default `demo`; `@` selects each environment's domain apex. |
 | `trustedProxyCIDRs` | Trusted ingress addresses for API rate limiting; first setup uses the target pod CIDR. |
 | `highAvailability` | Enables the [HA profile](#future-multi-node-ha-profile) on a prepared application cluster. |
+| `edgeRateLimit` | Optional per-visitor throttling at Traefik on each Ingress path, such as `{"average": 50, "burst": 100}`: `average` requests per second with bursts of up to `burst` requests, at most twice `average`. Off when absent, refused for remote clusters, and only safe when public traffic arrives through Cloudflare; see [Edge Throttling](security.md#edge-throttling). |
 | `apiDocs` | Publishes Swagger UI and the OpenAPI documents without a token, default `true`. `false` makes them require authentication like any API and hides the frontend's API link. |
 | `databaseName` | Defaults to `swirl_demo_app_<env>`; production alone can explicitly retain legacy `swirl_demo_app_db` after the ownership/credential migration below. |
 

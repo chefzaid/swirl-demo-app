@@ -126,7 +126,8 @@ def release_manifest(value, registry, project, environment="int"):
 def settings(root, selected, environment):
     path = root / "infra/environments" / environment / "settings.json"
     value = json.loads(path.read_text()) if path.is_file() else {}
-    require(isinstance(value, dict) and not set(value) - {"appSubdomain", "trustedProxyCIDRs", "highAvailability", "databaseName", "apiDocs"},
+    require(isinstance(value, dict) and not set(value) - {"appSubdomain", "trustedProxyCIDRs", "highAvailability", "databaseName", "apiDocs",
+                                                          "edgeRateLimit"},
             "Unsupported environment deployment setting")
     label = value.get("appSubdomain", "demo")
     require(label == "@" or isinstance(label, str) and LABEL.fullmatch(label), "Invalid application subdomain")
@@ -145,7 +146,21 @@ def settings(root, selected, environment):
     database = value.get("databaseName", "swirl_demo_app_" + environment)
     require(database == "swirl_demo_app_" + environment or environment == "prod" and database == "swirl_demo_app_db",
             "databaseName must be this environment's database; only prod can explicitly adopt legacy swirl_demo_app_db")
-    return host, cidrs, value.get("highAvailability", False), database, label, api_docs
+    edge = value.get("edgeRateLimit")
+    if edge is not None:
+        require(isinstance(edge, dict) and set(edge) == {"average", "burst"}
+                and all(type(edge[key]) is int and 0 < edge[key] <= 1000000 for key in edge),
+                "edgeRateLimit needs whole average (requests per second) and burst (requests) between 1 and 1000000")
+        # Traefik restarts a bucket full after about 2 idle seconds, so a larger
+        # burst would let a visitor sustain burst/2 requests per second.
+        require(edge["burst"] <= 2 * edge["average"], "edgeRateLimit burst can be at most twice average")
+        # Traefik reads the visitor from X-Forwarded-For, which it keeps only from
+        # the Cloudflare edge or Tunnel it trusts. A remote cluster's Traefik
+        # trusts none, so every request would share one bucket. A platform
+        # without Cloudflare has the same problem but is invisible here; see
+        # docs/security.md#edge-throttling.
+        require(selected.get("mode", "remote") == "local", "edgeRateLimit needs an environment on the platform cluster")
+    return host, cidrs, value.get("highAvailability", False), database, label, api_docs, edge
 
 
 def output_file(root, name, content):
@@ -172,7 +187,7 @@ def render(root, inventory, environment, release, revision, repository_url=None,
     namespace = selected["namespace"]
     registry = public_string(services["registry"]["host"], "registry host")
     release_manifest(release, registry, project, environment)
-    host, cidrs, ha, database, app_label, api_docs = settings(root, selected, environment)
+    host, cidrs, ha, database, app_label, api_docs, edge = settings(root, selected, environment)
     central_tls = selected.get("mode", "remote") == "local" and inventory["platform"].get("hostnameStyle", "nested") == "suffix"
     tls = {"hosts": [host]}
     if not central_tls:
@@ -211,6 +226,8 @@ def render(root, inventory, environment, release, revision, repository_url=None,
     for name, value in backend.items():
         public_string(value, name)
     relative = Path("infra/environments") / environment
+    # Throttle first, so a rejected request is never buffered or rewritten.
+    throttle = f"{namespace}-swirl-demo-app-rate-limit@kubernetescrd," if edge else ""
     patches = [{"target": {"kind": "Ingress", "name": "swirl-demo-app-ingress"}, "patch": yaml.safe_dump([
         {"op": "replace", "path": "/spec/rules/0/host", "value": host},
         {"op": "replace", "path": "/spec/tls/0/hosts", "value": [host]},
@@ -220,8 +237,16 @@ def render(root, inventory, environment, release, revision, repository_url=None,
         {"op": "replace", "path": "/metadata/annotations/gethomepage.dev~1name", "value": "Swirl Demo App"},
         {"op": "replace", "path": "/metadata/annotations/gethomepage.dev~1group", "value": f"Applications - {environment.upper()}"},
         {"op": "replace", "path": "/metadata/annotations/traefik.ingress.kubernetes.io~1router.middlewares",
-         "value": f"{namespace}-swirl-demo-app-upload-limit@kubernetescrd"},
+         "value": throttle + f"{namespace}-swirl-demo-app-upload-limit@kubernetescrd"},
     ], sort_keys=False)}]
+    rate_limit = {"target": {"kind": "Middleware", "name": "swirl-demo-app-rate-limit"}}
+    if edge:
+        rate_limit["patch"] = yaml.safe_dump([{"op": "replace", "path": "/spec/rateLimit/" + key, "value": edge[key]}
+                                              for key in ("average", "burst")], sort_keys=False)
+    else:
+        rate_limit["patch"] = yaml.safe_dump({"apiVersion": "traefik.io/v1alpha1", "kind": "Middleware",
+                                              "metadata": {"name": "swirl-demo-app-rate-limit"}, "$patch": "delete"}, sort_keys=False)
+    patches.append(rate_limit)
     for service in IMAGES:
         patches.append({"target": {"kind": "Service", "name": service}, "patch": yaml.safe_dump([
             {"op": "replace", "path": "/metadata/annotations/traefik.ingress.kubernetes.io~1service.serverstransport",
@@ -284,7 +309,7 @@ def render(root, inventory, environment, release, revision, repository_url=None,
                 "argocd.argoproj.io/sync-wave": "10",
                 "traefik.ingress.kubernetes.io/router.entrypoints": "websecure",
                 "traefik.ingress.kubernetes.io/router.tls": "true",
-                "traefik.ingress.kubernetes.io/router.middlewares": f"{namespace}-swirl-demo-app-health@kubernetescrd"}},
+                "traefik.ingress.kubernetes.io/router.middlewares": throttle + f"{namespace}-swirl-demo-app-health@kubernetescrd"}},
         "spec": {"ingressClassName": "traefik", "tls": [tls],
             "rules": [{"host": host, "http": {"paths": [{"path": "/health/" + name, "pathType": "Exact",
                 "backend": {"service": {"name": "swirlapp-" + name, "port": {"number": port}}}}
@@ -292,9 +317,10 @@ def render(root, inventory, environment, release, revision, repository_url=None,
     health_middleware = {"apiVersion": "traefik.io/v1alpha1", "kind": "Middleware",
                          "metadata": {"name": "swirl-demo-app-health", "namespace": namespace},
                          "spec": {"replacePath": {"path": "/actuator/health"}}}
-    output_file(root, relative / "settings.json", json.dumps({
-        "appSubdomain": app_label,
-        "trustedProxyCIDRs": cidrs, "highAvailability": ha, "databaseName": database, "apiDocs": api_docs}, indent=2) + "\n")
+    stored = {"appSubdomain": app_label, "trustedProxyCIDRs": cidrs, "highAvailability": ha, "databaseName": database, "apiDocs": api_docs}
+    if edge:
+        stored["edgeRateLimit"] = edge
+    output_file(root, relative / "settings.json", json.dumps(stored, indent=2) + "\n")
     output_file(root, relative / "health-ingress.yaml", yaml.safe_dump_all([health_ingress, health_middleware], sort_keys=False))
     output_file(root, relative / "backend-runtime.properties", "# Public environment settings; credentials come from Vault.\n" +
                 "".join(f"{key}={value}\n" for key, value in backend.items()))

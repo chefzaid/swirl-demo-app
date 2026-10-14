@@ -147,6 +147,7 @@ Implemented security behavior:
 - CSRF disabled for stateless bearer-token APIs
 - narrow CORS configuration
 - HTTPS redirect and TLS termination at Traefik Ingress
+- [opt-in per-visitor throttling at Traefik](security.md#edge-throttling), set per environment
 - default Spring security headers, with frame embedding relaxed only for the local H2 console
 - public ingress removed for Actuator; Prometheus scrapes cluster services through NetworkPolicy
 - Kubernetes containers run as non-root with a read-only root filesystem, dropped capabilities, and runtime-default seccomp
@@ -266,7 +267,7 @@ GitLab is the CI/CD source of truth; GitHub is the public mirror.
 Do not present these as implemented:
 
 - change-data-capture outbox relay (the polling relay is implemented)
-- distributed or edge-global rate limiting
+- distributed rate limiting (edge throttling counts per Traefik pod) and a bot challenge (left to the Cloudflare zone)
 - ownership rules or business authorization policies beyond the user-delete role
 - application-level field encryption or KMS integration
 - synchronous HTTP resilience patterns such as circuit breakers or bulkheads

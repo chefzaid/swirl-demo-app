@@ -12,6 +12,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,6 +44,12 @@ public class OrderController {
     @GetMapping("/{id}")
     public OrderResponse getOrder(@PathVariable @Positive Long id) {
         return OrderResponse.from(orderService.getOrderById(id));
+    }
+
+    /** HAL-FORMS variant of {@link #getOrder(Long)}; see {@link OrderHypermedia}. */
+    @GetMapping(value = "/{id}", produces = MediaTypes.HAL_FORMS_JSON_VALUE)
+    public EntityModel<OrderResponse> getOrderWithAffordances(@PathVariable @Positive Long id) {
+        return OrderHypermedia.toModel(orderService.getOrderById(id));
     }
 
     @PostMapping

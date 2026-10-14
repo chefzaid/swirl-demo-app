@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import static dev.swirlit.demo.common.http.HttpApiTestSupport.BEARER;
 import static dev.swirlit.demo.common.http.HttpApiTestSupport.SUBJECT;
@@ -105,5 +108,30 @@ class OrderApiHttpTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(401);
         assertThat(response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).contains("invalid_token");
+    }
+
+    @Test
+    void clientsCanAskForLinksAndAffordancesInsteadOfPlainJson() throws Exception {
+        String location = client.post().uri("/api/orders").header(HttpHeaders.AUTHORIZATION, BEARER)
+                .contentType(MediaType.APPLICATION_JSON).body(Map.of("userId", 2, "productId", 2501))
+                .retrieve().toBodilessEntity().getHeaders().getLocation().toString();
+
+        ResponseEntity<String> plain = client.get().uri(location).header(HttpHeaders.AUTHORIZATION, BEARER)
+                .accept(MediaType.APPLICATION_JSON).retrieve().toEntity(String.class);
+        assertThat(plain.getBody()).doesNotContain("_links");
+
+        ResponseEntity<String> hypermedia = client.get().uri(location).header(HttpHeaders.AUTHORIZATION, BEARER)
+                .accept(MediaTypes.HAL_FORMS_JSON).retrieve().toEntity(String.class);
+        assertThat(hypermedia.getHeaders().getContentType()).isEqualTo(MediaTypes.HAL_FORMS_JSON);
+        JsonNode body = JsonMapper.shared().readTree(hypermedia.getBody());
+        assertThat(body.path("status").asString()).isEqualTo("PENDING");
+        assertThat(body.path("_links").path("self").path("href").asString()).endsWith(location);
+        assertThat(body.path("_links").path("user").path("href").asString()).isEqualTo("/api/users/2");
+        JsonNode update = body.path("_templates").path("updateOrder");
+        assertThat(update.path("method").asString()).isEqualTo("PUT");
+        assertThat(update.path("properties").findValuesAsString("name")).containsExactlyInAnyOrder("userId", "productId");
+        assertThat(update.path("properties").findValues("readOnly")).allSatisfy(readOnly -> assertThat(readOnly.asBoolean()).isFalse());
+        assertThat(update.path("properties").findValues("required")).allSatisfy(required -> assertThat(required.asBoolean()).isTrue());
+        assertThat(body.path("_templates").path("deleteOrder").path("method").asString()).isEqualTo("DELETE");
     }
 }

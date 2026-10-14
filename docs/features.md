@@ -56,7 +56,7 @@ Implemented API behavior:
 - explicit CORS origins, methods, request headers, and exposed response headers
 - HTTP compression and forwarded-header support
 
-The APIs demonstrate Richardson Maturity Model level 2 resource and HTTP semantics. They do not claim level 3 because no HATEOAS controls are emitted.
+The APIs demonstrate Richardson Maturity Model level 2 resource and HTTP semantics. A single order can also be read as HAL-FORMS, with links and edit/delete affordances, as an opt-in [hypermedia example](architecture.md#hypermedia-example); the rest of the API stays at level 2.
 
 ## Transactions, Persistence, And Auditing
 

@@ -46,7 +46,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Turn public API documentation off in `uat` and `prod` (`"apiDocs": false` in their `settings.json`) once a release containing the `apiDocs` switch runs there; older web images reject the extra runtime-config key, so the switch stays on until then.
 - [ ] Add a distributed rate-limit implementation at the gateway or Redis layer; retain the in-process filter as the single-instance reference.
 - [ ] Add API versioning and compatibility policy, generated frontend clients, and contract-drift checks in CI.
-- [ ] Add an optional HATEOAS affordance example and explain when Richardson level 3 is worth the client coupling; keep OpenAPI documentation distinct from hypermedia controls.
+- [x] Add an optional HATEOAS affordance example and explain when Richardson level 3 is worth the client coupling; keep OpenAPI documentation distinct from hypermedia controls.
 - [ ] Add consumer-driven contract tests for service and event contracts.
 - [ ] Add a small field-encryption example backed by envelope encryption/KMS abstractions; document key rotation and keep passwords in Keycloak.
 - [ ] Add SBOM generation, image signing and verification, secret scanning, SAST, dependency scanning, and a baseline DAST stage.

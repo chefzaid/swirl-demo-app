@@ -120,6 +120,14 @@ Each service caches single-record reads in Redis (`users`, `orders`) for the `ua
 - **Keys are versioned.** Keys look like `<REDIS_CACHE_PREFIX><cache>:<version>::<id>`, for example `swirl-demo-app:prod:users:v1::7`. Bump `CacheConfig.CACHE_VERSION` when the cached entity changes shape, so new pods never read values written by old ones during a rolling deployment.
 - **Staleness is bounded by the TTL.** If an eviction fails (Redis down during a write), another pod can serve the old value until the entry expires. That is acceptable for this demo's profile data; data that must never be stale should not be cached or needs a shorter TTL.
 
+## Hypermedia Example
+
+`GET /api/orders/{id}` with `Accept: application/prs.hal-forms+json` returns the order with `_links` (`self`, `orders`, and `user`, which points across to the user service) and `_templates` describing the requests the server accepts: `updateOrder` (`PUT` with required `userId` and `productId`) and `deleteOrder`. Any other `Accept` value gets the plain JSON every client uses today. `OrderHypermedia` builds the representation; `OrderApiHttpTest` pins it.
+
+Level 3 is worth its coupling when clients should discover what they may do next from the server, for example when actions depend on state or permissions the client cannot compute, or when many independent clients must follow server-side workflow changes without a release. It costs a hypermedia-aware client, larger responses, and links that must stay stable. This demo's single Angular client knows its workflow, so it keeps using plain JSON.
+
+OpenAPI and hypermedia answer different questions. The OpenAPI document describes every operation at design time for code generation and review; HAL-FORMS templates describe the operations available on one resource at run time. Keep the OpenAPI document authoritative for the contract; the templates must never offer an operation it does not describe.
+
 ## Data Ownership Rules
 
 - `swirlapp-user` owns `app_users`.

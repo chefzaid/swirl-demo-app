@@ -31,4 +31,6 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
     @Modifying
     @Query("delete from OutboxEvent e where e.publishedAt < :cutoff")
     int deletePublishedBefore(Instant cutoff);
+
+    long countByPublishedAtBefore(Instant cutoff);
 }

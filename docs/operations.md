@@ -423,6 +423,7 @@ The workloads currently have one replica. Before scaling:
 - add PodDisruptionBudgets/topology spread as needed
 - load test the ingress and service resources
 - expect `swirl_events_duplicates_total` to rise briefly after rebalances and relay restarts; the inbox absorbs those duplicates
+- the outbox relay runs on every replica and shares rows through `SKIP LOCKED`; the retention job runs on one replica at a time through `order_scheduler_lock`, so a new cluster-wide job needs `@SchedulerLock` too
 
 Kafka topics have three partitions, which caps useful parallel consumption per consumer group at three active consumers unless partitioning changes.
 

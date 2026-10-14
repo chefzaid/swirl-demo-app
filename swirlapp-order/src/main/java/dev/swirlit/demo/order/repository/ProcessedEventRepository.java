@@ -13,4 +13,6 @@ public interface ProcessedEventRepository extends JpaRepository<ProcessedEvent, 
     @Modifying
     @Query("delete from ProcessedEvent e where e.processedAt < :cutoff")
     int deleteProcessedBefore(Instant cutoff);
+
+    long countByProcessedAtBefore(Instant cutoff);
 }

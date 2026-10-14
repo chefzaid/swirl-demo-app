@@ -15,7 +15,7 @@ Write each order event into an `order_outbox` table in the same transaction as t
 - `OutboxRelay` polls every second (`app.messaging.outbox.poll-interval`), locks up to 100 unpublished rows (`batch-size`) with `FOR UPDATE SKIP LOCKED`, sends them, waits for Kafka's acknowledgement, and marks them published in the same transaction. Rows another pod holds are skipped, so replicas relay in parallel without sending a row twice at the same time.
 - A failed send leaves the row pending with its attempt count raised; the next poll retries it.
 - Each record carries a `swirl-event-id` header (`order-outbox-<row id>`), identical on every republish of the row.
-- Published rows are deleted after seven days (`app.messaging.event-retention`) by a daily job.
+- Published rows are deleted after seven days (`app.messaging.event-retention`) by a daily job that holds a database lock, so one replica runs it at a time.
 - `swirl_outbox_pending`, `swirl_outbox_published_total`, and `swirl_outbox_failed_total` expose the backlog, and `SwirlOutboxBacklog` alerts when it stays above 100.
 
 Delivery is at least once. A relay that crashes after Kafka acknowledged a batch but before its commit publishes that batch again, and a retried row can follow a newer row for the same order. The user service gives each result the request's ID plus `:result`, and the order service records applied result IDs in an `order_inbox` table in the same transaction as the order update, so a redelivered or republished result is skipped even after a restart and counted in `swirl_events_duplicates_total`.

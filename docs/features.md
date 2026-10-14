@@ -119,6 +119,7 @@ Implemented Kafka behavior:
 - idempotent handling of duplicate final results, backed by an [inbox table](data-model.md#transactions-and-consistency) keyed by event ID so it survives restarts
 - edited orders return to `PENDING` and publish a fresh validation request
 - [transactional outbox](adr/0011-transactional-outbox.md): order validation requests are recorded with the order change and published by a relay that retries until Kafka acknowledges them, with backlog metrics and alerting
+- a scheduled [retention job](data-model.md#event-contract) that purges old outbox and inbox rows on one replica at a time (ShedLock), deletes by age so repeated runs are harmless, and supports a dry run
 - late results for superseded edits or deleted orders are ignored safely
 - rejection of invalid order state transitions
 - local single-node Kafka 4.3 in KRaft mode
@@ -265,7 +266,7 @@ Do not present these as implemented:
 - ownership rules or business authorization policies beyond the user-delete role
 - application-level field encryption or KMS integration
 - synchronous HTTP resilience patterns such as circuit breakers or bulkheads
-- general-purpose `@Async` jobs or leader-elected scheduled maintenance
+- general-purpose `@Async` jobs
 - service mesh, saga, or API gateway owned by this repository
 - Testcontainers, contract tests, load tests, or chaos tests
 - canary rollout or environment overlays

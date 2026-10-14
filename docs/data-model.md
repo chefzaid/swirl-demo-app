@@ -162,7 +162,9 @@ Publication is at least once: a relay crash between Kafka's acknowledgement and 
 
 Every request record carries a `swirl-event-id` header taken from its outbox row, and the user service answers with the same ID plus `:result`. `OrderResultListener` stores each applied result ID in `order_inbox` (`event_id`, `processed_at`) in the transaction that updates the order, and skips a result whose ID is already there. Deduplication therefore survives restarts and covers republished requests as well as redelivered results; `swirl_events_duplicates_total` counts the skips. Records without the header (from older producers during a rolling upgrade) fall back to the state checks, which ignore exact duplicates and superseded results.
 
-Inbox entries are deleted with the outbox rows after seven days. Keep that retention longer than the result topic's retention plus the longest consumer outage, or a very late duplicate is no longer recognised and falls back to the state checks.
+Inbox entries are deleted with the outbox rows after seven days by `EventRetention`, a daily job (`app.messaging.event-retention-cron`) that runs on one replica at a time and can count instead of delete (`APP_MESSAGING_EVENT_RETENTION_DRY_RUN=true`). Keep that retention longer than the result topic's retention plus the longest consumer outage, or a very late duplicate is no longer recognised and falls back to the state checks.
+
+`order_scheduler_lock` (`name`, `lock_until`, `locked_at`, `locked_by`) holds one row per cluster-wide scheduled job. [ShedLock](https://github.com/lukas-krecan/ShedLock) claims the row before the job runs and skips the run while another replica's claim has not expired; claims use the database clock, and a crashed holder's claim expires after the job's `lockAtMostFor` (30 minutes for the retention job).
 
 ## Caching Rules
 

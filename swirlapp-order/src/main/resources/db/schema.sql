@@ -25,3 +25,10 @@ CREATE TABLE IF NOT EXISTS order_inbox (
     event_id VARCHAR(255) PRIMARY KEY,
     processed_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS order_scheduler_lock (
+    name VARCHAR(64) PRIMARY KEY,
+    lock_until TIMESTAMP NOT NULL,
+    locked_at TIMESTAMP NOT NULL,
+    locked_by VARCHAR(255) NOT NULL
+);

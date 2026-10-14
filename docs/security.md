@@ -32,13 +32,12 @@ Important limitations:
 
 - no business roles or method-level authorities yet
 - no distributed/global rate limit
-- API documentation is intentionally public
+- API documentation is public unless an environment turns it off
 - Prometheus endpoint is unauthenticated inside the cluster
 - no application field encryption/KMS example
 - no data export, erasure, anonymization, or retention workflow
-- no automated SAST, DAST, SBOM signing, or policy gate in GitLab CI
+- no automated SAST, DAST, or SBOM signing in GitLab CI
 - Kafka transport/authentication is supplied by the environment and the local demo is plaintext
-- no OpenTelemetry trace propagation across service events
 
 ## Trust Boundaries
 

@@ -192,7 +192,7 @@ Implemented observability behavior:
 Remote application clusters require separate collector and central dashboard
 integration; see [operational observability scope](operations.md#logs-and-request-correlation).
 [Service-level objectives](slo.md) for availability, latency, event backlog, and saturation come with Prometheus burn-rate alerts, `promtool` unit tests, and matching dashboard panels.
-Distributed traces are a future reusable capability.
+OpenTelemetry trace context crosses HTTP and Kafka, so `traceId` and `spanId` join `requestId` in every log line, and spans export over OTLP when an endpoint is configured ([ADR 0010](adr/0010-opentelemetry-tracing.md)).
 
 ## Testing And Quality Reporting
 
@@ -267,10 +267,9 @@ Do not present these as implemented:
 - synchronous HTTP resilience patterns such as circuit breakers or bulkheads
 - general-purpose `@Async` jobs or scheduled cleanup
 - service mesh, saga, or API gateway owned by this repository
-- OpenTelemetry distributed tracing
-- Testcontainers, contract tests, mutation tests, load tests, or chaos tests
-- HPA, PodDisruptionBudget, canary rollout, or environment overlays
-- automated SBOM signing, SAST, DAST, or policy-as-code gates
+- Testcontainers, contract tests, load tests, or chaos tests
+- canary rollout or environment overlays
+- automated SBOM signing, SAST, or DAST
 
 These are tracked as technically focused candidates in [TODO.md](../TODO.md).
 

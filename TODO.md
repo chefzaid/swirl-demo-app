@@ -26,6 +26,8 @@ Parts of tasks that cannot advance without the owner's decision or information. 
   - Answer:
 - [ ] How does the platform's Prometheus load alert rules? Options: (a) a `PrometheusRule` resource (Prometheus Operator), which the app would ship with its manifests; (b) a ConfigMap with a label the platform's Prometheus watches (please name the label); (c) the platform team adds `infra/observability/slo-rules.yaml` to its own `rule_files`. *(task: Observability › Load SLO rules; asked by: Coding Agent)*
   - Answer:
+- [ ] Which OTLP endpoint should deployed environments send traces to, and at what sampling rate? The services propagate trace context and log `traceId` already; setting `MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT` (for example `http://otel-collector.observability:4318/v1/traces`) turns span export on. If the platform has no collector yet, say so and the item stays parked. *(task: Observability › Export spans; asked by: Coding Agent)*
+  - Answer:
 
 ## Priority: Delivery And Data Correctness
 
@@ -65,7 +67,8 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 
 ## Priority: Observability And Operations
 
-- [ ] Add OpenTelemetry traces and propagate trace context across HTTP and Kafka alongside the existing request ID.
+- [x] Add OpenTelemetry traces and propagate trace context across HTTP and Kafka alongside the existing request ID.
+- [ ] Export spans from deployed environments to the platform's trace collector *(waiting in Needs Input)*.
 - [x] Add reusable Micrometer business/event metrics for publish latency, consumer lag, retries, DLT records, cache behavior, and rate-limit rejections.
 - [x] Define service-level indicators, objectives, Prometheus alerts, and Grafana alert views for availability, latency, errors, saturation, and event backlog.
 - [x] Add log redaction tests and a documented policy for tokens, personal data, request bodies, and exception details.

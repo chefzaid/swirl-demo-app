@@ -242,6 +242,8 @@ The roadmap keeps a stricter application-only dev-container direction: environme
 | `JWT_ISSUER_URI` | token issuer visible to clients | local proxied Keycloak issuer |
 | `JWT_JWK_SET_URI` | internal key-set URL | Keycloak service URL |
 | `CORS_ALLOWED_ORIGINS` | browser origins | `http://localhost:4200` |
+| `MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT` | OTLP/HTTP collector URL for spans, for example `http://otel-collector:4318/v1/traces`; unset keeps trace IDs in logs only | unset |
+| `MANAGEMENT_TRACING_SAMPLING_PROBABILITY` | share of traces exported | `0.1` |
 | `APP_MESSAGING_REQUIRED` | take pods out of service while Kafka is unreachable instead of accepting orders as `PENDING` | `false` |
 | `APP_API_DOCS_ENABLED` | publish Swagger UI and OpenAPI documents; the `uat`/`prod` profiles default to `false` | `true` |
 | `RATE_LIMIT_REQUESTS_PER_MINUTE` | per-instance API limit | default `120` |

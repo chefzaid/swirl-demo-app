@@ -174,6 +174,7 @@ Statuses:
 - [ADR 0007: Deliver Through GitLab CI, Immutable Images, And Argo CD](./adr/0007-gitlab-ci-argocd-gitops.md)
 - [ADR 0008: Keep Verification Layered And Continuous](./adr/0008-code-quality-and-verification.md)
 - [ADR 0009: Use Explicit Delivery Jobs And Non-Blocking Verification](./adr/0009-explicit-delivery-jobs.md)
+- [ADR 0010: Trace Through Micrometer Observation With The OpenTelemetry Bridge](./adr/0010-opentelemetry-tracing.md)
 
 ## Proposed ADRs For Roadmap Work
 
@@ -185,7 +186,6 @@ Create decisions before implementing:
 - role/authority mapping and method authorization
 - event schema compatibility and contract testing
 - envelope encryption and key rotation
-- OpenTelemetry context across HTTP/Kafka
 - environment overlays, autoscaling, disruption, and canary policy
 - shared internal Spring starters versus copyable source modules
 

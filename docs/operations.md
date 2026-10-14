@@ -145,6 +145,7 @@ Useful fields:
 - `thread_name`
 - `message`
 - `requestId` from MDC
+- `traceId` and `spanId` from MDC, shared by every log line of one order across both services
 - `audit.*` fields on [audit trail](security.md#audit-trail) entries (`logger_name` `dev.swirlit.demo.audit`)
 - Kubernetes namespace, pod, and container fields added by the collector
 
@@ -165,9 +166,12 @@ kubectl logs -n "$APP_NAMESPACE" <order-pod-name> --previous
 ```
 
 Start with the request ID returned to the caller and search `requestId` in the
-logs, or in Kibana after forwarding is configured. Kafka messages do not yet
-carry that ID or an OpenTelemetry trace context, so continue event diagnosis
-with order ID, Kafka key, and timestamps.
+logs, or in Kibana after forwarding is configured. Take the `traceId` from that
+line and search it to follow the order through Kafka into the user service and
+back: Kafka records carry the W3C trace context in their headers
+([ADR 0010](adr/0010-opentelemetry-tracing.md)). When
+`MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT` points at a collector,
+the same trace is also available as spans in the tracing backend.
 
 Do not paste tokens, credentials, complete personal records, or browser test artifacts into incident tickets.
 

@@ -115,7 +115,13 @@
               "default"
             ],
             "buildTarget": ":build:testing",
-            "runner": "vitest"
+            "runner": "vitest",
+            "coverageThresholds": {
+              "statements": 85,
+              "branches": 85,
+              "functions": 85,
+              "lines": 85
+            }
           }
         }
       }

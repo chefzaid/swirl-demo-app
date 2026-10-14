@@ -41,7 +41,7 @@ CI consumes more time/resources than a minimal build and browser acceptance depe
 
 H2 remains insufficient for production persistence guarantees; PostgreSQL/Flyway and infrastructure tests must continue to grow.
 
-The later delivery decision standardizes an 80 percent reported coverage policy and keeps it non-blocking for release; coverage remains evidence rather than proof of adequate risk coverage.
+The later delivery decision standardized an 80 percent reported coverage policy, since raised to 85 percent per layer (JaCoCo bundle check and Vitest thresholds), and keeps it non-blocking for release; coverage remains evidence rather than proof of adequate risk coverage.
 
 Testcontainers, contracts, mutation, load, chaos, accessibility, supply-chain, and manifest policy tests remain roadmap work.
 

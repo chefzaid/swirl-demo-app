@@ -198,7 +198,7 @@ Implemented verification layers:
 - focused controller, service, cache, filter, health-indicator, listener, and security tests
 - anonymous-versus-JWT integration tests using full Spring Security contexts
 - event success, duplicate, invalid-state, missing-resource, retryable-failure, and rejection scenarios
-- JaCoCo reports and a non-blocking 80 percent combined line-coverage policy
+- JaCoCo reports and a non-blocking 85 percent combined line-coverage policy; Maven and Vitest also fail below 85 percent per layer
 - Vitest component, service, guard, interceptor, and authentication tests
 - frontend V8 coverage and JUnit-compatible CI output
 - Playwright browser tests for Chromium, Firefox, and WebKit

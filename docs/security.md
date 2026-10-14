@@ -344,7 +344,7 @@ Still required for a stronger supply-chain posture:
 - admission policy checks
 - base-image vulnerability policy
 
-SonarQube analysis runs automatically in `02-quality` on the default branch in both standard and full mode, independently of optional manual `01-e2e`. The scanner imports JaCoCo and LCOV coverage, submits without waiting for the quality gate, and authenticates with a masked project-scoped token. The reporting job retains dependency-audit output and is allowed to fail, so findings never block `01-release`. Compilation and package validation remain required; unit tests and the 80 percent coverage policy are visible, non-blocking jobs.
+SonarQube analysis runs automatically in `02-quality` on the default branch in both standard and full mode, independently of optional manual `01-e2e`. The scanner imports JaCoCo and LCOV coverage, submits without waiting for the quality gate, and authenticates with a masked project-scoped token. The reporting job retains dependency-audit output and is allowed to fail, so findings never block `01-release`. Compilation and package validation remain required; unit tests and the 85 percent coverage policy are visible, non-blocking jobs.
 
 Application scans use a protected, masked project analysis token; administrator
 credentials stay with provisioning automation. Platform discovery provisions

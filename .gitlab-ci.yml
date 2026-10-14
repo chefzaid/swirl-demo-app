@@ -37,7 +37,7 @@ variables:
       - "standard"
       - "full"
     description: "Full builds and deploys the selected branch to int, or publishes/promotes a release to uat/prod. E2E remains optional."
-  COVERAGE_MINIMUM: "80"
+  COVERAGE_MINIMUM: "85"
   NEW_MAJOR_VERSION:
     value: ""
     description: "Major version number for the manual set-major-version job (for example: 2)."

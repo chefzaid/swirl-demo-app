@@ -237,6 +237,11 @@ def render(root, inventory, environment, release, revision, repository_url=None,
     patches.append({"target": {"kind": "ConfigMap", "name": "swirl-demo-app-grafana-dashboard"}, "patch": yaml.safe_dump([
         {"op": "replace", "path": "/data", "value": {f"swirl-demo-app-{environment}-overview.json": json.dumps(dashboard, indent=2) + "\n"}}
     ], sort_keys=False)})
+    # Each copy evaluates only its own namespace, so environments sharing one Prometheus never record a series twice.
+    rules = (root / "infra/observability/slo-rules.yaml").read_text().replace('namespace="apps"', f'namespace="{namespace}"')
+    patches.append({"target": {"kind": "ConfigMap", "name": "swirl-demo-app-prometheus-rules"}, "patch": yaml.safe_dump([
+        {"op": "replace", "path": "/data", "value": {f"swirl-demo-app-{environment}-slo-rules.yaml": rules}}
+    ], sort_keys=False)})
     if selected.get("mode", "remote") == "local" and namespace != SHARED_NAMESPACE:
         # The platform owns dedicated environment network boundaries; app delivery
         # cannot add a policy that defeats environment isolation. In the shared

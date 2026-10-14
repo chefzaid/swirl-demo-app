@@ -16,6 +16,7 @@ build_application() {
   python3 infra/scripts/test-release.py
   python3 infra/scripts/test-keycloak.py
   python3 infra/scripts/test-deployment.py
+  python3 infra/scripts/test-promotion.py
   python3 infra/scripts/test-doc-links.py
   python3 infra/scripts/check-doc-links.py
   npx --yes markdownlint-cli2@0.23.3

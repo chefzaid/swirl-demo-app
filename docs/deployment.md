@@ -11,7 +11,7 @@ the selected environment.
 | Directory or file | Responsibility |
 | --- | --- |
 | `infra/k8s/` | Shared application manifests and public configuration templates. |
-| `infra/observability/` | Prometheus SLO recording and alert rules with their `promtool` tests; not deployed by Kustomize. |
+| `infra/observability/` | Prometheus SLO recording and alert rules with their `promtool` tests, shipped to each environment as a labelled ConfigMap scoped to its namespace. |
 | `infra/overlays/ha/` | Optional application replica and disruption-budget profile. |
 | `infra/overlays/canary/` | Optional Argo Rollouts canary example with an error-rate analysis. |
 | `infra/environments/<env>/` | Generated environment settings, runtime ConfigMaps, ingress and image digests. |
@@ -278,6 +278,7 @@ application version; image rollback does not undo database changes.
 python3 infra/scripts/test-onboarding.py
 python3 infra/scripts/test-release.py
 python3 infra/scripts/test-deployment.py
+python3 infra/scripts/test-promotion.py
 ```
 
 These checks need Python with PyYAML, Git, Bash, jq and kubectl. They use disposable

@@ -32,20 +32,21 @@ incident and clears quickly once it ends.
 
 | Alert | Fires when | Severity |
 | --- | --- | --- |
-| `SwirlApiErrorBudgetFastBurn` | 5xx ratio above 7.2% over both 1 h and 5 min (14.4x burn, 2% of the budget per hour) | page |
-| `SwirlApiErrorBudgetSlowBurn` | 5xx ratio above 3% over both 6 h and 30 min (6x burn) | ticket |
-| `SwirlApiLatencyBudgetFastBurn` | over 72% of requests slower than 300 ms over both 1 h and 5 min | page |
-| `SwirlApiLatencyBudgetSlowBurn` | over 30% of requests slower than 300 ms over both 6 h and 30 min | ticket |
-| `SwirlTargetDown` | a backend pod cannot be scraped for 5 minutes | page |
-| `SwirlDatabasePoolSaturated` | requests wait for a pooled database connection for 5 minutes | ticket |
-| `SwirlHeapNearLimit` | a pod uses over 90% of its maximum heap for 15 minutes | ticket |
-| `SwirlConsumerLagHigh` | a consumer is over 1000 records behind for 10 minutes | ticket |
-| `SwirlEventsDeadLettered` | any record reached a dead-letter topic in the last 15 minutes | ticket |
-| `SwirlOutboxBacklog` | over 100 order events wait in the outbox for 10 minutes | ticket |
-| `SwirlCacheFailing` | cache operations keep failing for 10 minutes | ticket |
+| `SwirlApiErrorBudgetFastBurn` | 5xx ratio above 7.2% over both 1 h and 5 min (14.4x burn, 2% of the budget per hour) | critical |
+| `SwirlApiErrorBudgetSlowBurn` | 5xx ratio above 3% over both 6 h and 30 min (6x burn) | warning |
+| `SwirlApiLatencyBudgetFastBurn` | over 72% of requests slower than 300 ms over both 1 h and 5 min | critical |
+| `SwirlApiLatencyBudgetSlowBurn` | over 30% of requests slower than 300 ms over both 6 h and 30 min | warning |
+| `SwirlTargetDown` | a backend pod cannot be scraped for 5 minutes | critical |
+| `SwirlDatabasePoolSaturated` | requests wait for a pooled database connection for 5 minutes | warning |
+| `SwirlHeapNearLimit` | a pod uses over 90% of its maximum heap for 15 minutes | warning |
+| `SwirlConsumerLagHigh` | a consumer is over 1000 records behind for 10 minutes | warning |
+| `SwirlEventsDeadLettered` | any record reached a dead-letter topic in the last 15 minutes | warning |
+| `SwirlOutboxBacklog` | over 100 order events wait in the outbox for 10 minutes | warning |
+| `SwirlCacheFailing` | cache operations keep failing for 10 minutes | warning |
 
-`page` alerts need a person now; `ticket` alerts need attention within working
-hours. Route them by the `severity` label in Alertmanager.
+`critical` alerts need a person now; `warning` alerts need attention within
+working hours. These are the severities the platform's own alerts use, so
+Alertmanager routes both sets the same way.
 
 ### Availability Alerts
 
@@ -80,16 +81,26 @@ The overview dashboard in `infra/k8s/observability.yaml` shows each objective
 next to its indicator: the 5xx and slow-request panels draw the objective as a
 red threshold line, and the event, cache, and rate-limit panels show the
 signals behind the backlog and saturation alerts. The panels query the raw
-series, so they work before the recording rules are loaded.
+series, so they work before the rules are loaded.
 
 ## Loading And Testing The Rules
 
-Kustomize does not deploy the rule file, because the platform decides how its
-Prometheus discovers rules. Load it either way:
+Every environment ships the rules as the `swirl-demo-app-prometheus-rules`
+ConfigMap from [`infra/observability`](../infra/observability/kustomization.yaml),
+labelled `prometheus_rule: "1"`. Every selector in the rule file names
+`namespace="apps"`, and `render-deployment.py` rewrites it to the
+environment's namespace, as it does for the dashboard. Each copy therefore
+alerts only on its own environment, and copies loaded by one Prometheus never
+record the same series twice. Like the environment's other manifests, a copy
+holds the rule file of the revision rendered at that environment's last
+deployment, not of its release tag: an image rollback keeps the current rules.
 
-- list it under `rule_files` in the Prometheus configuration, or
-- wrap the `groups` in a `PrometheusRule` resource when the Prometheus Operator
-  manages the server.
+The platform's Prometheus does not load labelled ConfigMaps yet; the label and
+the loader wait on the platform owner (see `TODO.md`, Needs Input). Until then
+the ConfigMaps change nothing. Remote clusters have no Prometheus of their own
+and the central one does not scrape them, so a remote environment's copy stays
+inert until the platform connects
+[remote telemetry](operations.md#metrics-dashboard), like its dashboard.
 
 CI validates the syntax and runs the unit tests in
 [`slo-rules.test.yaml`](../infra/observability/slo-rules.test.yaml), which

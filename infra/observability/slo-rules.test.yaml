@@ -50,7 +50,7 @@ tests:
         alertname: SwirlApiErrorBudgetFastBurn
         exp_alerts:
           - exp_labels:
-              severity: page
+              severity: critical
               namespace: apps
               app: swirlapp-order
             exp_annotations:
@@ -70,7 +70,7 @@ tests:
         alertname: SwirlApiLatencyBudgetFastBurn
         exp_alerts:
           - exp_labels:
-              severity: page
+              severity: critical
               namespace: apps
               app: swirlapp-user
             exp_annotations:
@@ -103,7 +103,7 @@ tests:
       - eval_time: 20m
         alertname: SwirlTargetDown
         exp_alerts:
-          - exp_labels: {severity: page, namespace: apps, app: swirlapp-order, pod: order-1}
+          - exp_labels: {severity: critical, namespace: apps, app: swirlapp-order, pod: order-1}
             exp_annotations:
               summary: "swirlapp-order pod order-1 in apps cannot be scraped"
               description: "Prometheus has not scraped this target for 5 minutes."
@@ -111,7 +111,7 @@ tests:
       - eval_time: 20m
         alertname: SwirlDatabasePoolSaturated
         exp_alerts:
-          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-order}
+          - exp_labels: {severity: warning, namespace: apps, app: swirlapp-order}
             exp_annotations:
               summary: "swirlapp-order in apps is waiting for database connections"
               description: "3 requests have waited for a pooled connection for 5 minutes."
@@ -119,7 +119,7 @@ tests:
       - eval_time: 20m
         alertname: SwirlHeapNearLimit
         exp_alerts:
-          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-order, pod: order-1}
+          - exp_labels: {severity: warning, namespace: apps, app: swirlapp-order, pod: order-1}
             exp_annotations:
               summary: "swirlapp-order pod order-1 has used over 90% of its heap for 15 minutes"
               description: "Heap use is 95% of the maximum."
@@ -127,7 +127,7 @@ tests:
       - eval_time: 20m
         alertname: SwirlConsumerLagHigh
         exp_alerts:
-          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-order, topic: order_result_topic}
+          - exp_labels: {severity: warning, namespace: apps, app: swirlapp-order, topic: order_result_topic}
             exp_annotations:
               summary: "swirlapp-order in apps is more than 1000 records behind on order_result_topic"
               description: "The consumer has lagged for 10 minutes; events are processed late."
@@ -135,7 +135,7 @@ tests:
       - eval_time: 5m
         alertname: SwirlEventsDeadLettered
         exp_alerts:
-          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-user, topic: order_topic}
+          - exp_labels: {severity: warning, namespace: apps, app: swirlapp-user, topic: order_topic}
             exp_annotations:
               summary: "swirlapp-user in apps sent records from order_topic to the dead-letter topic"
               description: "2 records exhausted their retries in the last 15 minutes."
@@ -143,7 +143,7 @@ tests:
       - eval_time: 20m
         alertname: SwirlCacheFailing
         exp_alerts:
-          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-user, cache: users}
+          - exp_labels: {severity: warning, namespace: apps, app: swirlapp-user, cache: users}
             exp_annotations:
               summary: "swirlapp-user in apps has been reading users without its cache for 10 minutes"
               description: "Cache operations fail and fall through to the database; check Redis."
@@ -151,8 +151,112 @@ tests:
       - eval_time: 20m
         alertname: SwirlOutboxBacklog
         exp_alerts:
-          - exp_labels: {severity: ticket, namespace: apps, app: swirlapp-order}
+          - exp_labels: {severity: warning, namespace: apps, app: swirlapp-order}
             exp_annotations:
               summary: "swirlapp-order in apps has 250 order events waiting in the outbox"
               description: "The outbox relay has not caught up for 10 minutes; orders stay PENDING until their events publish."
               runbook: docs/operations.md#order-events-are-waiting-in-the-outbox
+
+  # Each environment loads its own copy with "apps" rewritten to its namespace,
+  # so a copy must ignore every other namespace or the copies would overlap.
+  - name: another namespace's series raise nothing in this copy
+    interval: 1m
+    input_series:
+      - series: 'http_server_requests_seconds_count{namespace="apps-int",app="swirlapp-order",uri="/api/orders",status="200"}'
+        values: '0+80x70'
+      - series: 'http_server_requests_seconds_count{namespace="apps-int",app="swirlapp-order",uri="/api/orders",status="503"}'
+        values: '0+20x70'
+      - series: 'http_server_requests_seconds_count{namespace="apps-int",app="swirlapp-user",uri="/api/users",status="200"}'
+        values: '0+100x70'
+      - series: 'http_server_requests_seconds_bucket{namespace="apps-int",app="swirlapp-user",uri="/api/users",status="200",le="0.3"}'
+        values: '0+10x70'
+      - series: 'up{namespace="apps-int",app="swirlapp-order",pod="order-1"}'
+        values: '1 0x70'
+      - series: 'hikaricp_connections_pending{namespace="apps-int",app="swirlapp-order",pod="order-1",pool="HikariPool-1"}'
+        values: '3x70'
+      - series: 'jvm_memory_used_bytes{namespace="apps-int",app="swirlapp-order",pod="order-1",area="heap",id="G1 Old Gen"}'
+        values: '95x70'
+      - series: 'jvm_memory_max_bytes{namespace="apps-int",app="swirlapp-order",pod="order-1",area="heap",id="G1 Old Gen"}'
+        values: '100x70'
+      - series: 'kafka_consumer_fetch_manager_records_lag_max{namespace="apps-int",app="swirlapp-order",pod="order-1",topic="order_result_topic",client_id="c1"}'
+        values: '5000x70'
+      - series: 'swirl_events_dead_lettered_total{namespace="apps-int",app="swirlapp-user",pod="user-1",topic="order_topic"}'
+        values: '0+1x70'
+      - series: 'swirl_cache_errors_total{namespace="apps-int",app="swirlapp-user",pod="user-1",cache="users",operation="get"}'
+        values: '0+5x70'
+      - series: 'swirl_outbox_pending{namespace="apps-int",app="swirlapp-order",pod="order-1"}'
+        values: '250x70'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: SwirlApiErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlApiErrorBudgetSlowBurn
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlApiLatencyBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlApiLatencyBudgetSlowBurn
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlTargetDown
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlDatabasePoolSaturated
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlHeapNearLimit
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlConsumerLagHigh
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlEventsDeadLettered
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlOutboxBacklog
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlCacheFailing
+        exp_alerts: []
+    promql_expr_test:
+      - expr: swirl:api_error_ratio:rate5m
+        eval_time: 70m
+        exp_samples: []
+      - expr: swirl:api_slow_ratio:rate5m
+        eval_time: 70m
+        exp_samples: []
+
+  - name: another copy's recorded ratios raise nothing in this copy
+    interval: 1m
+    input_series:
+      - series: 'swirl:api_error_ratio:rate5m{namespace="apps-int",app="swirlapp-order"}'
+        values: '0.9x70'
+      - series: 'swirl:api_error_ratio:rate30m{namespace="apps-int",app="swirlapp-order"}'
+        values: '0.9x70'
+      - series: 'swirl:api_error_ratio:rate1h{namespace="apps-int",app="swirlapp-order"}'
+        values: '0.9x70'
+      - series: 'swirl:api_error_ratio:rate6h{namespace="apps-int",app="swirlapp-order"}'
+        values: '0.9x70'
+      - series: 'swirl:api_slow_ratio:rate5m{namespace="apps-int",app="swirlapp-order"}'
+        values: '0.9x70'
+      - series: 'swirl:api_slow_ratio:rate30m{namespace="apps-int",app="swirlapp-order"}'
+        values: '0.9x70'
+      - series: 'swirl:api_slow_ratio:rate1h{namespace="apps-int",app="swirlapp-order"}'
+        values: '0.9x70'
+      - series: 'swirl:api_slow_ratio:rate6h{namespace="apps-int",app="swirlapp-order"}'
+        values: '0.9x70'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: SwirlApiErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlApiErrorBudgetSlowBurn
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlApiLatencyBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: SwirlApiLatencyBudgetSlowBurn
+        exp_alerts: []

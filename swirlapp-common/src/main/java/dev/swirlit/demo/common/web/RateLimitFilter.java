@@ -19,13 +19,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -123,15 +121,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         if (used > requestsPerMinute) {
             rejections.increment();
-            response.setStatus(429);
             response.setHeader("Retry-After", Long.toString(reset));
-            response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-            String requestId = MDC.get("requestId");
-            String requestIdProperty = requestId == null ? "" : ",\"requestId\":\"" + requestId + "\"";
-            response.getWriter().write("{\"type\":\"/problems/429\","
-                    + "\"title\":\"Too many requests\",\"status\":429,"
-                    + "\"detail\":\"Request limit exceeded; retry after the indicated delay\""
-                    + requestIdProperty + "}");
+            ProblemResponses.write(response, 429, "Too many requests",
+                    "Request limit exceeded; retry after the indicated delay");
             return;
         }
 

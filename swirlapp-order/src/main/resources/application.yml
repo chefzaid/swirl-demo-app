@@ -90,6 +90,9 @@ spring:
       observation-enabled: true
 
 app:
+  # Largest accepted request body; bigger ones get 413 before they are parsed.
+  request-size:
+    max: ${APP_REQUEST_SIZE_MAX:64KB}
   security:
     enabled: false
     roles:

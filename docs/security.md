@@ -169,6 +169,7 @@ Requests use typed DTOs with Jakarta Validation:
 - positive path IDs
 - bounded collection limits
 - malformed JSON/type handling
+- request bodies of at most 64 KB (`APP_REQUEST_SIZE_MAX`); a larger declared body gets `413` before it is read, and a chunked body fails with `413` as soon as it passes the limit, so oversized JSON is never buffered or parsed. The ingress keeps its own 10 MB limit (`swirl-demo-app-upload-limit`) in front
 
 Responses use explicit DTOs and omit:
 

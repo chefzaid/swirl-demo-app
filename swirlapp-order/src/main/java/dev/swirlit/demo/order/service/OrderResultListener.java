@@ -91,6 +91,7 @@ public class OrderResultListener {
         if (event == null || event.orderId() == null || event.userId() == null || event.productId() == null) {
             throw new IllegalArgumentException("Order result identifiers are required");
         }
+        event.requireReadableSchema();
         if (event.status() != OrderStatus.APPROVED && event.status() != OrderStatus.REJECTED) {
             throw new IllegalArgumentException("Order result must be APPROVED or REJECTED");
         }

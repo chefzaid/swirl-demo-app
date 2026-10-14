@@ -45,4 +45,4 @@ Producer idempotence does not make the database insert and event publish atomic.
 
 DLT records require inspection/retention/replay operations that are not yet automated.
 
-Event schema compatibility must be defined before independently versioning producers and consumers beyond this demo.
+Event schema changes follow [ADR 0012](0012-event-schema-compatibility.md): additive within a major `schemaVersion`, and a newer major version is dead-lettered rather than misread.

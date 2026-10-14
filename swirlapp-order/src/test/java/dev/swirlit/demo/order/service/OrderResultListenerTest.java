@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -108,6 +109,16 @@ class OrderResultListenerTest {
         OrderEvent invalid = new OrderEvent(null, 1L, 1001L, null, OrderStatus.APPROVED, Instant.now());
 
         assertThrows(IllegalArgumentException.class, () -> orderResultListener.consume(invalid, null));
+    }
+
+    @Test
+    void consumeRefusesANewerSchemaVersionBeforeTouchingTheOrder() {
+        OrderEvent future = new OrderEvent(OrderEvent.SCHEMA_VERSION + 1, 1L, 1L, 1001L, "Ada", OrderStatus.APPROVED,
+                Instant.now());
+
+        assertThrows(IllegalArgumentException.class, () -> orderResultListener.consume(future, null));
+
+        verifyNoInteractions(orderRepository, processedEventRepository);
     }
 
     @Test

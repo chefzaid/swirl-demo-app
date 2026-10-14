@@ -102,16 +102,19 @@ The result listener accepts only `APPROVED` and `REJECTED` events. It verifies o
 
 ## Event Contract
 
-`OrderEvent` is an immutable Java record:
+`OrderEvent` is an immutable Java record, serialized as JSON without a Java type header:
 
 | Field | Type | Meaning |
 | --- | --- | --- |
+| `schemaVersion` | `Integer` | contract major version, currently 1; a missing value means 1 |
 | `orderId` | `Long` | persisted order identifier and Kafka record key |
 | `userId` | `Long` | logical user reference |
 | `productId` | `Long` | product reference carried through validation |
 | `userName` | `String` | null in the request; resolved name in an approved result |
 | `status` | `OrderStatus` | pending request or approved/rejected result |
 | `occurredAt` | `Instant` | event creation time |
+
+Add fields only as optional fields, and add `OrderStatus` values only after every consumer can read them; anything else raises `schemaVersion`. [ADR 0012](adr/0012-event-schema-compatibility.md) lists the rules and the rollout for a breaking change.
 
 Topics:
 

@@ -184,6 +184,7 @@ Statuses:
 - [ADR 0009: Use Explicit Delivery Jobs And Non-Blocking Verification](./adr/0009-explicit-delivery-jobs.md)
 - [ADR 0010: Trace Through Micrometer Observation With The OpenTelemetry Bridge](./adr/0010-opentelemetry-tracing.md)
 - [ADR 0011: Publish Order Events Through A Polling Transactional Outbox](./adr/0011-transactional-outbox.md)
+- [ADR 0012: Version Order Events By Major Schema Version And Evolve Them Additively](./adr/0012-event-schema-compatibility.md)
 
 ## Proposed ADRs For Roadmap Work
 

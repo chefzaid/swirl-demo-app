@@ -99,7 +99,7 @@ The current cache is an acceleration layer, not a source of truth. Distributed s
 
 Implemented Kafka behavior:
 
-- immutable `OrderEvent` records shared by producer and consumers
+- immutable `OrderEvent` records shared by producer and consumers, with a [schema version and compatibility rules](adr/0012-event-schema-compatibility.md)
 - keyed order and result records so events for one order retain partition ordering
 - three-partition order and result topics
 - matching dead-letter topics

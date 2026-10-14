@@ -14,6 +14,7 @@ Swirl Demo App is a reusable application template, not a product roadmap. New wo
 
 Bugs, failing checks, security findings, and code smells found while working on another task. Each entry names the file or area, what is wrong, and how to reproduce it.
 
+- [ ] Kafka consumers in both services use `JacksonJsonDeserializer` directly (`spring.kafka.consumer.value-deserializer` in each `application.yml`), so a record that cannot be deserialized (malformed JSON, or an `OrderStatus` value the consumer does not know) fails inside `poll()` before the listener's error handler sees it. The consumer stays on that offset and every later poll fails the same way, so the partition stops and the record never reaches the dead-letter topic (read from Spring Kafka 4.1.1's container code; not reproduced against a broker). Reproduce: publish `{"orderId":1,"status":"CANCELLED"}` to `order_topic`; the user service logs the deserialization error repeatedly and later records on that partition are not consumed. Fix with `ErrorHandlingDeserializer` delegating to the JSON deserializer and a dead-letter template that can write the raw bytes.
 - [x] `swirlapp-web` coverage counts only files that some spec imports, so an untested file is invisible rather than reported at 0% (`NotificationComponent` showed up only once `AppComponent` gained a spec). Reproduce: `npm run test:coverage` lists no row for `src/main.ts` or any file no spec loads. Fixed: `angular.json` now includes `src/**/*.ts` and excludes only the bootstrap glue (`src/main.ts`, `src/environments/`).
 
 ## Needs Input
@@ -36,7 +37,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [x] Replace the order database/Kafka dual write with a transactional outbox and a small relay implementation; provide polling and CDC variants as documented alternatives.
 - [x] Add an inbox or processed-event store so consumer idempotency survives restarts and duplicate events can be measured.
 - [ ] Add DLT inspection, replay, quarantine, and retention tooling with an operator-safe runbook.
-- [ ] Define event schema compatibility rules and demonstrate versioned events with backward-compatible consumers.
+- [x] Define event schema compatibility rules and demonstrate versioned events with backward-compatible consumers.
 - [ ] Add Testcontainers integration tests for PostgreSQL, Redis, and Kafka, including migration, retry, DLT, duplicate-delivery, and restart scenarios.
 - [ ] Demonstrate saga orchestration or choreography only after adding a second compensating write; keep the example domain minimal.
 

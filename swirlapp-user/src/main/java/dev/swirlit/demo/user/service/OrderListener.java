@@ -39,6 +39,7 @@ public class OrderListener {
 
     @KafkaListener(topics = "${app.messaging.topics.order:" + Constants.ORDER_TOPIC + "}", groupId = "${spring.kafka.consumer.group-id}")
     public void consume(OrderEvent event, @Header(name = EventIds.HEADER, required = false) byte[] eventId) {
+        event.requireReadableSchema();
         OrderEvent result;
         try {
             User user = userService.getUser(event.userId());

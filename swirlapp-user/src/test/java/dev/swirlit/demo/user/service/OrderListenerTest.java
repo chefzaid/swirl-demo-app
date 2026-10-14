@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,6 +67,17 @@ class OrderListenerTest {
         orderListener.consume(event(11L, 2L), null);
 
         assertPublishedStatus(11L, OrderStatus.REJECTED, null);
+    }
+
+    @Test
+    void consumeRefusesANewerSchemaVersionWithoutAnswering() {
+        OrderEvent future = new OrderEvent(OrderEvent.SCHEMA_VERSION + 1, 13L, 1L, 1001L, null, OrderStatus.PENDING,
+                Instant.now());
+
+        assertThrows(IllegalArgumentException.class, () -> orderListener.consume(future, null));
+
+        verifyNoInteractions(userService);
+        verify(kafkaTemplate, never()).send(any(ProducerRecord.class));
     }
 
     @Test

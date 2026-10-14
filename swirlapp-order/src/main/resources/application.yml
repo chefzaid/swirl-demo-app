@@ -57,6 +57,8 @@ spring:
       properties:
         spring.json.trusted.packages: dev.swirlit.demo.common.event
         spring.json.value.default.type: dev.swirlit.demo.common.event.OrderEvent
+        # The payload alone defines the contract; a Java class name in a header would couple it to code layout.
+        spring.json.use.type.headers: false
     producer:
       acks: all
       retries: 10
@@ -64,6 +66,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
       properties:
         enable.idempotence: true
+        spring.json.add.type.headers: false
         delivery.timeout.ms: 30000
         request.timeout.ms: 10000
         max.in.flight.requests.per.connection: 5

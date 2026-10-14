@@ -169,6 +169,12 @@ Requests use typed DTOs with Jakarta Validation:
 - positive path IDs
 - bounded collection limits
 - malformed JSON/type handling
+- request bodies of at most 64 KB (`APP_REQUEST_SIZE_MAX`), so oversized JSON is never buffered or parsed beyond the limit:
+  - a larger declared `Content-Length` gets `413` before any byte is read
+  - a chunked JSON or other body is counted while it is read and gets `413` once it passes the limit, whether a controller or a filter reads it
+  - a form or multipart body without a declared length gets `411`, because Tomcat parses those through its own stream and no endpoint accepts them
+  - the rejection carries the service's CORS headers, so the browser client can read it
+  - the ingress keeps its own 10 MB limit (`swirl-demo-app-upload-limit`) in front
 
 Responses use explicit DTOs and omit:
 

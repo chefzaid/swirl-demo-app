@@ -90,6 +90,10 @@ spring:
       observation-enabled: true
 
 app:
+  # Largest accepted request body: a larger declared length gets 413 before it is read, and a chunked body once
+  # it passes the limit. Must be positive.
+  request-size:
+    max: ${APP_REQUEST_SIZE_MAX:64KB}
   security:
     enabled: false
     roles:

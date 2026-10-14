@@ -1,5 +1,11 @@
 package dev.swirlit.demo.user.http;
 
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -88,5 +94,50 @@ class UserApiHttpTest {
                 .getStatusCode().value()).isEqualTo(200);
         assertThat(client.get().uri("/api/users").retrieve().toBodilessEntity()
                 .getStatusCode().value()).isEqualTo(401);
+    }
+
+    @Test
+    void oversizedBodiesAreRejectedWhetherOrNotTheyDeclareTheirLength() throws Exception {
+        String oversized = "{\"name\":\"" + "x".repeat(70_000) + "\"}";
+        try (HttpClient http = HttpClient.newHttpClient()) {
+            HttpResponse<String> declared = http.send(post("application/json")
+                    .header(HttpHeaders.ORIGIN, "https://app.example.test")
+                    .POST(HttpRequest.BodyPublishers.ofString(oversized)).build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> chunked = http.send(post("application/json")
+                    .POST(unknownLength(oversized)).build(), HttpResponse.BodyHandlers.ofString());
+
+            assertThat(declared.statusCode()).isEqualTo(413);
+            assertThat(declared.headers().firstValue(HttpHeaders.CONTENT_TYPE)).hasValue("application/problem+json");
+            assertThat(declared.headers().firstValue(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN))
+                    .hasValue("https://app.example.test");
+            assertThat(declared.body()).contains("\"title\":\"Payload too large\"", "\"requestId\":\"");
+            assertThat(chunked.statusCode()).isEqualTo(413);
+            assertThat(chunked.body()).contains("\"title\":\"Payload too large\"");
+        }
+    }
+
+    @Test
+    void formAndMultipartBodiesMustDeclareTheirLength() throws Exception {
+        try (HttpClient http = HttpClient.newHttpClient()) {
+            for (String type : List.of("application/x-www-form-urlencoded", "multipart/form-data; boundary=b")) {
+                HttpRequest put = post(type).method("PUT", unknownLength("name=" + "x".repeat(70_000))).build();
+                HttpResponse<String> response = http.send(put, HttpResponse.BodyHandlers.ofString());
+
+                assertThat(response.statusCode()).as(type).isEqualTo(411);
+                assertThat(response.body()).contains("\"title\":\"Length required\"");
+            }
+        }
+    }
+
+    private HttpRequest.Builder post(String contentType) {
+        return HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/users"))
+                .version(HttpClient.Version.HTTP_1_1)
+                .header(HttpHeaders.AUTHORIZATION, BEARER).header(HttpHeaders.CONTENT_TYPE, contentType);
+    }
+
+    /** A body the client must send chunked, because it cannot know the length up front. */
+    private static HttpRequest.BodyPublisher unknownLength(String body) {
+        return HttpRequest.BodyPublishers.ofInputStream(
+                () -> new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)));
     }
 }

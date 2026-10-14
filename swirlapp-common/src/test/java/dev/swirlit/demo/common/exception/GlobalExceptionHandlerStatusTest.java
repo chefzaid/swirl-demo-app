@@ -1,9 +1,13 @@
 package dev.swirlit.demo.common.exception;
 
+import dev.swirlit.demo.common.web.PayloadTooLargeException;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -42,5 +46,15 @@ class GlobalExceptionHandlerStatusTest {
 
         assertThat(problem.getStatus()).isEqualTo(403);
         assertThat(problem.getDetail()).isEqualTo("The caller lacks the role this operation requires");
+    }
+
+    @Test
+    void anOversizedBodyIsTooLargeRatherThanMalformed() {
+        var unreadable = new HttpMessageNotReadableException("I/O error",
+                new PayloadTooLargeException(65536), new MockHttpInputMessage(new byte[0]));
+
+        assertThat(handler.handleMalformedRequest(unreadable).getStatus()).isEqualTo(413);
+        assertThat(handler.handleMalformedRequest(new HttpMessageNotReadableException("bad json",
+                new MockHttpInputMessage(new byte[0]))).getStatus()).isEqualTo(400);
     }
 }

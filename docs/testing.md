@@ -92,7 +92,8 @@ mask build all
 - `GlobalExceptionHandlerLoggingTest`: constraint violations log the SQL state, never the rejected values
 - `FailOpenCacheErrorHandlerTest`: an unreachable cache turns into logged misses, so cached reads and evicting writes still succeed, and counts each failure
 - `DeadLettersTest`: newest dead letters across topics without payloads, replay of original bytes, key, and event ID to the source topic, and refusal of foreign topics, missing offsets, and unknown original topics
-- `GlobalExceptionHandlerStatusTest`: deliberate 4xx `ResponseStatusException`s keep their status, server errors stay generic, and denied access is 403
+- `GlobalExceptionHandlerStatusTest`: deliberate 4xx `ResponseStatusException`s keep their status, server errors stay generic, denied access is 403, and an oversized body is 413 rather than malformed
+- `RequestSizeLimitFilterTest`: declared oversized bodies are rejected unread with CORS headers, bodies within the limit pass unchanged, chunked bodies fail once they pass the limit through the stream or the reader (also when a filter reads them), chunked form and multipart bodies get 411, and a non-positive limit is refused
 - `KafkaReliabilityConfigTest`: environment-scoped topics and dead-letter topics, per-topic retry and dead-letter counters, and unreadable records dead-lettered as their original bytes
 - `MessagingHealthIndicatorTest`: optional messaging degrades, required messaging goes down, and probes reuse the last background check
 - `AuditTrailTest`: audit entries name the token subject and resource ID, wait for the transaction to commit, and cover rejected tokens and denied requests
@@ -112,7 +113,7 @@ mask build all
 - `DatabaseHealthIndicatorTest`: healthy and failed repository access
 - `SecurityConfigTest`: anonymous API rejection, JWT-authenticated API access, CORS preflight, and valid Kafka producer settings in a full application context
 - `UserArchitectureTest`: the shared `ArchitectureRules` for the user service
-- `UserApiHttpTest`: over real HTTP, create/list/delete with duplicate rejection, CORS preflight for allowed and foreign origins, and public probes beside a protected API
+- `UserApiHttpTest`: over real HTTP, create/list/delete with duplicate rejection, CORS preflight for allowed and foreign origins, public probes beside a protected API, `413` for oversized bodies with and without a declared length, and `411` for chunked form and multipart bodies
 - `UserAuthorizationMatrixTest`: over real HTTP with Keycloak-shaped tokens, anonymous, forged, authenticated, wrong-role, and permitted callers each get the expected status, and denied deletes never reach the service
 - `DeadLetterEndpointTest`: over real HTTP, `/actuator/deadletters` rejects anonymous callers, forbids callers without the operator role, and answers a replay of a foreign topic with 400
 - `SecurityAuditTest`: denied anonymous requests and rejected bearer tokens reach the audit trail without the token

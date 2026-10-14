@@ -52,6 +52,7 @@ Implemented API behavior:
 - request IDs in error bodies and production logging context
 - configurable per-principal or per-IP fixed-window rate limiting
 - `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`, and `Retry-After` response headers
+- a 64 KB request-body limit answered with `413` Problem Details, enforced while chunked bodies are read; chunked form and multipart bodies get `411`
 - SpringDoc OpenAPI documents for each service and one aggregated Swagger UI
 - explicit CORS origins, methods, request headers, and exposed response headers
 - Keycloak realm roles mapped to `ROLE_*` authorities, and a [`@PreAuthorize` rule](security.md#backend-authorization) that can require a role to delete users

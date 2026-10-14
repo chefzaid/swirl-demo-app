@@ -59,7 +59,8 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [x] Resolve the findings of the CI `03-security` job (2026-10-04, pipeline 723): one critical prototype-pollution issue in a build-time worker-pool dependency and high denial-of-service issues in the router and HTTP-client dependencies; the job is report-only, so they do not block delivery. Fixed 2026-10-14 by moving Angular to 22.2.2 with a refreshed lockfile (piscina, router, undici, fast-uri, proxy-addr) and pinning Jackson 2.21.7/3.1.7 and lz4-java 1.11.4; a local `trivy fs` reports no HIGH or CRITICAL findings.
 - [x] Give the order, user and web deployments an explicit non-root pod and container `securityContext` (Trivy KSV-0118 reports the default context, which allows root). The base Deployments already set it; the finding came from the HA overlay's standalone partial Deployments, now inline patches in `infra/overlays/ha/kustomization.yaml` with an identical rendered output.
 - [ ] Define retention, export, anonymization, and deletion examples for personal data without expanding the demo into an account-management product.
-- [ ] Add edge security examples for global throttling, request-size limits, and optional bot protection.
+- [x] Add request-size limits: the services answer bodies over 64 KB with `413` (chunked bodies once they pass the limit) and chunked form or multipart bodies with `411`, behind the ingress's 10 MB limit.
+- [ ] Add edge security examples for global throttling and optional bot protection (Traefik `rateLimit` middleware chained after `swirl-demo-app-upload-limit`, opt-in per environment setting, since the client IP Traefik sees depends on the platform's load balancer).
 
 ## Priority: Resilience And Asynchronous Work
 

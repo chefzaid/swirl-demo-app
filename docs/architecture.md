@@ -40,7 +40,7 @@ flowchart LR
 - `OrderStatus` and `OrderEvent`
 - Kafka topics/retry/DLT wiring
 - Problem Details handling
-- request-ID and rate-limit filters
+- request-ID, request-size, and rate-limit filters
 
 Each deployable service owns:
 
@@ -78,13 +78,14 @@ The UI stays deliberately small so infrastructure and delivery behavior remain v
 1. Angular loads Keycloak OIDC discovery.
 2. Authorization Code + PKCE authenticates the browser.
 3. The interceptor adds the access token to an API request.
-4. Spring Security validates the JWT issuer/signature/time claims.
-5. the request-ID filter validates or creates `X-Request-Id`.
-6. the rate limiter accounts by principal.
-7. controller validates DTO/path/query values.
-8. service executes a transaction and repository/cache work.
-9. response DTO hides persistence-only fields.
-10. logs and errors carry the request ID.
+4. the request-ID filter validates or creates `X-Request-Id`.
+5. the request-size filter rejects a body over 64 KB with `413` (a chunked form or multipart body with `411`).
+6. Spring Security validates the JWT issuer/signature/time claims.
+7. the rate limiter accounts by principal.
+8. controller validates DTO/path/query values.
+9. service executes a transaction and repository/cache work.
+10. response DTO hides persistence-only fields.
+11. logs and errors carry the request ID.
 
 ### Order creation and validation
 

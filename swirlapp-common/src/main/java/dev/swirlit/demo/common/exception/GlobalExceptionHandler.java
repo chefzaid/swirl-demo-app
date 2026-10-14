@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import dev.swirlit.demo.common.web.PayloadTooLargeException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 
@@ -85,6 +86,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class})
     ProblemDetail handleMalformedRequest(Exception exception) {
+        if (PayloadTooLargeException.causes(exception)) {
+            return problem(HttpStatus.CONTENT_TOO_LARGE, PayloadTooLargeException.TITLE,
+                    PayloadTooLargeException.DETAIL);
+        }
         return problem(HttpStatus.BAD_REQUEST, "Malformed request", "The request syntax or parameter types are invalid");
     }
 

@@ -50,7 +50,7 @@ services:
       - kafka-data:/var/lib/kafka/data
 
   redis:
-    image: redis:8.8-alpine
+    image: redis:8.10-alpine
     profiles: ["local-infra"]
     restart: unless-stopped
     ports:
@@ -59,7 +59,7 @@ services:
       - redis-data:/data
 
   postgres:
-    image: postgres:18.4-alpine
+    image: postgres:18.6-alpine
     profiles: ["local-infra"]
     restart: unless-stopped
     environment:
@@ -72,7 +72,7 @@ services:
       - postgres-data:/var/lib/postgresql
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.7.0
+    image: quay.io/keycloak/keycloak:26.8.1
     profiles: ["local-infra"]
     restart: unless-stopped
     command: ["start-dev", "--import-realm"]

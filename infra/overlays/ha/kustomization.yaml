@@ -4,5 +4,67 @@ namespace: apps
 resources:
 - ../../k8s
 - disruption-budgets.yaml
+# Patches stay inline: standalone partial Deployments are scanned as complete
+# workloads and reported as missing their (inherited) security context.
 patches:
-- path: workloads.yaml
+- target:
+    kind: Deployment
+  patch: |-
+    - op: add
+      path: /spec/replicas
+      value: 2
+    - op: add
+      path: /spec/minReadySeconds
+      value: 5
+    - op: add
+      path: /spec/strategy
+      value:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 0
+          maxSurge: 1
+- target:
+    kind: Deployment
+    name: swirlapp-user
+  patch: |-
+    - op: add
+      path: /spec/template/spec/topologySpreadConstraints
+      value:
+      - maxSkew: 1
+        minDomains: 2
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        nodeTaintsPolicy: Honor
+        labelSelector:
+          matchLabels:
+            app: swirlapp-user
+- target:
+    kind: Deployment
+    name: swirlapp-order
+  patch: |-
+    - op: add
+      path: /spec/template/spec/topologySpreadConstraints
+      value:
+      - maxSkew: 1
+        minDomains: 2
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        nodeTaintsPolicy: Honor
+        labelSelector:
+          matchLabels:
+            app: swirlapp-order
+- target:
+    kind: Deployment
+    name: swirlapp-web
+  patch: |-
+    - op: add
+      path: /spec/template/spec/topologySpreadConstraints
+      value:
+      - maxSkew: 1
+        minDomains: 2
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        nodeTaintsPolicy: Honor
+        labelSelector:
+          matchLabels:
+            app: swirlapp-web

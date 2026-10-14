@@ -271,7 +271,7 @@ Checks:
 
 - confirm shared Redis health in `swirl-cloud`
 - inspect application readiness details internally
-- verify `REDIS_HOST`/port and NetworkPolicy behavior
+- verify `REDIS_HOST`/port and NetworkPolicy behavior, including that `allow-swirl-demo-app-egress` still allows the Redis port
 
 The services fail open (see [cache behavior](architecture.md#cache-behavior)), so a Redis outage degrades latency, not availability. After Redis returns, entries whose eviction failed during the outage can be stale until their 10-minute TTL expires; flush the environment's prefix (`swirl-demo-app:<env>:*`) if that window matters.
 
@@ -355,7 +355,7 @@ Checks:
 
 - pod readiness and annotations
 - service endpoints
-- `allow-swirl-demo-app-ingress` NetworkPolicy (prod in `apps`); platform policies in `apps-int` and `apps-uat`
+- `allow-swirl-demo-app-ingress` and `allow-swirl-demo-app-egress` NetworkPolicies (prod in `apps`); platform policies in `apps-int` and `apps-uat`
 - Prometheus namespace/pod labels still match the policy
 - `/actuator/prometheus` responds through the cluster service
 

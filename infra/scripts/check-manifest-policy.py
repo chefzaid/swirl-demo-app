@@ -14,11 +14,11 @@ ROOT = Path(__file__).resolve().parents[2]
 WORKLOADS = {"Deployment", "StatefulSet", "DaemonSet", "Job"}
 
 
-def pod_spec(resource):
+def pod_template(resource):
     if resource.get("kind") == "CronJob":
-        return resource["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+        return resource["spec"]["jobTemplate"]["spec"]["template"]
     if resource.get("kind") in WORKLOADS:
-        return resource["spec"]["template"]["spec"]
+        return resource["spec"]["template"]
     return None
 
 
@@ -42,12 +42,32 @@ def container_violations(container, long_running):
     return [message for passed, message in checks if not passed]
 
 
+def selects(selector, labels):
+    if any(labels.get(key) != value for key, value in (selector.get("matchLabels") or {}).items()):
+        return False
+    for expression in selector.get("matchExpressions") or []:
+        present, value = expression["key"] in labels, labels.get(expression["key"])
+        operator, values = expression["operator"], expression.get("values", [])
+        if not {"In": present and value in values, "NotIn": not present or value not in values,
+                "Exists": present, "DoesNotExist": not present}[operator]:
+            return False
+    return True
+
+
 def violations(resources):
+    resources = [resource for resource in resources if resource]
+    policies = [resource["spec"] for resource in resources if resource.get("kind") == "NetworkPolicy"]
+    egress_selectors = [policy["podSelector"] for policy in policies if "Egress" in policy.get("policyTypes", [])]
     for resource in resources:
-        spec = pod_spec(resource or {})
-        if spec is None:
+        template = pod_template(resource)
+        if template is None:
             continue
+        spec = template["spec"]
         where = f"{resource['kind']}/{resource['metadata']['name']}"
+        labels = (template.get("metadata") or {}).get("labels") or {}
+        # A target that ships its own NetworkPolicies must also bound each workload's egress.
+        if policies and not any(selects(selector, labels) for selector in egress_selectors):
+            yield f"{where}: pod must be selected by an egress NetworkPolicy"
         context = spec.get("securityContext") or {}
         if context.get("runAsNonRoot") is not True:
             yield f"{where}: pod must set runAsNonRoot: true"

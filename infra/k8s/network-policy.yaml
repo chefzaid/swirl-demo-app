@@ -51,3 +51,91 @@ spec:
           port: 8080
         - protocol: TCP
           port: 8081
+---
+# Application pods may reach only the services they use. Selecting the pods
+# for egress denies everything else, so add a rule here before configuring a
+# new outbound dependency (for example an OTLP collector).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-swirl-demo-app-egress
+  namespace: apps
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - swirlapp-web
+          - swirlapp-user
+          - swirlapp-order
+  policyTypes:
+    - Egress
+  egress:
+    # Calls between the application's own pods.
+    - to:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - swirlapp-web
+                  - swirlapp-user
+                  - swirlapp-order
+    # Cluster DNS.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Shared PostgreSQL, Redis and Kafka, and in-cluster HTTP(S) services in infra.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: infra
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 9094
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+    # Keycloak's public hostname resolves to the node address, which the
+    # cluster forwards to the ingress controller's container ports.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: infra
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8444
+    # Public HTTPS endpoints (the issuer's JWK set); private ranges stay closed.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+              - 127.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 443

@@ -241,6 +241,7 @@ Implemented platform features:
 - requests and limits for application and CI containers
 - restrictive application pod security contexts
 - ingress NetworkPolicy for application pods, NGINX, Prometheus, and GitLab CI smoke tests
+- egress NetworkPolicy limiting application pods to DNS, the shared datastores, the identity provider and public HTTPS
 - Vault-backed database and CI credentials through External Secrets
 - persistent Maven/npm dependency caches and private GitLab image registry integration
 - explicit GitLab jobs for build, optional tests, Docker validation, optional E2E/quality reports, release, deploy, and set-major-version

@@ -87,7 +87,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Add an optional API-gateway profile for centralized routing, authentication policy, quotas, contract publication, and edge observability without replacing service-side controls.
 - [x] Add HorizontalPodAutoscaler, PodDisruptionBudget, topology spread, and rolling/canary deployment examples. The HA overlay carries the autoscalers, disruption budgets, topology spread and rolling-update settings; canary delivery is split out below.
 - [ ] Add a canary deployment example (for example Argo Rollouts with an analysis step on error rate), kept optional like the HA overlay.
-- [ ] Add explicit egress NetworkPolicies for PostgreSQL, Redis, Kafka, Keycloak, DNS, and approved external endpoints.
+- [x] Add explicit egress NetworkPolicies for PostgreSQL, Redis, Kafka, Keycloak, DNS, and approved external endpoints. `allow-swirl-demo-app-egress` ships with the base and prod (dedicated `int`/`uat` namespaces keep the platform's policies), and the manifest policy check rejects a target whose workloads lack an egress policy. Prod picks it up with its next release.
 - [ ] Add optional service-mesh documentation only when mTLS, traffic policy, or service-to-service telemetry is demonstrated.
 - [ ] Add ephemeral preview environments and automated teardown for pull requests.
 - [x] Add policy-as-code checks for Kubernetes manifests and container security contexts.

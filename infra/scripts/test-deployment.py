@@ -174,7 +174,7 @@ class RenderingTests(unittest.TestCase):
             resources = list(yaml.safe_load_all(rendered.stdout))
             policies = [item["metadata"]["name"] for item in resources if item["kind"] == "NetworkPolicy"]
             # Dedicated namespaces use platform policies; the shared prod namespace needs the app's own.
-            self.assertEqual(policies, ["allow-swirl-demo-app-ingress"] if environment == "prod" else [])
+            self.assertEqual(policies, ["allow-swirl-demo-app-egress", "allow-swirl-demo-app-ingress"] if environment == "prod" else [])
             for item in resources:
                 self.assertEqual(item["metadata"]["namespace"], namespace)
                 identity = (item["apiVersion"], item["kind"], namespace, item["metadata"]["name"])

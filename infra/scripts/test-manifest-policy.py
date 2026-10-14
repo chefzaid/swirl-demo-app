@@ -20,7 +20,7 @@ CONTAINER = {
 }
 DEPLOYMENT = {
     "kind": "Deployment", "metadata": {"name": "app"},
-    "spec": {"template": {"spec": {
+    "spec": {"template": {"metadata": {"labels": {"app": "app"}}, "spec": {
         "automountServiceAccountToken": False,
         "securityContext": {"runAsNonRoot": True, "seccompProfile": {"type": "RuntimeDefault"}},
         "containers": [CONTAINER]}}},
@@ -71,6 +71,20 @@ class ManifestPolicyTest(unittest.TestCase):
         found = list(policy.violations([job]))
         self.assertTrue(found)
         self.assertTrue(all("container init:" in message for message in found), found)
+
+    def test_shipped_network_policies_must_bound_every_workloads_egress(self):
+        def network_policy(types, selector):
+            return {"kind": "NetworkPolicy", "metadata": {"name": "policy"},
+                    "spec": {"podSelector": selector, "policyTypes": types}}
+        app = {"matchExpressions": [{"key": "app", "operator": "In", "values": ["app"]}]}
+        other = {"matchLabels": {"app": "other"}}
+        self.assertEqual([], list(policy.violations([DEPLOYMENT])))
+        self.assertEqual([], list(policy.violations([DEPLOYMENT, network_policy(["Egress"], app)])))
+        self.assertEqual([], list(policy.violations([DEPLOYMENT, network_policy(["Ingress", "Egress"], {})])))
+        for types, selector in ((["Ingress"], app), (["Egress"], other)):
+            with self.subTest(types=types, selector=selector):
+                self.assertEqual(["Deployment/app: pod must be selected by an egress NetworkPolicy"],
+                                 list(policy.violations([DEPLOYMENT, network_policy(types, selector)])))
 
 
 if __name__ == "__main__":

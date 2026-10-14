@@ -40,7 +40,8 @@ Subdomains route to separate Deployments; they do not create isolation by
 themselves. `apps-int` and `apps-uat` have their own Secrets and platform-managed
 access controls, network policies and resource limits. Prod shares `apps` with the
 platform's single-environment applications: it keeps its own Vault store and Argo
-project, and ships the `allow-swirl-demo-app-ingress` NetworkPolicy itself.
+project, and ships the `allow-swirl-demo-app-ingress` and `allow-swirl-demo-app-egress`
+NetworkPolicies itself.
 Shared-cluster environments also share capacity, outages and cluster maintenance.
 
 The central `infra/deployment-environments` ConfigMap supplies the authoritative
@@ -66,8 +67,16 @@ connectivity and secret access before deployment.
 
 The shared base contains the user, order and web Deployments and Services,
 ingress, observability resources, ExternalSecrets and generated ConfigMaps.
-Remote deployments also include the application's ingress NetworkPolicy; local
-deployments use platform-owned network policies that application CI cannot relax.
+Remote deployments and the shared prod namespace also include the application's
+ingress and egress NetworkPolicies; dedicated local namespaces use platform-owned
+network policies that application CI cannot relax. The egress policy mirrors the
+platform's dedicated-namespace allowance, limited to the application pods: the
+other application pods, cluster DNS, PostgreSQL (5432), Redis (6379), Kafka (9094)
+and HTTP(S) services in `infra`, the ingress controller (Keycloak's public hostname
+hairpins to it) and public HTTPS outside private ranges. Pods cannot open any other
+connection, so add a rule to `infra/k8s/network-policy.yaml` before configuring a
+new outbound dependency such as an OTLP collector. To roll back, revert that
+policy; removing it restores unrestricted egress at the next sync.
 The workloads use non-root containers, read-only root filesystems, explicit
 resources, health probes and restricted Linux capabilities.
 Argo CD creates application and health ingress routes after the workloads become

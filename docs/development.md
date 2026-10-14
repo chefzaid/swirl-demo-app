@@ -74,7 +74,7 @@ The repository currently targets:
 - Spring Boot 4.1.1
 - Node.js 24 LTS
 - npm 12.0.2
-- Angular 22.1
+- Angular 22.2
 - TypeScript 6.0
 - Docker with Compose support
 - optional: Mask task runner, kubectl, and VS Code Dev Containers

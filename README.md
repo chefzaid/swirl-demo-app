@@ -4,7 +4,7 @@ Swirl Demo App is a deliberately small, production-shaped full-stack template. T
 
 [![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Angular](https://img.shields.io/badge/Angular-22.1-red.svg)](https://angular.dev/)
+[![Angular](https://img.shields.io/badge/Angular-22.2-red.svg)](https://angular.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg)](https://www.typescriptlang.org/)
 
 ## GitLab Delivery

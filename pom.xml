@@ -24,6 +24,8 @@
         <spring-boot.version>4.1.1</spring-boot.version>
         <!-- Security fixes pending inclusion in the Spring Boot dependency BOM. -->
         <tomcat.version>11.0.25</tomcat.version>
+        <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
+        <jackson-bom.version>3.1.7</jackson-bom.version>
         <springdoc.version>3.1.0</springdoc.version>
         <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
         <mockito.version>5.23.0</mockito.version>
@@ -41,11 +43,11 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Kafka 4.2.1 still brings the vulnerable LZ4 1.10.1 runtime. -->
+            <!-- Kafka 4.2.1 still brings a vulnerable LZ4 runtime (CVE-2026-106451 fixed in 1.11.4). -->
             <dependency>
                 <groupId>at.yawk.lz4</groupId>
                 <artifactId>lz4-java</artifactId>
-                <version>1.11.1</version>
+                <version>1.11.4</version>
             </dependency>
             <dependency>
                 <groupId>com.tngtech.archunit</groupId>

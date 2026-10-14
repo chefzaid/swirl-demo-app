@@ -95,7 +95,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 
 - [x] Add ArchUnit rules for shared-module and service boundaries.
 - [x] Add mutation testing for service and event-state logic.
-- [ ] Add REST-assured or full-context HTTP integration tests against packaged applications.
+- [x] Add REST-assured or full-context HTTP integration tests against packaged applications.
 - [x] Add accessibility testing for the Angular critical path and automated checks for keyboard navigation and semantic labels.
 - [ ] Add visual regression tests for the deliberately small UI surface.
 - [ ] Extend the existing automatic Sonar reporting with Java 25-specific analyzer validation, OWASP Dependency-Check, and opt-in enforcement of quality gates.

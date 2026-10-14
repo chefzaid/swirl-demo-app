@@ -9,6 +9,7 @@ Backend layers:
 - plain unit tests for services, listeners, filters, cache configuration, and health indicators
 - Spring MVC slice tests for request validation, status codes, Problem Details, and response DTO privacy
 - full Spring Boot + MockMvc security tests for anonymous and JWT-authenticated access
+- full-context HTTP tests (`*ApiHttpTest`) that start the service on a random port with its in-memory database and call it over a real connection, through every servlet filter
 - Mockito fakes for repositories, Kafka templates, and infrastructure dependencies
 - ArchUnit rules for module boundaries, service layering, and coding conventions
 - JaCoCo verification during the Maven `verify` phase
@@ -89,7 +90,11 @@ mask build all
 - `RequestIdFilterTest`: accepted request IDs, unsafe-value replacement, response header, and MDC behavior
 - `RateLimitFilterTest`: allowed requests, response headers, and `429` rejection after the configured limit
 - `GlobalExceptionHandlerLoggingTest`: constraint violations log the SQL state, never the rejected values
-- `FailOpenCacheErrorHandlerTest`: an unreachable cache turns into logged misses, so cached reads and evicting writes still succeed
+- `FailOpenCacheErrorHandlerTest`: an unreachable cache turns into logged misses, so cached reads and evicting writes still succeed, and counts each failure
+- `KafkaReliabilityConfigTest`: environment-scoped topics and dead-letter topics, and per-topic retry and dead-letter counters
+- `MessagingHealthIndicatorTest`: optional messaging degrades, required messaging goes down, and probes reuse the last background check
+- `AuditTrailTest`: audit entries name the token subject and resource ID, wait for the transaction to commit, and cover rejected tokens and denied requests
+- `HttpApiTestSupport`: shared client and token setup for the HTTP tests, published in the module's test JAR
 - `ArchitectureRules`: shared ArchUnit rules, published in the module's test JAR: each module depends only on itself and `swirlapp-common`; controllers, services, and repositories stay layered; domain classes stay independent; no field injection, `java.util.logging`, or standard streams
 - `CommonArchitectureTest`: the shared module never depends on a service module
 
@@ -103,6 +108,10 @@ mask build all
 - `DatabaseHealthIndicatorTest`: healthy and failed repository access
 - `SecurityConfigTest`: anonymous API rejection, JWT-authenticated API access, CORS preflight, and valid Kafka producer settings in a full application context
 - `UserArchitectureTest`: the shared `ArchitectureRules` for the user service
+- `UserApiHttpTest`: over real HTTP, create/list/delete with duplicate rejection, CORS preflight for allowed and foreign origins, and public probes beside a protected API
+- `SecurityAuditTest`: denied anonymous requests and rejected bearer tokens reach the audit trail without the token
+- `MessagingReadinessTest`: a `DEGRADED` messaging contributor keeps readiness at 200, a `DOWN` one turns it to 503, and liveness ignores both
+- `LatencyObjectiveMetricsTest` and `TracingTest`: request timers publish the 300 ms objective bucket; incoming `traceparent` headers reach the logging MDC and outgoing Kafka records
 
 ### Order service
 
@@ -113,6 +122,7 @@ mask build all
 - `DatabaseHealthIndicatorTest`: healthy and failed repository access
 - `SecurityConfigTest`: anonymous API rejection, JWT-authenticated API access, CORS preflight, and valid Kafka producer settings in a full application context
 - `OrderArchitectureTest`: the shared `ArchitectureRules` for the order service
+- `OrderApiHttpTest`: over real HTTP, the bearer-token challenge, the create/read/edit/delete flow with request-ID and rate-limit headers and audit entries, Problem Details for invalid input, and rejected tokens
 
 ## Direct Maven Workflows
 

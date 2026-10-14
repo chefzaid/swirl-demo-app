@@ -110,6 +110,16 @@ separate credentials and logical data resources from the shared platform. See th
 [delivery flow](deployment.md#delivery-flow) for publication, promotion and health
 checks, and [code quality](code-quality.md) for analysis ownership and discovery scope.
 
+## Cache Behavior
+
+Each service caches single-record reads in Redis (`users`, `orders`) for the `uat` and `prod` profiles; other profiles use an in-memory or no cache.
+
+- **Outages fail open.** `FailOpenCacheErrorHandler` turns every cache failure (unreachable Redis, timeout, an entry that no longer deserializes) into a logged miss, so the request is served from PostgreSQL. Redis is never a readiness dependency.
+- **Stampedes are bounded per pod.** Cached reads use `@Cacheable(sync = true)`, so concurrent misses for one key load it once per instance.
+- **Writes evict.** Creates, edits and deletes evict the whole cache name, and an order result evicts that order. Entries also expire after 10 minutes.
+- **Keys are versioned.** Keys look like `<REDIS_CACHE_PREFIX><cache>:<version>::<id>`, for example `swirl-demo-app:prod:users:v1::7`. Bump `CacheConfig.CACHE_VERSION` when the cached entity changes shape, so new pods never read values written by old ones during a rolling deployment.
+- **Staleness is bounded by the TTL.** If an eviction fails (Redis down during a write), another pod can serve the old value until the entry expires. That is acceptable for this demo's profile data; data that must never be stale should not be cached or needs a shorter TTL.
+
 ## Data Ownership Rules
 
 - `swirlapp-user` owns `app_users`.

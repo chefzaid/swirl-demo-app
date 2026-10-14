@@ -32,7 +32,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "users", key = "#userId")
+    @Cacheable(cacheNames = "users", key = "#userId", sync = true)
     public User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User %d was not found".formatted(userId)));

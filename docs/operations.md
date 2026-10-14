@@ -226,9 +226,9 @@ Do not modify an applied migration or switch Hibernate to `update`. Correct the 
 
 Symptoms:
 
-- readiness may fail through Redis health
-- cached resource reads report errors or increased latency
-- logs contain Redis connection failures
+- `/actuator/health` reports Redis down; readiness stays up because the readiness group does not include Redis
+- reads keep working from PostgreSQL with higher latency (each lookup waits for the Redis timeout of 2 seconds first)
+- logs contain `Cache get failed for cache=...; continuing without the cache` warnings
 
 Checks:
 
@@ -236,7 +236,7 @@ Checks:
 - inspect application readiness details internally
 - verify `REDIS_HOST`/port and NetworkPolicy behavior
 
-The current production cache manager has no documented stale/local fallback. Restore Redis or deploy an explicitly tested degraded-mode change; do not assume cache annotations automatically fail open.
+The services fail open (see [cache behavior](architecture.md#cache-behavior)), so a Redis outage degrades latency, not availability. After Redis returns, entries whose eviction failed during the outage can be stale until their 10-minute TTL expires; flush the environment's prefix (`swirl-demo-app:<env>:*`) if that window matters.
 
 ### Kafka events remain pending
 

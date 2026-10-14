@@ -52,7 +52,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "orders", key = "#id")
+    @Cacheable(cacheNames = "orders", key = "#id", sync = true)
     public Order getOrderById(Long id) {
         return orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order %d was not found".formatted(id)));

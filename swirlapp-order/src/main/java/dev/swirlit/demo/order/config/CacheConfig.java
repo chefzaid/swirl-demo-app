@@ -1,9 +1,12 @@
 package dev.swirlit.demo.order.config;
 
+import dev.swirlit.demo.common.cache.FailOpenCacheErrorHandler;
 import dev.swirlit.demo.order.domain.Order;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -20,7 +23,10 @@ import java.time.Duration;
 @Configuration
 @EnableCaching
 @Profile({"uat", "prod"})
-public class CacheConfig {
+public class CacheConfig implements CachingConfigurer {
+
+    /** Bump when the cached class changes shape so new pods never read entries written by old ones. */
+    static final String CACHE_VERSION = "v1";
 
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory, JsonMapper jsonMapper,
@@ -30,9 +36,14 @@ public class CacheConfig {
                 .build();
     }
 
+    @Override
+    public CacheErrorHandler errorHandler() {
+        return new FailOpenCacheErrorHandler();
+    }
+
     static RedisCacheConfiguration cacheConfiguration(JsonMapper jsonMapper, String keyPrefix) {
         return RedisCacheConfiguration.defaultCacheConfig()
-                .prefixCacheNameWith(keyPrefix)
+                .computePrefixWith(cacheName -> keyPrefix + cacheName + ":" + CACHE_VERSION + "::")
                 .entryTtl(Duration.ofMinutes(10))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(

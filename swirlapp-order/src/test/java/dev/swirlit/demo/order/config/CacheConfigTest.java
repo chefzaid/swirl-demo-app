@@ -4,10 +4,13 @@ import dev.swirlit.demo.common.domain.OrderStatus;
 import dev.swirlit.demo.order.domain.Order;
 import dev.swirlit.demo.common.cache.FailOpenCacheErrorHandler;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import tools.jackson.databind.json.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.mockito.Mockito.mock;
 
 class CacheConfigTest {
 
@@ -34,5 +37,14 @@ class CacheConfigTest {
     @Test
     void cacheFailuresFallThroughToTheDatabase() {
         assertInstanceOf(FailOpenCacheErrorHandler.class, new CacheConfig().errorHandler());
+    }
+
+    @Test
+    void cacheIsKnownAtStartupSoItsStatisticsAreExported() {
+        var manager = assertInstanceOf(RedisCacheManager.class, new CacheConfig().cacheManager(
+                mock(RedisConnectionFactory.class), JsonMapper.builder().build(), ""));
+        manager.initializeCaches();
+
+        assertEquals(java.util.Set.of("orders"), java.util.Set.copyOf(manager.getCacheNames()));
     }
 }

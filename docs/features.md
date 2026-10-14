@@ -178,6 +178,7 @@ Implemented observability behavior:
 - liveness, readiness, and startup probe groups
 - custom database health indicators with record counts
 - Micrometer Prometheus registry
+- [application metrics](operations.md#application-metrics) for Kafka publish and consume latency, consumer lag, retries, DLT records, cache hits and errors, and rate-limit rejections
 - pod scrape annotations and NetworkPolicy access for Prometheus
 - Grafana dashboard definition for target health, request rate, 5xx rate, response time, JVM heap, CPU, database connections, pod memory, and restarts
 - readable development logs
@@ -188,7 +189,7 @@ Implemented observability behavior:
 
 Remote application clusters require separate collector and central dashboard
 integration; see [operational observability scope](operations.md#logs-and-request-correlation).
-Distributed traces, SLO alerts, and event-specific metrics are future reusable capabilities.
+Distributed traces and SLO alerts are future reusable capabilities.
 
 ## Testing And Quality Reporting
 

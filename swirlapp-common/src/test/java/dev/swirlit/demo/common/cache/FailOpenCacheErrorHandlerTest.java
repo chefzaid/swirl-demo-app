@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -43,7 +44,8 @@ class FailOpenCacheErrorHandlerTest {
 
     @Test
     void logsTheFailedOperationWithoutKeysOrValues(CapturedOutput output) {
-        var handler = new FailOpenCacheErrorHandler();
+        var registry = new SimpleMeterRegistry();
+        var handler = new FailOpenCacheErrorHandler(registry);
         var cache = new ConcurrentMapCache("people");
         var failure = new IllegalStateException("ada@example.test");
 
@@ -52,6 +54,8 @@ class FailOpenCacheErrorHandlerTest {
 
         assertThat(output).contains("Cache put failed for cache=people", "Cache evict failed for cache=people")
                 .doesNotContain("ada@example.test", "Ada Lovelace");
+        assertThat(registry.counter("swirl.cache.errors", "cache", "people", "operation", "put").count()).isEqualTo(1);
+        assertThat(registry.counter("swirl.cache.errors", "cache", "people", "operation", "evict").count()).isEqualTo(1);
     }
 
     @Configuration(proxyBeanMethods = false)

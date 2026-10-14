@@ -177,8 +177,27 @@ Do not paste tokens, credentials, complete personal records, or browser test art
 
 On a remote target, the ConfigMap alone does not provision central Grafana or
 supply metric series. Its dashboard needs to be imported and backed by that
-environment's telemetry. Event lag, retry, DLT, cache, rate-limit, and SLO alerts
-are roadmap items.
+environment's telemetry. SLO alerts are a roadmap item.
+
+### Application Metrics
+
+Both services export these series on `/actuator/prometheus` in addition to the
+Spring Boot defaults:
+
+| Behavior | Prometheus series | Tags |
+| --- | --- | --- |
+| Publish latency | `spring_kafka_template_seconds` | `spring_kafka_template_name`, `error` |
+| Consume latency | `spring_kafka_listener_seconds` | `spring_kafka_listener_id`, `error` |
+| Consumer lag | `kafka_consumer_fetch_manager_records_lag_max` | `client_id`, `topic`, `partition` |
+| Listener failures (each failed attempt) | `swirl_events_failed_deliveries_total` | `topic` |
+| Records sent to a DLT | `swirl_events_dead_lettered_total` | `topic` (source topic) |
+| Cache hits and misses | `cache_gets_total` | `cache`, `result` |
+| Cache outages that fell through | `swirl_cache_errors_total` | `cache`, `operation` |
+| Rate-limit rejections (429) | `swirl_rate_limit_rejections_total` | none |
+
+Kafka series appear only when messaging is enabled, and cache series only in
+UAT and production, where Redis caching is active. No series carries a record
+key, user name, or client address.
 
 ## Common Incidents
 

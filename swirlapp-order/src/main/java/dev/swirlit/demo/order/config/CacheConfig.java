@@ -19,6 +19,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
+import java.util.Set;
 
 @Configuration
 @EnableCaching
@@ -33,6 +34,8 @@ public class CacheConfig implements CachingConfigurer {
             @Value("${REDIS_CACHE_PREFIX:}") String keyPrefix) {
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(cacheConfiguration(jsonMapper, keyPrefix))
+                .initialCacheNames(Set.of("orders"))
+                .enableStatistics()
                 .build();
     }
 

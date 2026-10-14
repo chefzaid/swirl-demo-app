@@ -64,7 +64,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 ## Priority: Observability And Operations
 
 - [ ] Add OpenTelemetry traces and propagate trace context across HTTP and Kafka alongside the existing request ID.
-- [ ] Add reusable Micrometer business/event metrics for publish latency, consumer lag, retries, DLT records, cache behavior, and rate-limit rejections.
+- [x] Add reusable Micrometer business/event metrics for publish latency, consumer lag, retries, DLT records, cache behavior, and rate-limit rejections.
 - [ ] Define service-level indicators, objectives, Prometheus alerts, and Grafana alert views for availability, latency, errors, saturation, and event backlog.
 - [x] Add log redaction tests and a documented policy for tokens, personal data, request bodies, and exception details.
 - [ ] Add optional log/metric anomaly detection only after stable baselines and actionable alert ownership are defined.

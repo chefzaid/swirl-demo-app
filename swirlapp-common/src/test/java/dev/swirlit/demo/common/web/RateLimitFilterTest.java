@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -75,8 +76,9 @@ class RateLimitFilterTest {
 
     @Test
     void rejectsRequestsAboveConfiguredLimit() throws Exception {
+        var registry = new SimpleMeterRegistry();
         RateLimitFilter filter = new RateLimitFilter(
-                true, 1, 100, Clock.fixed(Instant.parse("2026-08-27T12:00:30Z"), ZoneOffset.UTC));
+                true, 1, 100, Clock.fixed(Instant.parse("2026-08-27T12:00:30Z"), ZoneOffset.UTC), "", registry);
         MockHttpServletRequest firstRequest = new MockHttpServletRequest("GET", "/api/users");
         firstRequest.setRemoteAddr("192.0.2.10");
         MockHttpServletResponse firstResponse = new MockHttpServletResponse();
@@ -95,6 +97,7 @@ class RateLimitFilterTest {
         assertEquals("30", secondResponse.getHeader("Retry-After"));
         assertTrue(secondResponse.getContentAsString().contains("Too many requests"));
         assertTrue(secondResponse.getContentAsString().contains("\"type\":\"/problems/429\""));
+        assertEquals(1.0, registry.counter("swirl.rate_limit.rejections").count());
     }
 
     @Test

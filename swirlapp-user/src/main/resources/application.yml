@@ -67,9 +67,13 @@ spring:
         delivery.timeout.ms: 30000
         request.timeout.ms: 10000
         max.in.flight.requests.per.connection: 5
+    # Observations time each publish (spring.kafka.template) and each handled record (spring.kafka.listener).
+    template:
+      observation-enabled: true
     listener:
       auto-startup: ${KAFKA_ENABLED:false}
       ack-mode: record
+      observation-enabled: true
 
 app:
   security:

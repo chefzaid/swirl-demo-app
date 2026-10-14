@@ -16,7 +16,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
@@ -39,14 +43,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final List<Subnet> trustedProxies;
     private final ConcurrentHashMap<String, ClientWindow> clients = new ConcurrentHashMap<>();
     private final AtomicInteger cleanupCounter = new AtomicInteger();
+    private final Counter rejections;
 
     @Autowired
     public RateLimitFilter(
             @Value("${app.rate-limit.enabled:false}") boolean enabled,
             @Value("${app.rate-limit.requests-per-minute:120}") int requestsPerMinute,
             @Value("${app.rate-limit.max-tracked-clients:10000}") int maxTrackedClients,
-            @Value("${app.rate-limit.trusted-proxy-cidrs:}") String trustedProxyCidrs) {
-        this(enabled, requestsPerMinute, maxTrackedClients, Clock.systemUTC(), trustedProxyCidrs);
+            @Value("${app.rate-limit.trusted-proxy-cidrs:}") String trustedProxyCidrs,
+            ObjectProvider<MeterRegistry> meterRegistry) {
+        this(enabled, requestsPerMinute, maxTrackedClients, Clock.systemUTC(), trustedProxyCidrs,
+                meterRegistry.getIfAvailable(SimpleMeterRegistry::new));
     }
 
     RateLimitFilter(boolean enabled, int requestsPerMinute, int maxTrackedClients, Clock clock) {
@@ -55,12 +62,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     RateLimitFilter(boolean enabled, int requestsPerMinute, int maxTrackedClients, Clock clock,
             String trustedProxyCidrs) {
+        this(enabled, requestsPerMinute, maxTrackedClients, clock, trustedProxyCidrs, new SimpleMeterRegistry());
+    }
+
+    RateLimitFilter(boolean enabled, int requestsPerMinute, int maxTrackedClients, Clock clock,
+            String trustedProxyCidrs, MeterRegistry meterRegistry) {
         this.enabled = enabled;
         this.requestsPerMinute = Math.max(1, requestsPerMinute);
         this.maxTrackedClients = Math.max(100, maxTrackedClients);
         this.clock = clock;
         this.trustedProxies = Arrays.stream(trustedProxyCidrs.split(","))
                 .map(String::trim).filter(value -> !value.isEmpty()).map(Subnet::parse).toList();
+        this.rejections = Counter.builder("swirl.rate_limit.rejections")
+                .description("Requests rejected with 429 by the per-client rate limit")
+                .register(meterRegistry);
     }
 
     @Override
@@ -107,6 +122,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         response.setHeader("RateLimit-Reset", Long.toString(reset));
 
         if (used > requestsPerMinute) {
+            rejections.increment();
             response.setStatus(429);
             response.setHeader("Retry-After", Long.toString(reset));
             response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);

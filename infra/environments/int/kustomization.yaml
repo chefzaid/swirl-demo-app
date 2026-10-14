@@ -18,11 +18,11 @@ configMapGenerator:
   - runtime-config.json=web-runtime-config.json
 images:
 - name: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-user
-  digest: sha256:5020122e6fd9dfcc14a0a4b7c52cc2e4f85b80824b948db71f0255c7a6843955
+  digest: sha256:d0b976cce52db378e3576771cbed726b9394d6c9520e009f7e70206c3ced6ec6
 - name: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-order
-  digest: sha256:4e47b4f107cff1f01ffc6a49b07cd25c047f6a39a5615578690b99994ee03487
+  digest: sha256:8b905a56449c06b1af89ba2bdb77cb72e5f1d031c04f1a4d00f2310ca5447df4
 - name: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-web
-  digest: sha256:729ce605de13745bcd769e8da085b0f73fbd5650f2be2a3a8cf93a07ad7a3b72
+  digest: sha256:1079b2f3ede6316ea6082c0a26bf4da77688259e19fade35c33a1babebab8434
 patches:
 - target:
     kind: Ingress
@@ -60,7 +60,7 @@ patches:
     title\\\": \\\"Swirl Demo App INT Overview\\\",\\n  \\\"tags\\\": [\\n    \\\"\
     swirl-demo-app\\\"\\\n      ,\\n    \\\"spring-boot\\\",\\n    \\\"provisioned\\\
     \"\\n  ],\\n  \\\"timezone\\\": \\\"browser\\\"\\\n      ,\\n  \\\"schemaVersion\\\
-    \": 41,\\n  \\\"version\\\": 1,\\n  \\\"refresh\\\": \\\"30s\\\",\\n  \\\"\\\n\
+    \": 41,\\n  \\\"version\\\": 2,\\n  \\\"refresh\\\": \\\"30s\\\",\\n  \\\"\\\n\
     \      time\\\": {\\n    \\\"from\\\": \\\"now-6h\\\",\\n    \\\"to\\\": \\\"\
     now\\\"\\n  },\\n  \\\"templating\\\"\\\n      : {\\n    \\\"list\\\": [\\n  \
     \    {\\n        \\\"name\\\": \\\"application\\\",\\n        \\\"\\\n      label\\\
@@ -241,7 +241,126 @@ patches:
     \ {{container}}\\\"\\\n      ,\\n          \\\"instant\\\": true,\\n         \
     \ \\\"format\\\": \\\"table\\\"\\n        }\\n\\\n      \\      ],\\n      \\\"\
     options\\\": {\\n        \\\"showHeader\\\": true\\n      }\\n   \\\n      \\\
-    \ }\\n  ]\\n}\\n\"\n"
+    \ },\\n    {\\n      \\\"id\\\": 11,\\n      \\\"type\\\": \\\"timeseries\\\"\
+    ,\\n      \\\"title\\\"\\\n      : \\\"API 5xx Ratio (objective 0.5%)\\\",\\n\
+    \      \\\"gridPos\\\": {\\n        \\\"x\\\":\\\n      \\ 0,\\n        \\\"y\\\
+    \": 27,\\n        \\\"w\\\": 8,\\n        \\\"h\\\": 8\\n      },\\n  \\\n   \
+    \   \\    \\\"datasource\\\": {\\n        \\\"type\\\": \\\"prometheus\\\",\\\
+    n        \\\"uid\\\":\\\n      \\ \\\"prometheus\\\"\\n      },\\n      \\\"targets\\\
+    \": [\\n        {\\n          \\\"refId\\\"\\\n      : \\\"A\\\",\\n         \
+    \ \\\"expr\\\": \\\"sum by (app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\",uri!~\\\\\\\
+    \"/actuator.*\\\\\\\",status=~\\\\\\\n      \\\"5..\\\\\\\"}[5m])) / sum by (app)\
+    \ (rate(http_server_requests_seconds_count{namespace=\\\\\\\n      \\\"apps-int\\\
+    \\\\\",app=~\\\\\\\"$application\\\\\\\",uri!~\\\\\\\"/actuator.*\\\\\\\"}[5m]))\\\
+    \",\\n\\\n      \\          \\\"legendFormat\\\": \\\"{{app}}\\\"\\n        }\\\
+    n      ],\\n      \\\"fieldConfig\\\"\\\n      : {\\n        \\\"defaults\\\"\
+    : {\\n          \\\"unit\\\": \\\"percentunit\\\",\\n       \\\n      \\   \\\"\
+    custom\\\": {\\n            \\\"thresholdsStyle\\\": {\\n              \\\"mode\\\
+    \"\\\n      : \\\"line\\\"\\n            }\\n          },\\n          \\\"thresholds\\\
+    \": {\\n     \\\n      \\       \\\"mode\\\": \\\"absolute\\\",\\n           \
+    \ \\\"steps\\\": [\\n              {\\n\\\n      \\                \\\"color\\\
+    \": \\\"green\\\"\\n              },\\n              {\\n \\\n      \\       \
+    \        \\\"color\\\": \\\"red\\\",\\n                \\\"value\\\": 0.005\\\
+    n    \\\n      \\          }\\n            ]\\n          }\\n        },\\n   \
+    \     \\\"overrides\\\"\\\n      : []\\n      },\\n      \\\"options\\\": {\\\
+    n        \\\"legend\\\": {\\n          \\\"displayMode\\\"\\\n      : \\\"table\\\
+    \",\\n          \\\"placement\\\": \\\"bottom\\\"\\n        }\\n      }\\n   \
+    \ },\\n\\\n      \\    {\\n      \\\"id\\\": 12,\\n      \\\"type\\\": \\\"timeseries\\\
+    \",\\n      \\\"title\\\"\\\n      : \\\"API Requests Slower Than 300 ms (objective\
+    \ 5%)\\\",\\n      \\\"gridPos\\\": {\\n\\\n      \\        \\\"x\\\": 8,\\n \
+    \       \\\"y\\\": 27,\\n        \\\"w\\\": 8,\\n        \\\"h\\\": 8\\n\\\n \
+    \     \\      },\\n      \\\"datasource\\\": {\\n        \\\"type\\\": \\\"prometheus\\\
+    \",\\n    \\\n      \\    \\\"uid\\\": \\\"prometheus\\\"\\n      },\\n      \\\
+    \"targets\\\": [\\n        {\\n  \\\n      \\        \\\"refId\\\": \\\"A\\\"\
+    ,\\n          \\\"expr\\\": \\\"1 - sum by (app) (rate(http_server_requests_seconds_bucket{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\",uri!~\\\\\\\
+    \"/actuator.*\\\\\\\",le=\\\\\\\"0.3\\\\\\\n      \\\"}[5m])) / sum by (app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\",uri!~\\\\\\\
+    \"/actuator.*\\\\\\\"}[5m]))\\\",\\n\\\n      \\          \\\"legendFormat\\\"\
+    : \\\"{{app}}\\\"\\n        }\\n      ],\\n      \\\"fieldConfig\\\"\\\n     \
+    \ : {\\n        \\\"defaults\\\": {\\n          \\\"unit\\\": \\\"percentunit\\\
+    \",\\n       \\\n      \\   \\\"custom\\\": {\\n            \\\"thresholdsStyle\\\
+    \": {\\n              \\\"mode\\\"\\\n      : \\\"line\\\"\\n            }\\n\
+    \          },\\n          \\\"thresholds\\\": {\\n     \\\n      \\       \\\"\
+    mode\\\": \\\"absolute\\\",\\n            \\\"steps\\\": [\\n              {\\\
+    n\\\n      \\                \\\"color\\\": \\\"green\\\"\\n              },\\\
+    n              {\\n \\\n      \\               \\\"color\\\": \\\"red\\\",\\n\
+    \                \\\"value\\\": 0.05\\n     \\\n      \\         }\\n        \
+    \    ]\\n          }\\n        },\\n        \\\"overrides\\\":\\\n      \\ []\\\
+    n      },\\n      \\\"options\\\": {\\n        \\\"legend\\\": {\\n          \\\
+    \"displayMode\\\"\\\n      : \\\"table\\\",\\n          \\\"placement\\\": \\\"\
+    bottom\\\"\\n        }\\n      }\\n    },\\n\\\n      \\    {\\n      \\\"id\\\
+    \": 13,\\n      \\\"type\\\": \\\"timeseries\\\",\\n      \\\"title\\\"\\\n  \
+    \    : \\\"Kafka Consumer Lag\\\",\\n      \\\"gridPos\\\": {\\n        \\\"x\\\
+    \": 16,\\n      \\\n      \\  \\\"y\\\": 27,\\n        \\\"w\\\": 8,\\n      \
+    \  \\\"h\\\": 8\\n      },\\n      \\\"datasource\\\"\\\n      : {\\n        \\\
+    \"type\\\": \\\"prometheus\\\",\\n        \\\"uid\\\": \\\"prometheus\\\"\\n \
+    \ \\\n      \\    },\\n      \\\"targets\\\": [\\n        {\\n          \\\"refId\\\
+    \": \\\"A\\\",\\n    \\\n      \\      \\\"expr\\\": \\\"max by (app, topic) (kafka_consumer_fetch_manager_records_lag_max{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"})\\\",\\n \
+    \         \\\"legendFormat\\\": \\\"\\\n      {{app}} {{topic}}\\\"\\n       \
+    \ }\\n      ],\\n      \\\"fieldConfig\\\": {\\n       \\\n      \\ \\\"defaults\\\
+    \": {\\n          \\\"unit\\\": \\\"short\\\"\\n        },\\n        \\\"overrides\\\
+    \"\\\n      : []\\n      },\\n      \\\"options\\\": {\\n        \\\"legend\\\"\
+    : {\\n          \\\"displayMode\\\"\\\n      : \\\"table\\\",\\n          \\\"\
+    placement\\\": \\\"bottom\\\"\\n        }\\n      }\\n    },\\n\\\n      \\  \
+    \  {\\n      \\\"id\\\": 14,\\n      \\\"type\\\": \\\"timeseries\\\",\\n    \
+    \  \\\"title\\\"\\\n      : \\\"Event Retries and Dead Letters (per 5 minutes)\\\
+    \",\\n      \\\"gridPos\\\": {\\n\\\n      \\        \\\"x\\\": 0,\\n        \\\
+    \"y\\\": 35,\\n        \\\"w\\\": 8,\\n        \\\"h\\\": 8\\n\\\n      \\   \
+    \   },\\n      \\\"datasource\\\": {\\n        \\\"type\\\": \\\"prometheus\\\"\
+    ,\\n    \\\n      \\    \\\"uid\\\": \\\"prometheus\\\"\\n      },\\n      \\\"\
+    targets\\\": [\\n        {\\n  \\\n      \\        \\\"refId\\\": \\\"A\\\",\\\
+    n          \\\"expr\\\": \\\"sum by (app, topic) (increase(swirl_events_failed_deliveries_total{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"}[5m]))\\\"\
+    ,\\n          \\\"legendFormat\\\"\\\n      : \\\"failed {{app}} {{topic}}\\\"\
+    \\n        },\\n        {\\n          \\\"refId\\\":\\\n      \\ \\\"B\\\",\\\
+    n          \\\"expr\\\": \\\"sum by (app, topic) (increase(swirl_events_dead_lettered_total{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"}[5m]))\\\"\
+    ,\\n          \\\"legendFormat\\\"\\\n      : \\\"dead-lettered {{app}} {{topic}}\\\
+    \"\\n        }\\n      ],\\n      \\\"fieldConfig\\\"\\\n      : {\\n        \\\
+    \"defaults\\\": {\\n          \\\"unit\\\": \\\"short\\\"\\n        },\\n  \\\n\
+    \      \\      \\\"overrides\\\": []\\n      },\\n      \\\"options\\\": {\\n\
+    \        \\\"legend\\\"\\\n      : {\\n          \\\"displayMode\\\": \\\"table\\\
+    \",\\n          \\\"placement\\\": \\\"bottom\\\"\\\n      \\n        }\\n   \
+    \   }\\n    },\\n    {\\n      \\\"id\\\": 15,\\n      \\\"type\\\": \\\"timeseries\\\
+    \"\\\n      ,\\n      \\\"title\\\": \\\"Cache Hit Ratio\\\",\\n      \\\"gridPos\\\
+    \": {\\n        \\\"x\\\"\\\n      : 8,\\n        \\\"y\\\": 35,\\n        \\\"\
+    w\\\": 8,\\n        \\\"h\\\": 8\\n      },\\n  \\\n      \\    \\\"datasource\\\
+    \": {\\n        \\\"type\\\": \\\"prometheus\\\",\\n        \\\"uid\\\":\\\n \
+    \     \\ \\\"prometheus\\\"\\n      },\\n      \\\"targets\\\": [\\n        {\\\
+    n          \\\"refId\\\"\\\n      : \\\"A\\\",\\n          \\\"expr\\\": \\\"\
+    sum by (app, cache) (rate(cache_gets_total{namespace=\\\\\\\n      \\\"apps-int\\\
+    \\\\\",app=~\\\\\\\"$application\\\\\\\",result=\\\\\\\"hit\\\\\\\"}[5m])) / sum\
+    \ by\\\n      \\ (app, cache) (rate(cache_gets_total{namespace=\\\\\\\"apps-int\\\
+    \\\\\",app=~\\\\\\\"$application\\\\\\\n      \\\"}[5m]))\\\",\\n          \\\"\
+    legendFormat\\\": \\\"{{app}} {{cache}}\\\"\\n        }\\n\\\n      \\      ],\\\
+    n      \\\"fieldConfig\\\": {\\n        \\\"defaults\\\": {\\n          \\\"unit\\\
+    \"\\\n      : \\\"percentunit\\\"\\n        },\\n        \\\"overrides\\\": []\\\
+    n      },\\n      \\\"\\\n      options\\\": {\\n        \\\"legend\\\": {\\n\
+    \          \\\"displayMode\\\": \\\"table\\\",\\n\\\n      \\          \\\"placement\\\
+    \": \\\"bottom\\\"\\n        }\\n      }\\n    },\\n    {\\n  \\\n      \\   \
+    \ \\\"id\\\": 16,\\n      \\\"type\\\": \\\"timeseries\\\",\\n      \\\"title\\\
+    \": \\\"Cache\\\n      \\ Errors and Rate-Limit Rejections\\\",\\n      \\\"gridPos\\\
+    \": {\\n        \\\"x\\\":\\\n      \\ 16,\\n        \\\"y\\\": 35,\\n       \
+    \ \\\"w\\\": 8,\\n        \\\"h\\\": 8\\n      },\\n \\\n      \\     \\\"datasource\\\
+    \": {\\n        \\\"type\\\": \\\"prometheus\\\",\\n        \\\"uid\\\"\\\n  \
+    \    : \\\"prometheus\\\"\\n      },\\n      \\\"targets\\\": [\\n        {\\\
+    n          \\\"refId\\\"\\\n      : \\\"A\\\",\\n          \\\"expr\\\": \\\"\
+    sum by (app, cache) (rate(swirl_cache_errors_total{namespace=\\\\\\\n      \\\"\
+    apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"}[5m]))\\\",\\n          \\\"\
+    legendFormat\\\"\\\n      : \\\"cache errors {{app}} {{cache}}\\\"\\n        },\\\
+    n        {\\n          \\\"refId\\\"\\\n      : \\\"B\\\",\\n          \\\"expr\\\
+    \": \\\"sum by (app) (rate(swirl_rate_limit_rejections_total{namespace=\\\\\\\n\
+    \      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"}[5m]))\\\",\\n \
+    \         \\\"legendFormat\\\"\\\n      : \\\"429 {{app}}\\\"\\n        }\\n \
+    \     ],\\n      \\\"fieldConfig\\\": {\\n        \\\"\\\n      defaults\\\":\
+    \ {\\n          \\\"unit\\\": \\\"reqps\\\"\\n        },\\n        \\\"overrides\\\
+    \"\\\n      : []\\n      },\\n      \\\"options\\\": {\\n        \\\"legend\\\"\
+    : {\\n          \\\"displayMode\\\"\\\n      : \\\"table\\\",\\n          \\\"\
+    placement\\\": \\\"bottom\\\"\\n        }\\n      }\\n    }\\n\\\n      \\  ]\\\
+    n}\\n\"\n"
 - target:
     kind: NetworkPolicy
   patch: "apiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name:\

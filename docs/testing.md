@@ -338,7 +338,6 @@ Not yet first-class:
 - consumer-driven HTTP/event contracts
 - mutation, load, soak, chaos, visual-regression, and accessibility suites
 - automated container and secret scanning beyond the current dependency and SonarQube reports
-- policy-as-code checks for manifests
 
 Track these in [TODO.md](../TODO.md), not as existing coverage.
 

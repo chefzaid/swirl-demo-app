@@ -136,7 +136,14 @@ jobs:
             else
               echo "Merging divergent branch $branch without force pushing"
               git checkout --quiet --detach "$github_head"
-              git merge --no-ff -m "sync: merge GitLab $branch into GitHub" "$gitlab_head"
+              if ! git merge --no-ff -m "sync: merge GitLab $branch into GitHub" "$gitlab_head"; then
+                # Leave a conflicting branch for a person and keep reconciling
+                # the others, so one stale branch cannot hold back main. The
+                # final ref comparison still fails the run.
+                git merge --abort
+                echo "::error::Branch $branch has conflicting GitHub and GitLab histories; reconcile it by hand"
+                continue
+              fi
               merged_head="$(git rev-parse HEAD)"
               git push gitlab "$merged_head:refs/heads/$branch"
               git push github "$merged_head:refs/heads/$branch"

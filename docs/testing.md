@@ -313,7 +313,7 @@ Render manifests without changing a cluster:
 kubectl kustomize infra/k8s
 ```
 
-Check the workload policy on the base, the HA overlay and every committed environment (the build job runs it):
+Check the workload policy on the base, the HA and canary overlays and every committed environment (the build job runs it):
 
 ```bash
 python3 infra/scripts/check-manifest-policy.py

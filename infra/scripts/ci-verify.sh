@@ -21,6 +21,7 @@ build_application() {
   npx --yes markdownlint-cli2@0.23.3
   kubectl kustomize infra/k8s >/dev/null
   kubectl kustomize infra/overlays/ha >/dev/null
+  kubectl kustomize infra/overlays/canary >/dev/null
   python3 infra/scripts/test-manifest-policy.py
   python3 infra/scripts/check-manifest-policy.py
   promtool check rules infra/observability/slo-rules.yaml

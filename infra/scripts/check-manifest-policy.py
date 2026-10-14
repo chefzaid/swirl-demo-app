@@ -2,7 +2,7 @@
 """Enforce the workload security and operability baseline on rendered Kustomize output.
 
 Usage: check-manifest-policy.py [KUSTOMIZE_DIR ...]
-Without arguments it checks the base, the HA overlay and every committed environment.
+Without arguments it checks the base, the HA and canary overlays and every committed environment.
 """
 import subprocess
 import sys
@@ -91,7 +91,7 @@ def render(directory):
 
 def main(arguments):
     directories = [Path(argument) for argument in arguments] or [
-        ROOT / "infra/k8s", ROOT / "infra/overlays/ha", *sorted((ROOT / "infra/environments").glob("*/"))]
+        ROOT / "infra/k8s", ROOT / "infra/overlays/ha", ROOT / "infra/overlays/canary", *sorted((ROOT / "infra/environments").glob("*/"))]
     failures = [f"{directory}: {message}" for directory in directories for message in violations(render(directory))]
     print("\n".join(failures) or f"Workload policy passed for {len(directories)} Kustomize targets.")
     return 1 if failures else 0

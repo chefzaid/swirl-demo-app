@@ -29,6 +29,9 @@ Parts of tasks that cannot advance without the owner's decision or information. 
   - Answer:
 - [ ] Which OTLP endpoint should deployed environments send traces to, and at what sampling rate? The services propagate trace context and log `traceId` already; setting `MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT` (for example `http://otel-collector.observability:4318/v1/traces`) turns span export on. If the platform has no collector yet, say so and the item stays parked. *(task: Observability › Export spans; asked by: Coding Agent)*
 
+- [ ] Should an environment use the canary overlay (`infra/overlays/canary`)? It needs the Argo Rollouts controller and CRDs, which the platform does not install. Options: (a) keep it as an example only; (b) install Argo Rollouts in `swirl-cloud` and add a `canary` setting to `settings.json` so `render-deployment.py` can select the overlay per environment, starting with `int`. *(task: Kubernetes And Delivery › Canary deployment; asked by: Infra Agent)*
+  - Answer:
+
 - [ ] Should deleting users require a role in `int`/`uat`/`prod`? Locally it now needs the `user-admin` realm role; deployed environments leave `APP_SECURITY_ROLES_USER_ADMIN` blank, so any signed-in user can still delete. Options: (a) keep it open to every signed-in user; (b) require `user-admin`, which needs the role in the shared realm, the `roles` scope on each environment's web client, and the role assigned to named people; (c) use a Keycloak group instead (the production client already sends `groups`). *(task: Security › Role-gated user deletion; asked by: Coding Agent)*
   - Answer:
 
@@ -86,7 +89,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Add environment-specific Kustomize overlays or a Helm chart for names, domains, registry, replicas, and resource sizing.
 - [ ] Add an optional API-gateway profile for centralized routing, authentication policy, quotas, contract publication, and edge observability without replacing service-side controls.
 - [x] Add HorizontalPodAutoscaler, PodDisruptionBudget, topology spread, and rolling/canary deployment examples. The HA overlay carries the autoscalers, disruption budgets, topology spread and rolling-update settings; canary delivery is split out below.
-- [ ] Add a canary deployment example (for example Argo Rollouts with an analysis step on error rate), kept optional like the HA overlay.
+- [x] Add a canary deployment example (for example Argo Rollouts with an analysis step on error rate), kept optional like the HA overlay. `infra/overlays/canary` wraps the Deployments in Rollouts with a Prometheus error-rate analysis; it is rendered and policy-checked in CI, and enabling it waits in Needs Input.
 - [x] Add explicit egress NetworkPolicies for PostgreSQL, Redis, Kafka, Keycloak, DNS, and approved external endpoints. `allow-swirl-demo-app-egress` ships with the base and prod (dedicated `int`/`uat` namespaces keep the platform's policies), and the manifest policy check rejects a target whose workloads lack an egress policy. Prod picks it up with its next release.
 - [ ] Add optional service-mesh documentation only when mTLS, traffic policy, or service-to-service telemetry is demonstrated.
 - [ ] Add ephemeral preview environments and automated teardown for pull requests.

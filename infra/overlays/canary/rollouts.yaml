@@ -1,0 +1,97 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: swirlapp-user
+  namespace: apps
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: swirlapp-user
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: swirlapp-user
+    scaleDown: progressively
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      analysis:
+        startingStep: 1
+        templates:
+        - templateName: swirl-demo-app-error-rate
+        args:
+        - name: namespace
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: app
+          value: swirlapp-user
+      steps:
+      - setWeight: 50
+      - pause:
+          duration: 5m
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: swirlapp-order
+  namespace: apps
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: swirlapp-order
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: swirlapp-order
+    scaleDown: progressively
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      analysis:
+        startingStep: 1
+        templates:
+        - templateName: swirl-demo-app-error-rate
+        args:
+        - name: namespace
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: app
+          value: swirlapp-order
+      steps:
+      - setWeight: 50
+      - pause:
+          duration: 5m
+---
+# The static frontend has no request metrics; its canary only pauses for review.
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: swirlapp-web
+  namespace: apps
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: swirlapp-web
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: swirlapp-web
+    scaleDown: progressively
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      steps:
+      - setWeight: 50
+      - pause:
+          duration: 5m

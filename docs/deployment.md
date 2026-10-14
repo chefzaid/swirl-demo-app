@@ -13,6 +13,7 @@ the selected environment.
 | `infra/k8s/` | Shared application manifests and public configuration templates. |
 | `infra/observability/` | Prometheus SLO recording and alert rules with their `promtool` tests; not deployed by Kustomize. |
 | `infra/overlays/ha/` | Optional application replica and disruption-budget profile. |
+| `infra/overlays/canary/` | Optional Argo Rollouts canary example with an error-rate analysis. |
 | `infra/environments/<env>/` | Generated environment settings, runtime ConfigMaps, ingress and image digests. |
 | `infra/argocd/application.yaml` | Onboarding template; do not apply it to deploy an environment. |
 | `infra/argocd/<env>.yaml` | Selected environment's central Argo CD Application and pinned source revision. |
@@ -94,6 +95,7 @@ Render without changing a cluster:
 ```sh
 kubectl kustomize infra/k8s >/dev/null
 kubectl kustomize infra/overlays/ha >/dev/null
+kubectl kustomize infra/overlays/canary >/dev/null
 # After onboarding/deployment generated the selected environment:
 kubectl kustomize infra/environments/int >/dev/null
 ```
@@ -338,6 +340,35 @@ network routing must survive the tested failure. Application replicas do not
 provide those guarantees. Flyway migrations must support rolling deployments;
 rate limits remain per API process. Every order replica runs the outbox relay;
 `SKIP LOCKED` gives each one a different batch.
+
+## Optional canary example
+
+`infra/overlays/canary` replaces the plain rolling update with an Argo Rollouts
+canary. Each Rollout points at its existing Deployment (`workloadRef`), runs two
+Pods and, on a new image or configuration, moves one Pod to the new version, then
+waits five minutes before promoting. Pods keep their `app` label, so the Services,
+NetworkPolicies and dashboards apply unchanged. For the user and order APIs the
+`swirl-demo-app-error-rate` AnalysisTemplate queries the platform Prometheus every
+minute; more than 5 percent 5xx responses in two of five samples aborts the
+Rollout and returns all Pods to the stable version. The frontend has no request
+metrics, so its canary only pauses.
+
+The overlay needs the Argo Rollouts controller and CRDs on the cluster, which the
+platform does not install today; no environment selects it. It removes
+`spec.replicas` from the Deployments so Argo CD does not scale them back up while
+Argo Rollouts scales them down (`scaleDown: progressively`). Both versions run
+against the same database during the pause, so schema changes must be expand and
+contract. Check a canary with `kubectl argo rollouts get rollout swirlapp-user -n <namespace>`;
+abort it with `kubectl argo rollouts abort`, and roll back the overlay by deploying
+the base again, which restores the Deployments' replica count.
+
+Validate offline (the build job renders it; schema checks need the CRD schemas):
+
+```sh
+kubectl kustomize infra/overlays/canary | kubeconform -strict -summary \
+  -schema-location default \
+  -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+```
 
 Before relying on HA, verify JWT requests across replicas, cache invalidation,
 Kafka rebalance and duplicate handling, then drain one eligible application node

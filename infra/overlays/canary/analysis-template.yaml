@@ -1,0 +1,26 @@
+# Fails a canary when its API answers more than 5 percent of requests with a 5xx.
+# Pods of both versions share the app label, so the ratio covers the whole
+# service; with half the Pods on the canary a broken release still crosses it.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: swirl-demo-app-error-rate
+  namespace: apps
+spec:
+  args:
+  - name: namespace
+  - name: app
+  metrics:
+  - name: error-ratio
+    interval: 1m
+    count: 5
+    failureLimit: 1
+    # No traffic yet yields an empty result, which counts as a pass.
+    successCondition: len(result) == 0 || isNaN(result[0]) || result[0] <= 0.05
+    provider:
+      prometheus:
+        address: http://prometheus.infra.svc.cluster.local:9090
+        timeout: 10
+        query: |
+          sum(rate(http_server_requests_seconds_count{namespace="{{args.namespace}}",app="{{args.app}}",uri!~"/actuator.*",status=~"5.."}[2m]))
+          / sum(rate(http_server_requests_seconds_count{namespace="{{args.namespace}}",app="{{args.app}}",uri!~"/actuator.*"}[2m]))

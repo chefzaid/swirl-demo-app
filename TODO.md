@@ -10,6 +10,14 @@ Swirl Demo App is a reusable application template, not a product roadmap. New wo
 - Every added pattern needs tests, configuration documentation, operational notes, and a clear removal path.
 - Do not add distributed-systems patterns merely to name them. Add them when the example can demonstrate the failure mode they solve.
 
+## Bugs to fix
+
+Bugs, failing checks, security findings, and code smells found while working on another task. Each entry names the file or area, what is wrong, and how to reproduce it.
+
+## Needs Input
+
+Parts of tasks that cannot advance without the owner's decision or information. Only the part needing input is set aside here; the rest of the task keeps moving. Answer under the item, and the next agent run applies the answer and removes the entry.
+
 ## Priority: Delivery And Data Correctness
 
 - [ ] Replace the order database/Kafka dual write with a transactional outbox and a small relay implementation; provide polling and CDC variants as documented alternatives.

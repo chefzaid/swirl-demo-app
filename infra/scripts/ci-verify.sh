@@ -19,6 +19,8 @@ build_application() {
   python3 infra/scripts/test-promotion.py
   python3 infra/scripts/test-doc-links.py
   python3 infra/scripts/check-doc-links.py
+  python3 infra/scripts/test-playwright-images.py
+  python3 infra/scripts/check-playwright-images.py
   npx --yes markdownlint-cli2@0.23.3
   kubectl kustomize infra/k8s >/dev/null
   kubectl kustomize infra/overlays/ha >/dev/null

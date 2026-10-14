@@ -253,6 +253,13 @@ Browser projects:
 
 CI retries failures twice with one worker and forbids committed focused tests.
 
+The E2E job in `.gitlab-ci.yml` and the Compose `test-runner` use the
+`mcr.microsoft.com/playwright` image of the locked `@playwright/test` release,
+because each image carries only its own release's browser builds. When an
+upgrade raises `@playwright/test`, change both image tags in the same commit and
+pin the CI image's new digest; the build job's `check-playwright-images.py`
+fails until they match.
+
 Artifacts:
 
 - JUnit: `test-results/playwright-junit.xml`

@@ -13,7 +13,7 @@
     "test:coverage": "ng test --watch=false --coverage --coverage-reporters=text --coverage-reporters=lcov",
     "test:ci": "ng test --watch=false --coverage --coverage-reporters=lcov --reporters=default --reporters=junit --output-file=test-results.xml",
     "test:integration": "playwright test e2e/live-cluster.spec.ts",
-    "test:e2e": "playwright test e2e/home.spec.ts",
+    "test:e2e": "playwright test e2e/home.spec.ts e2e/accessibility.spec.ts",
     "test:e2e:install": "playwright install --with-deps chromium firefox webkit",
     "test:e2e:types": "tsc --project e2e/tsconfig.json --noEmit",
     "analyze": "ng build --configuration production --stats-json"
@@ -35,6 +35,7 @@
     "@angular/build": "^22.2.2",
     "@angular/cli": "^22.2.2",
     "@angular/compiler-cli": "^22.2.2",
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
     "@types/node": "^26.2.0",
     "@vitest/coverage-v8": "^4.1.11",

@@ -18,7 +18,7 @@
 .auth-state { display: flex; align-items: center; gap: 8px; color: var(--mint-dark); font-size: 10px; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; }
 .auth-state i { width: 7px; height: 7px; background: currentColor; border-radius: 50%; }
 .auth-state.auth-error { color: #b64d3c; }
-.card-label { margin: 0 0 9px; color: #7f918d; font-size: 10px; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
+.card-label { margin: 0 0 9px; color: var(--muted); font-size: 10px; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
 .login-card h2 { max-width: 320px; margin: 0; color: var(--ink); font-size: clamp(32px, 3.2vw, 43px); line-height: 1.03; letter-spacing: -.045em; }
 .card-copy { margin: 18px 0 27px; color: var(--muted); font-size: 14px; line-height: 1.7; }
 .sso-button { width: 100%; min-height: 58px; display: flex; align-items: center; justify-content: space-between; padding: 0 21px; color: var(--ink); background: var(--mint); border: 0; border-radius: 14px; box-shadow: 0 13px 28px rgb(39 161 125 / .19); font-weight: 850; cursor: pointer; transition: transform .2s, box-shadow .2s, background .2s; }
@@ -27,7 +27,7 @@
 .sso-button svg { width: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .demo-hint { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 19px 0 0; padding: 13px 14px; color: #536960; background: #f3f3ec; border-radius: 11px; font-size: 11px; }
 .demo-hint code { color: var(--text); font: 800 12px/1 var(--font); }
-.security-note { display: flex; align-items: start; gap: 9px; margin: 22px 0 0; color: #879692; font-size: 10px; line-height: 1.5; }
+.security-note { display: flex; align-items: start; gap: 9px; margin: 22px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .security-note svg { flex: 0 0 15px; width: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 @media (max-width: 900px) { .login-layout { grid-template-columns: 1fr; max-width: 650px; } .login-story h1 { font-size: clamp(52px, 12vw, 78px); } }
 @media (max-width: 540px) { .login-page { padding: 45px 16px 60px; } .platform-flow { grid-template-columns: 1fr; } .flow-item { min-height: 70px; } .login-card { padding: 28px 22px; } .login-card::before { left: 22px; } }

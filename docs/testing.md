@@ -20,7 +20,7 @@ Frontend layers:
 - auth guard and interceptor tests
 - public runtime-configuration validation and startup failures
 - notification and error behavior tests
-- Playwright smoke journey against the development UI
+- Playwright smoke journey and WCAG 2.2 AA accessibility checks against the development UI
 - Playwright live/full-stack journey through Keycloak and both secured APIs
 
 Deployment layers:
@@ -180,7 +180,7 @@ CI uses `npm run test:ci`, which writes `swirlapp-web/test-results.xml` for GitL
 
 ### Local UI smoke
 
-`e2e/home.spec.ts` checks that the login route and SSO call to action render. When `WEB_URL` is unset, Playwright starts the Angular development server automatically.
+`e2e/home.spec.ts` checks that the login route and SSO call to action render. `e2e/accessibility.spec.ts` runs axe-core WCAG 2.2 AA rules on the login, user, and order screens, with the APIs answered from fixtures, and checks that the primary navigation and the user form are reachable and usable from the keyboard. When `WEB_URL` is unset, Playwright starts the Angular development server automatically.
 
 ```bash
 cd swirlapp-web
@@ -336,7 +336,7 @@ Not yet first-class:
 - automated Flyway upgrade tests from every supported schema version
 - durable DLT/replay and consumer restart tests
 - consumer-driven HTTP/event contracts
-- mutation, load, soak, chaos, visual-regression, and accessibility suites
+- mutation, load, soak, chaos, and visual-regression suites
 - automated container and secret scanning beyond the current dependency and SonarQube reports
 
 Track these in [TODO.md](../TODO.md), not as existing coverage.

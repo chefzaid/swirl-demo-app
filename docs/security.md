@@ -384,7 +384,23 @@ Actuator health and metrics are unauthenticated at the Spring filter level for p
 - metrics and other Actuator routes use ClusterIP services
 - NetworkPolicy restricts traffic to the declared application and ingress paths
 
-Logs include stack traces for internal unexpected failures. Ensure log access is restricted and add redaction tests before logging richer arguments or contexts.
+### Log redaction policy
+
+Deployed profiles (`uat`, `prod`) write structured JSON with the message, its arguments, the MDC and stack traces. Application code may log:
+
+- generated identifiers: request ID, user ID, order ID, product ID, Kafka partition and offset
+- states, counts, durations, SQL states, and exception types
+
+It must not log:
+
+- tokens, authorization codes, `Authorization` headers, cookies, passwords, or client secrets
+- personal data such as names, usernames, and email addresses; log the user ID instead
+- request or response bodies
+- database or driver error messages, which quote the rejected values; log the SQL state instead
+
+Stack traces are kept for unexpected failures (`Unhandled request failure`) because diagnosis needs them, so log access must stay restricted to operators. The `dev` and `test` profiles log Spring MVC at DEBUG, which prints request bodies; never enable them against real data.
+
+`GlobalExceptionHandlerLoggingTest` and `NotificationServiceTest` capture log output and fail if a rejected value or personal data reaches it. Add a test of the same kind with any new log statement that touches user input.
 
 The custom database health indicator includes record counts in health details. Spring uses `show-details: when-authorized`; review operational role configuration before exposing details beyond trusted cluster callers.
 

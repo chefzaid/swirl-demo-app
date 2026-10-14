@@ -66,7 +66,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Add OpenTelemetry traces and propagate trace context across HTTP and Kafka alongside the existing request ID.
 - [ ] Add reusable Micrometer business/event metrics for publish latency, consumer lag, retries, DLT records, cache behavior, and rate-limit rejections.
 - [ ] Define service-level indicators, objectives, Prometheus alerts, and Grafana alert views for availability, latency, errors, saturation, and event backlog.
-- [ ] Add log redaction tests and a documented policy for tokens, personal data, request bodies, and exception details.
+- [x] Add log redaction tests and a documented policy for tokens, personal data, request bodies, and exception details.
 - [ ] Add optional log/metric anomaly detection only after stable baselines and actionable alert ownership are defined.
 - [ ] Add audit events for security-sensitive actions and document separation between entity auditing, application audit trails, and platform logs.
 - [ ] Add backup/restore drills for PostgreSQL and persistent Kafka/Redis data, with recovery-point and recovery-time targets.

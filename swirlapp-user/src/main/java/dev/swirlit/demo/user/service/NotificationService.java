@@ -13,6 +13,6 @@ public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     public void notifyUser(User user, OrderEvent order) {
-        log.info("Demo notification user={} order={} product={}", user.getUsername(), order.orderId(), order.productId());
+        log.info("Demo notification user={} order={} product={}", user.getId(), order.orderId(), order.productId());
     }
 }

@@ -88,6 +88,7 @@ mask build all
 
 - `RequestIdFilterTest`: accepted request IDs, unsafe-value replacement, response header, and MDC behavior
 - `RateLimitFilterTest`: allowed requests, response headers, and `429` rejection after the configured limit
+- `GlobalExceptionHandlerLoggingTest`: constraint violations log the SQL state, never the rejected values
 - `ArchitectureRules`: shared ArchUnit rules, published in the module's test JAR: each module depends only on itself and `swirlapp-common`; controllers, services, and repositories stay layered; domain classes stay independent; no field injection, `java.util.logging`, or standard streams
 - `CommonArchitectureTest`: the shared module never depends on a service module
 
@@ -95,6 +96,7 @@ mask build all
 
 - `UserServiceTest`: bounded reads, not-found behavior, create/edit normalization, duplicate username/email rejection, deletion, persistence, and cache-oriented service behavior
 - `OrderListenerTest`: approved result, missing-user rejection, synchronous result publication, and propagation of transient failures
+- `NotificationServiceTest`: notification logs carry IDs, never names, usernames, or email addresses
 - `UserControllerTest`: create/get/list/edit/delete responses, invalid bodies, invalid IDs/limits, malformed JSON, and private entity-field exclusion
 - `CacheConfigTest`: Redis serialization and TTL configuration
 - `DatabaseHealthIndicatorTest`: healthy and failed repository access

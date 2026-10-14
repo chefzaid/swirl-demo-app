@@ -1,6 +1,7 @@
 package dev.swirlit.demo.common.exception;
 
 import java.net.URI;
+import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -92,7 +93,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ProblemDetail handleConflict(DataIntegrityViolationException exception) {
-        log.warn("Database constraint violation: {}", exception.getMostSpecificCause().getMessage());
+        // Database messages quote the rejected values, which can be personal data; log only the SQL state.
+        log.warn("Database constraint violation sqlState={}", sqlState(exception));
         return problem(HttpStatus.CONFLICT, "Data conflict", "A record with the same unique value already exists");
     }
 
@@ -115,6 +117,15 @@ public class GlobalExceptionHandler {
     ProblemDetail handleUnexpected(Exception exception) {
         log.error("Unhandled request failure", exception);
         return problem(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", "The request could not be completed");
+    }
+
+    private static String sqlState(Throwable exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof SQLException sql) {
+                return sql.getSQLState();
+            }
+        }
+        return null;
     }
 
     private static ProblemDetail problem(HttpStatus status, String title, String message) {

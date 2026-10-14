@@ -454,4 +454,6 @@ does not check the operating-system packages in a deployed image.
 The application workloads run with UID and GID 10001, above the host system-user
 range, with the existing read-only filesystem, dropped capabilities and runtime
 seccomp profile. Writable application data and temporary files use explicit
-volumes.
+volumes. `infra/scripts/check-manifest-policy.py` fails the build when a rendered
+workload loses any of these settings; see the
+[testing guide](testing.md#kubernetes-and-delivery-verification).

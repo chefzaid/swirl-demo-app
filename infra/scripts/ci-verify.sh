@@ -21,6 +21,8 @@ build_application() {
   npx --yes markdownlint-cli2@0.23.3
   kubectl kustomize infra/k8s >/dev/null
   kubectl kustomize infra/overlays/ha >/dev/null
+  python3 infra/scripts/test-manifest-policy.py
+  python3 infra/scripts/check-manifest-policy.py
   kubectl create --dry-run=client --validate=false \
     -f infra/argocd/application.yaml >/dev/null
   mvn --batch-mode clean package -DskipTests \

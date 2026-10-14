@@ -285,6 +285,14 @@ Render manifests without changing a cluster:
 kubectl kustomize infra/k8s
 ```
 
+Check the workload policy on the base, the HA overlay and every committed environment (the build job runs it):
+
+```bash
+python3 infra/scripts/check-manifest-policy.py
+```
+
+Every Deployment, StatefulSet, DaemonSet, Job and CronJob must run as non-root with a `RuntimeDefault` seccomp profile and no service-account token, without host namespaces; every container must block privilege escalation, use a read-only root filesystem, drop all capabilities, request CPU and memory, limit memory, and pin its image; long-running containers also need liveness and readiness probes. Pass Kustomize directories as arguments to check others.
+
 The [delivery flow](deployment.md#delivery-flow) defines CI job dependencies and
 release gates. `infra/scripts/test-deployment.py` verifies real Kustomize output
 for local, remote and mixed targets, namespace-specific ingress and secret

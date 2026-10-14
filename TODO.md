@@ -80,7 +80,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 - [ ] Add explicit egress NetworkPolicies for PostgreSQL, Redis, Kafka, Keycloak, DNS, and approved external endpoints.
 - [ ] Add optional service-mesh documentation only when mTLS, traffic policy, or service-to-service telemetry is demonstrated.
 - [ ] Add ephemeral preview environments and automated teardown for pull requests.
-- [ ] Add policy-as-code checks for Kubernetes manifests and container security contexts.
+- [x] Add policy-as-code checks for Kubernetes manifests and container security contexts.
 - [ ] Add release promotion, rollback, provenance, and environment-approval examples without weakening Argo CD ownership.
 - [ ] *(waiting in Needs Input)* Fix the `swirl-demo-app-int`/`-uat`/`-prod` Argo CD `ComparisonError: Object 'Kind' is missing`: the Application source directory also contains `infra/environments/<env>/settings.json`, which Argo CD parses as a manifest. Exclude it (`directory.exclude`) or move the settings outside the source path.
 

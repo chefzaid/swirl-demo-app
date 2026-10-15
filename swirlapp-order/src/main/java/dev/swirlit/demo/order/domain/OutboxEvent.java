@@ -35,14 +35,23 @@ public class OutboxEvent {
     @Column(nullable = false)
     private int attempts;
 
+    /** The W3C {@code traceparent} of the change that recorded the event, so its Kafka record joins that trace. */
+    @Column(name = "trace_parent")
+    private String traceParent;
+
     protected OutboxEvent() {
     }
 
     public OutboxEvent(String topic, String key, String payload, Instant createdAt) {
+        this(topic, key, payload, createdAt, null);
+    }
+
+    public OutboxEvent(String topic, String key, String payload, Instant createdAt, String traceParent) {
         this.topic = topic;
         this.key = key;
         this.payload = payload;
         this.createdAt = createdAt;
+        this.traceParent = traceParent;
     }
 
     public Long getId() {
@@ -71,6 +80,10 @@ public class OutboxEvent {
 
     public int getAttempts() {
         return attempts;
+    }
+
+    public String getTraceParent() {
+        return traceParent;
     }
 
     public void markPublished(Instant when) {

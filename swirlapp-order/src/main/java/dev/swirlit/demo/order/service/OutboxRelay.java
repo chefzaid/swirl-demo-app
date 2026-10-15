@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -17,9 +18,13 @@ import dev.swirlit.demo.order.repository.OutboxEventRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.propagation.Propagator;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -35,7 +40,8 @@ import tools.jackson.databind.json.JsonMapper;
  * Polls the outbox and publishes pending events to Kafka (at least once, in outbox order per batch). Each batch
  * holds its rows locked until Kafka acknowledges them, and other instances skip locked rows, so several pods can
  * relay at once without publishing the same row concurrently. An event whose send fails stays pending and is
- * retried on the next poll.
+ * retried on the next poll. Each send continues the trace stored with its row, not the poll's own trace, so the
+ * record carries the trace of the request that changed the order.
  */
 @Component
 @ConditionalOnProperty(name = "app.messaging.enabled", havingValue = "true")
@@ -52,6 +58,8 @@ public class OutboxRelay {
     private final Clock clock;
     private final Counter published;
     private final Counter failed;
+    private final Tracer tracer;
+    private final Propagator propagator;
 
     @Autowired
     public OutboxRelay(
@@ -60,20 +68,25 @@ public class OutboxRelay {
             JsonMapper jsonMapper,
             TransactionTemplate transactionTemplate,
             MeterRegistry meterRegistry,
+            ObjectProvider<Tracer> tracer,
+            ObjectProvider<Propagator> propagator,
             @Value("${app.messaging.outbox.batch-size:100}") int batchSize) {
         this(outboxEventRepository, kafkaTemplate, jsonMapper, transactionTemplate, meterRegistry, batchSize,
-                Clock.systemUTC());
+                Clock.systemUTC(), tracer.getIfAvailable(() -> Tracer.NOOP),
+                propagator.getIfAvailable(() -> Propagator.NOOP));
     }
 
     OutboxRelay(OutboxEventRepository outboxEventRepository, KafkaTemplate<Object, Object> kafkaTemplate,
             JsonMapper jsonMapper, TransactionTemplate transactionTemplate, MeterRegistry meterRegistry,
-            int batchSize, Clock clock) {
+            int batchSize, Clock clock, Tracer tracer, Propagator propagator) {
         this.outboxEventRepository = outboxEventRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.jsonMapper = jsonMapper;
         this.transactionTemplate = transactionTemplate;
         this.batchSize = batchSize;
         this.clock = clock;
+        this.tracer = tracer;
+        this.propagator = propagator;
         this.published = Counter.builder("swirl.outbox.published").description("Outbox events published to Kafka")
                 .register(meterRegistry);
         this.failed = Counter.builder("swirl.outbox.failed").description("Outbox publication attempts that failed")
@@ -111,6 +124,19 @@ public class OutboxRelay {
     }
 
     private CompletableFuture<SendResult<Object, Object>> send(OutboxEvent event) {
+        if (event.getTraceParent() == null) {
+            return sendRecord(event);
+        }
+        Span span = propagator.extract(Map.of(OrderEventOutbox.TRACEPARENT, event.getTraceParent()), Map::get)
+                .name("order.outbox.publish").start();
+        try (Tracer.SpanInScope ignored = tracer.withSpan(span)) {
+            return sendRecord(event);
+        } finally {
+            span.end();
+        }
+    }
+
+    private CompletableFuture<SendResult<Object, Object>> sendRecord(OutboxEvent event) {
         try {
             OrderEvent payload = jsonMapper.readValue(event.getPayload(), OrderEvent.class);
             ProducerRecord<Object, Object> record = new ProducerRecord<>(event.getTopic(), event.getKey(), payload);

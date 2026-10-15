@@ -14,6 +14,8 @@ import dev.swirlit.demo.order.domain.OutboxEvent;
 import dev.swirlit.demo.order.repository.OutboxEventRepository;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.propagation.Propagator;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -44,7 +46,7 @@ class OutboxRelayTest {
     private final KafkaTemplate<Object, Object> kafkaTemplate = mock(KafkaTemplate.class);
     private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
     private final OutboxRelay relay = new OutboxRelay(repository, kafkaTemplate, JSON, inlineTransactions(),
-            registry, 50, Clock.fixed(NOW, ZoneOffset.UTC));
+            registry, 50, Clock.fixed(NOW, ZoneOffset.UTC), Tracer.NOOP, Propagator.NOOP);
 
     @Test
     void publishesPendingEventsAndMarksThemPublished() {

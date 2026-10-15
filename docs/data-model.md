@@ -158,7 +158,7 @@ Important consistency boundary:
 
 Publication is at least once: a relay crash between Kafka's acknowledgement and the database commit republishes that batch. Duplicates are recognised by event ID, as described below. See [ADR 0011](adr/0011-transactional-outbox.md) for the trade-offs and the change-data-capture alternative.
 
-`order_outbox` columns: `id`, `topic`, `event_key` (the order ID), `payload` (the `OrderEvent` JSON), `created_at`, `published_at` (null while pending), and `attempts`. Published rows are deleted after seven days.
+`order_outbox` columns: `id`, `topic`, `event_key` (the order ID), `payload` (the `OrderEvent` JSON), `created_at`, `published_at` (null while pending), `attempts`, and `trace_parent` (the W3C `traceparent` of the change, which the relay's record continues). Published rows are deleted after seven days.
 
 Every request record carries a `swirl-event-id` header taken from its outbox row, and the user service answers with the same ID plus `:result`. `OrderResultListener` stores each applied result ID in `order_inbox` (`event_id`, `processed_at`) in the transaction that updates the order, and skips a result whose ID is already there. Deduplication therefore survives restarts and covers republished requests as well as redelivered results; `swirl_events_duplicates_total` counts the skips. Records without the header (from older producers during a rolling upgrade) fall back to the state checks, which ignore exact duplicates and superseded results.
 

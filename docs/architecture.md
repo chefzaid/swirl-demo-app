@@ -236,3 +236,4 @@ What becomes easier, harder, riskier, or more constrained?
 - [Deployment](./deployment.md)
 - [Operations](./operations.md)
 - [Security](./security.md)
+- [Threat Model](./threat-model.md)

@@ -72,7 +72,7 @@ Each reader has a starting point ([ADR 0001](./docs/adr/0001-documentation-struc
 - **Contributors:** [Development Guide](./docs/development.md), [Testing Guide](./docs/testing.md) and [Code Quality And Template Onboarding](./docs/code-quality.md)
 - **Deployers:** [Deployment Guide](./docs/deployment.md), [Infrastructure Layout](./docs/deployment.md#infrastructure-layout) and [Public DNS](./docs/dns.md)
 - **Operators:** [Operations Runbook](./docs/operations.md) and [Service Levels And Alerts](./docs/slo.md)
-- **Reviewers:** [Security Reference](./docs/security.md)
+- **Reviewers:** [Security Reference](./docs/security.md) and [Threat Model](./docs/threat-model.md)
 
 ## Roadmap
 

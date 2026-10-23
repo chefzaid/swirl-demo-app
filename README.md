@@ -1,11 +1,38 @@
 # Swirl Demo App
 
-Swirl Demo App is a deliberately small, production-shaped full-stack template. Two Java 25 / Spring Boot 4 services and an Angular 22 SPA demonstrate reusable application, event-driven, security, observability, testing, and GitOps patterns on the platform supplied by [`swirl-cloud`](https://github.com/chefzaid/swirl-cloud).
+Swirl Demo App is a production-shaped Java and Angular service template for teams whose services must pass security, architecture and supplier reviews.
+
+Two Java 25 / Spring Boot 4 services and an Angular 22 SPA demonstrate reusable application, event-driven, security, observability, testing, and GitOps patterns on the platform supplied by [`swirl-cloud`](https://github.com/chefzaid/swirl-cloud). The product is the template itself: its user and order example is only the smallest flow that proves each pattern end to end ([ADR 0014](./docs/adr/0014-template-scope-and-audience.md)).
 
 [![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Angular](https://img.shields.io/badge/Angular-22.2-red.svg)](https://angular.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg)](https://www.typescriptlang.org/)
+
+## What It Does
+
+The example is one order-validation flow ([details](./docs/features.md#minimal-demonstration-flow)):
+
+1. `swirlapp-user` stores a user created through its API or the SPA.
+2. An order is created for that user; `swirlapp-order` stores it as `PENDING` and publishes a validation request through its transactional outbox.
+3. `swirlapp-user` consumes the request, looks up the user and publishes an `APPROVED` or `REJECTED` result.
+4. `swirlapp-order` checks the result and updates the order, ignoring duplicates and late results.
+5. The Angular SPA lists both resources and can create, edit and delete each one.
+
+On the way the flow exercises Keycloak JWT validation at each API, PostgreSQL with Flyway, Redis caching, Kafka retries and dead-letter topics, tracing and audit logs, and delivery from GitLab CI through Argo CD.
+
+## Aim And Status
+
+The template aims to become an audited service starter for regulated enterprise teams: a service generated with only the capabilities it needs, which keeps receiving template improvements, and which ships the evidence that security and supplier reviews ask for ([Product Direction](./TODO.md#product-direction-added-2026-10-05)).
+
+**Status:** the services, SPA, tests and delivery pipeline in [Features](./docs/features.md) ship today. Capability selection at generation, template update merge requests, the compliance evidence pack and the readiness score are roadmap work. [Before You Adopt](./docs/code-quality.md#before-you-adopt) lists what a service built from the template accepts today.
+
+### What It Is Not
+
+- A business domain: the user and order example stays the smallest one that proves each pattern.
+- A one-shot generator: the aim is services that keep receiving template changes, not copies that drift from it.
+- A compliance certificate: the aim is to supply evidence for an organisation's own reviews, not to certify anyone, and until that evidence ships the template calls nothing audited, evidenced or compliant.
+- A pattern catalogue for its own sake: a service mesh, a saga or an API gateway arrives only with an example of the failure mode it handles.
 
 ## GitLab Delivery
 
@@ -38,21 +65,18 @@ and deliberate major-version changes.
 
 ## Documentation
 
-- [Features](./docs/features.md)
-- [Architecture Overview and ADR Index](./docs/architecture.md)
-- [Data Model Reference](./docs/data-model.md)
-- [Development Guide](./docs/development.md)
-- [Testing Guide](./docs/testing.md)
-- [Code Quality And Template Onboarding](./docs/code-quality.md)
-- [Deployment Guide](./docs/deployment.md)
-- [Operations Runbook](./docs/operations.md)
-- [Service Levels And Alerts](./docs/slo.md)
-- [Security Reference](./docs/security.md)
-- [Infrastructure Layout](./docs/deployment.md#infrastructure-layout)
+Each reader has a starting point ([ADR 0001](./docs/adr/0001-documentation-structure.md)):
+
+- **Evaluators:** [Features](./docs/features.md) and [Before You Adopt](./docs/code-quality.md#before-you-adopt)
+- **Architects:** [Architecture Overview and ADR Index](./docs/architecture.md) and [Data Model Reference](./docs/data-model.md)
+- **Contributors:** [Development Guide](./docs/development.md), [Testing Guide](./docs/testing.md) and [Code Quality And Template Onboarding](./docs/code-quality.md)
+- **Deployers:** [Deployment Guide](./docs/deployment.md), [Infrastructure Layout](./docs/deployment.md#infrastructure-layout) and [Public DNS](./docs/dns.md)
+- **Operators:** [Operations Runbook](./docs/operations.md) and [Service Levels And Alerts](./docs/slo.md)
+- **Reviewers:** [Security Reference](./docs/security.md)
 
 ## Roadmap
 
-Future reusable technical capabilities are tracked in [TODO.md](./TODO.md). Product behavior stays intentionally minimal so every example remains easy to understand and transplant.
+Future reusable technical capabilities are tracked in [TODO.md](./TODO.md), and its [Product Direction](./TODO.md#product-direction-added-2026-10-05) sets where the template is heading. The user and order example's business behavior stays intentionally minimal so every example remains easy to understand and transplant.
 
 ## Quick Start
 

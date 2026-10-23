@@ -9,9 +9,9 @@ ADR 0002 keeps the user and order domain minimal, and the roadmap's contribution
 rules keep new work technical. Neither says who the template is for or what it
 is ultimately meant to become. That direction was set on 2026-10-05 in
 [TODO.md › Product Direction](../../TODO.md#product-direction-added-2026-10-05),
-and it lives only there: the README presents a "deliberately small,
-production-shaped full-stack template", the running SPA calls itself a "cluster
-lab", and no ADR names the audience or the non-goals.
+and it lived only there: the README presented a "deliberately small,
+production-shaped full-stack template", the running SPA called itself a "cluster
+lab", and no ADR named the audience or the non-goals.
 
 Without a recorded scope, each change re-decides what belongs in the template,
 and the documents drift into describing the aim as if it had already shipped.

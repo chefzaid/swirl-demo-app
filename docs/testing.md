@@ -244,13 +244,15 @@ reports and baselines it writes to you.
 `e2e/live-cluster.spec.ts`:
 
 1. loads OIDC discovery
-2. starts Authorization Code + PKCE login
+2. follows the SPA's automatic Authorization Code + PKCE redirect
 3. authenticates through Keycloak
 4. loads the secured user directory
 5. loads the secured order workflow
 6. optionally creates and edits a disposable user
-7. creates and edits an order, waiting for Kafka validation after each change
-8. deletes the disposable order and user again
+7. creates and edits an order, waiting for Kafka validation to approve it after each change
+8. deletes the disposable user, edits the order again and waits for validation to reject it,
+   the rejection path of the README's [Try The Flow](../README.md#try-the-flow)
+9. deletes the disposable order
 
 Run against an environment:
 

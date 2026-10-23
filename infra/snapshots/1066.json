@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "kind": "snapshot",
+  "releaseVersion": "snapshot-4eae3ddb409dbe9822d1e1907431cab64ab4ab64-1066",
+  "sourceRevision": "4eae3ddb409dbe9822d1e1907431cab64ab4ab64",
+  "pipelineId": "1066",
+  "images": {
+    "swirlapp-user": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-user",
+      "digest": "sha256:31cf72050badd780a82daf9889ccfdd94e06835d86978176e02912e6c409e988"
+    },
+    "swirlapp-order": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-order",
+      "digest": "sha256:3a9e1e8cff2713a6368d9d982acf326868e4fac107edda7548c3e0b13f8bb0a6"
+    },
+    "swirlapp-web": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-web",
+      "digest": "sha256:281875d98e8ad98927116f79f36be992f3221edd6617bc318113b608ad151cba"
+    }
+  },
+  "sourceBranch": "claude/apply-coding-md-vc7yw3"
+}

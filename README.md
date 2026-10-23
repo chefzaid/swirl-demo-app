@@ -26,8 +26,10 @@ can share the platform cluster; remote clusters are optional. See the
 CI submits Sonar analysis for both the Java backend and Angular frontend. The
 platform's scheduled discovery currently covers its local workloads; remote
 application clusters need separate telemetry/discovery integration. See
-[observability scope](https://github.com/chefzaid/swirl-cloud/blob/main/docs/operations.md#namespace-and-discovery). When
-copying this template, follow the [code-quality onboarding guide](./docs/code-quality.md#adapting-the-template)
+[observability scope](https://github.com/chefzaid/swirl-cloud/blob/main/docs/operations.md#namespace-and-discovery). Before
+copying this template, read [Before You Adopt](./docs/code-quality.md#before-you-adopt)
+for what a service built from it accepts today. When copying it, follow the
+[code-quality onboarding guide](./docs/code-quality.md#adapting-the-template)
 to preserve source coverage, credentials and scan-only CI behavior.
 
 [`VERSION`](./VERSION) owns the version baseline. See the

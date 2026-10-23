@@ -2,7 +2,9 @@
 
 This guide covers Swirl Demo App's two local workflows: a fast dependency-free loop and a production-shaped authenticated stack.
 
-When creating an application from this template, follow the
+Before creating an application from this template, check
+[Before You Adopt](code-quality.md#before-you-adopt) for what it accepts today.
+When creating one, follow the
 [code-quality onboarding instructions](code-quality.md#adapting-the-template) alongside the
 repository and service renames. Update both backend and frontend source paths,
 retain `.sonar-auto.json`, and preserve the scan-only CI rules.

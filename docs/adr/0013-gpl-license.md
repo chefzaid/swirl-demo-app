@@ -18,3 +18,12 @@ The owner chose to keep GPL 3.0 unchanged for the template and the code it gener
 - Services built from the template and distributed to others must be released under the GPL 3.0, with their source. Organisations that cannot accept that cannot adopt the template as is.
 - Running a generated service as a network service without distributing it does not trigger the GPL's source obligation; only distribution does (the AGPL, not chosen here, would close that gap).
 - Changing the license later needs the agreement of every contributor whose code is still present, so outside contributions should come with that agreement in mind.
+
+## Amendment: the browser bundle (2026-10-23)
+
+The second consequence above holds for the backend services only. A service
+that serves the Angular SPA copies its compiled bundle to each visitor's
+browser, and the GPL 3.0 counts any propagation that lets others receive copies
+as conveying, so the bundle's corresponding source has to be offered even when
+nothing else is distributed.
+[Before You Adopt](../code-quality.md#before-you-adopt) states this for adopters.

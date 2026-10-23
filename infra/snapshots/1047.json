@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "kind": "snapshot",
+  "releaseVersion": "snapshot-5a828f10796701c2193814f1aae2d0b69db19083-1047",
+  "sourceRevision": "5a828f10796701c2193814f1aae2d0b69db19083",
+  "pipelineId": "1047",
+  "images": {
+    "swirlapp-user": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-user",
+      "digest": "sha256:6388cfdac4a11644cbaf67366e0b3882900ff26b5d0a2e1dffab50e73de5393b"
+    },
+    "swirlapp-order": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-order",
+      "digest": "sha256:03ef90c55ba6dc3d4d198ce532c765202f39ac421634a3b468fb311bc16a5ab8"
+    },
+    "swirlapp-web": {
+      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-web",
+      "digest": "sha256:0cdb3fd5e49c965f911b4cf589097b791bed314fa78f7f932dbe2ccad35f4705"
+    }
+  },
+  "sourceBranch": "dependabot/maven/maven-a8c11a950f"
+}

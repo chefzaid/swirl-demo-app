@@ -69,6 +69,22 @@
     </dependencyManagement>
 
     <build>
+        <testResources>
+            <!-- Tests compare the build version with build-version.properties, filtered like application.yml. -->
+            <testResource>
+                <directory>${basedir}/src/test/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>build-version.properties</include>
+                </includes>
+            </testResource>
+            <testResource>
+                <directory>${basedir}/src/test/resources</directory>
+                <excludes>
+                    <exclude>build-version.properties</exclude>
+                </excludes>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

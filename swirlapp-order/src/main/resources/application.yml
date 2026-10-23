@@ -152,11 +152,27 @@ management:
 info:
   app:
     name: ${spring.application.name}
-    description: Event-driven order service
-    version: 1.0.0
+    description: >-
+      Example service of the Swirl Demo App service template. In the
+      order-validation flow it creates each order as PENDING, publishes the order
+      event through its transactional outbox and applies the APPROVED or REJECTED
+      result from the user service.
+    # Maven resource filtering writes the build's version here.
+    version: "@project.version@"
     java: ${java.version}
 
 springdoc:
+  open-api:
+    info:
+      title: Swirl Demo App orders API
+      description: ${info.app.description}
+      version: ${info.app.version}
+      license:
+        name: GNU General Public License v3.0
+        url: https://www.gnu.org/licenses/gpl-3.0.html
+    external-docs:
+      description: Swirl Demo App features
+      url: https://github.com/chefzaid/swirl-demo-app/blob/main/docs/features.md
   api-docs:
     enabled: ${APP_API_DOCS_ENABLED:true}
     path: /api/orders/openapi

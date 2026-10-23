@@ -53,7 +53,7 @@ Implemented API behavior:
 - configurable per-principal or per-IP fixed-window rate limiting
 - `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`, and `Retry-After` response headers
 - a 64 KB request-body limit answered with `413` Problem Details, enforced while chunked bodies are read; chunked form and multipart bodies get `411`
-- SpringDoc OpenAPI documents for each service and one aggregated Swagger UI
+- SpringDoc OpenAPI documents for each service and one aggregated Swagger UI; each document names its service, describes its step in the order-validation flow, and carries the build's version, the GPL 3.0 license and a link to this page, and `/actuator/info` reports the same version
 - explicit CORS origins, methods, request headers, and exposed response headers
 - Keycloak realm roles mapped to `ROLE_*` authorities, and a [`@PreAuthorize` rule](security.md#backend-authorization) that can require a role to delete users
 - HTTP compression and forwarded-header support

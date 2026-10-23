@@ -130,7 +130,7 @@ With `app.security.enabled=true`, the services permit these without a bearer tok
 
 Every other request requires authentication.
 
-`APP_API_DOCS_ENABLED` is the production switch for API documentation. The default profile and the local Compose stack publish it; the `uat` and `prod` Spring profiles default to `false`, which turns SpringDoc off and leaves the documentation paths behind authentication. Deployed environments set it from the `apiDocs` [environment setting](deployment.md#add-or-reconfigure-this-repository), which also hides the frontend's API link.
+`APP_API_DOCS_ENABLED` is the production switch for API documentation. The default profile and the local Compose stack publish it; the `uat` and `prod` Spring profiles default to `false`, which turns SpringDoc off and leaves the documentation paths behind authentication. Deployed environments set it from the `apiDocs` [environment setting](deployment.md#add-or-reconfigure-this-repository), which also hides the frontend's API link. Each OpenAPI document names the running release, so turning the documents off also keeps that version private.
 
 Ingress exposes API documentation and the exact `/health/user` and `/health/order` health summaries used by CI. Other Actuator routes, including metrics, remain private to cluster services.
 

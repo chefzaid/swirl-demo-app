@@ -23,6 +23,8 @@ build_application() {
   python3 infra/scripts/check-playwright-images.py
   python3 infra/scripts/test-compose-images.py
   python3 infra/scripts/check-compose-images.py
+  python3 infra/scripts/test-identity.py
+  python3 infra/scripts/check-identity.py
   npx --yes markdownlint-cli2@0.23.3
   kubectl kustomize infra/k8s >/dev/null
   kubectl kustomize infra/overlays/ha >/dev/null

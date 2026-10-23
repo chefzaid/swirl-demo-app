@@ -189,6 +189,29 @@ visible discovery error. The controller cannot infer arbitrary build commands
 or add the missing configuration to the application repository. Vendor software
 in `corp`, such as Odoo, is outside this source-discovery scope.
 
+### Replace The Identity
+
+The first sentence of [README.md](../README.md) is the template's identity: it says
+what the project is and who it is for, in plain text of at most 160 characters
+that ends with a full stop and has no Markdown, quotes, apostrophes, braces, `&`,
+`$` or backslashes, so every copy can hold it without escaping. A new
+application replaces it, and the copies below, together:
+
+- the parent `<description>` in [pom.xml](../pom.xml)
+- `description` in [swirlapp-web/package.json](../swirlapp-web/package.json)
+- the `description` meta tag in [swirlapp-web/src/index.html](../swirlapp-web/src/index.html)
+- the `PROJECT_DESCRIPTION` default in
+  [configure-code-quality.sh](../infra/scripts/configure-code-quality.sh), which
+  becomes the GitLab project description (its `PROJECT_TOPICS` default sits beside it)
+- the start of the release description in
+  [ci-release.sh](../infra/scripts/ci-release.sh)
+
+The build job's `infra/scripts/check-identity.py` fails and names the file when a
+copy differs from the README. Each service's `application.yml` also names the
+template in its `info.app.description`, which feeds `/actuator/info` and the
+OpenAPI description, and in the OpenAPI title and `external-docs` link under
+`springdoc.open-api`; the check does not cover those.
+
 ## Verification And Troubleshooting
 
 From the Swirl Demo App repository, verify the submission helper's success, scanner

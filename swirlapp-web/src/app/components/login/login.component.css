@@ -4,6 +4,7 @@
 .login-story h1 { margin: 0; color: #f7f8f2; font-size: clamp(52px, 6.2vw, 84px); line-height: .95; letter-spacing: -.06em; }
 .login-story h1 span { color: var(--coral); }
 .story-lead { max-width: 620px; margin: 25px 0 38px; color: #a8b9b6; font-size: clamp(16px, 1.6vw, 19px); line-height: 1.7; }
+.story-lead a { color: var(--mint); }
 .platform-flow { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; overflow: hidden; border: 1px solid rgb(255 255 255 / .09); border-radius: 17px; background: rgb(255 255 255 / .09); }
 .flow-item { min-height: 84px; display: flex; align-items: center; gap: 15px; padding: 18px; background: rgb(12 31 33 / .84); }
 .flow-number { color: var(--mint); font: 800 10px/1 var(--font); letter-spacing: .08em; }

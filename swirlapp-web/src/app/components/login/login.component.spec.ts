@@ -33,6 +33,12 @@ describe('LoginComponent', () => {
         expect(component).toBeTruthy();
     });
 
+    it('says this is the reference flow of a service template and links its README', () => {
+        const note = (fixture.nativeElement as HTMLElement).querySelector('.story-lead') as HTMLElement;
+        expect(note.textContent?.replace(/\s+/g, ' ')).toContain('This is the reference flow of a service template: read what it is for.');
+        expect(note.querySelector('a')?.getAttribute('href')).toBe('https://github.com/chefzaid/swirl-demo-app#readme');
+    });
+
     it('should call authService.login on login', () => {
         component.login();
         expect(authServiceSpy.login).toHaveBeenCalled();

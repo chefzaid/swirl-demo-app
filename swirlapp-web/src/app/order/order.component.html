@@ -3,7 +3,7 @@
         <div>
             <p class="eyebrow">Event domain</p>
             <h1>Orders that travel the stack.</h1>
-            <p>Creating an order persists state, publishes a Kafka event, warms Redis, and leaves a trace in the observability layer.</p>
+            <p>Creating an order stores it as pending, publishes a validation request to Kafka through the outbox, and evicts the cached orders; the user service then approves or rejects it.</p>
         </div>
         <div class="count-card" aria-label="Order count">
             <strong>{{ orders().length }}</strong>
@@ -104,7 +104,7 @@
                         <dl><dt>Owner</dt><dd>{{ order.userName || ('User #' + order.userId) }}</dd></dl>
                         <dl><dt>Product</dt><dd>#{{ order.productId }}</dd></dl>
                     </div>
-                    <div class="event-confirmation"><i></i><span>Event pipeline connected</span></div>
+                    <p class="status-note">{{ statusNotes[order.status] }}</p>
                     <div class="order-actions">
                         @if (pendingDeleteOrderId() === order.id) {
                             <button type="button" class="card-action danger" (click)="deleteOrder(order)" [disabled]="deletingOrderId() === order.id" [attr.aria-label]="'Confirm delete order #' + order.id">{{ deletingOrderId() === order.id ? 'Deleting…' : 'Confirm delete' }}</button>

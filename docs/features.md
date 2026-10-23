@@ -165,15 +165,17 @@ Passwords do not enter the application databases. Keycloak owns password hashing
 Implemented frontend behavior:
 
 - Angular 22 standalone application
-- lazy-loaded login, users, and orders routes
+- lazy-loaded login, users, and orders routes, each with its own tab title
 - functional route guard and HTTP interceptor
 - OAuth discovery, login, logout, token refresh setup, and auth-state observables
 - RxJS service layer for API calls and notifications
 - typed user and order models
 - create, list, edit, and confirmed-delete views for the two demonstration resources
+- a note on each order card explaining its `PENDING`, `APPROVED` or `REJECTED` status
 - visible API error handling and notification surface
 - `OnPush` change detection
-- semantic navigation and form labels used by browser tests
+- semantic navigation and form labels used by browser tests, with each visible label part of its control's accessible name
+- a login-page sentence naming the app as the reference flow of a service template, linked to the README
 - development proxy for both APIs and Keycloak
 - runtime public configuration shared across `int`, `uat` and `prod` image deployments
 - production build served by unprivileged NGINX

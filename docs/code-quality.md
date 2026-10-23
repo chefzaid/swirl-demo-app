@@ -210,7 +210,10 @@ The build job's `infra/scripts/check-identity.py` fails and names the file when 
 copy differs from the README. Each service's `application.yml` also names the
 template in its `info.app.description`, which feeds `/actuator/info` and the
 OpenAPI description, and in the OpenAPI title and `external-docs` link under
-`springdoc.open-api`; the check does not cover those.
+`springdoc.open-api`; the check does not cover those. Nor does it cover the SPA,
+which names the app in its brand, its tab titles (`APP_NAME` in
+[app.routes.ts](../swirlapp-web/src/app/app.routes.ts)) and the README link in
+[login.component.ts](../swirlapp-web/src/app/components/login/login.component.ts).
 
 ## Verification And Troubleshooting
 

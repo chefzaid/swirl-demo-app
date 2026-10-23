@@ -5,7 +5,11 @@ import { serveFixtures, turnOffTransitions } from './fixtures';
 
 async function expectNoViolations(page: Page): Promise<void> {
   await turnOffTransitions(page);
+  // label-content-name-mismatch (WCAG 2.5.3 Label in Name) is experimental in
+  // axe, so it runs only when enabled explicitly.
+  // options() replaces the whole option object, so it runs before withTags().
   const results = await new AxeBuilder({ page })
+    .options({ rules: { 'label-content-name-mismatch': { enabled: true } } })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
   const findings = results.violations.flatMap(({ id, nodes }) =>

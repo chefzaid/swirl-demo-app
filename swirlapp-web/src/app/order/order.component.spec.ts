@@ -51,6 +51,28 @@ describe('OrderComponent', () => {
     fixture.detectChanges();
   });
 
+  it('explains each order status instead of a fixed pipeline line', () => {
+    orderService.getAllOrders.mockReturnValue(of([
+      order,
+      { ...order, id: 2, status: 'APPROVED' },
+      { ...order, id: 3, status: 'REJECTED' }
+    ]));
+
+    component.loadOrders();
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const notes = Array.from(element.querySelectorAll('.status-note'), note => note.textContent?.trim());
+    expect(notes).toEqual([
+      'Waiting for the user service to check that the owner exists.',
+      'Approved: the user service found the owner.',
+      'Rejected: the user service found no user with this ID.'
+    ]);
+    expect(component.statusNotes.COMPLETED).toBe('Completed: a reserved status; no step of this example moves an order here.');
+    expect(element.textContent).not.toContain('Event pipeline connected');
+    expect(element.textContent).not.toContain('warms Redis');
+  });
+
   it('creates and loads orders', () => {
     orderService.getAllOrders.mockReturnValue(of([order]));
 

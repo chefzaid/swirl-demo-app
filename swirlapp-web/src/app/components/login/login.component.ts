@@ -9,6 +9,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
+  readonly readmeUrl = 'https://github.com/chefzaid/swirl-demo-app#readme';
   readonly authStatus = toSignal(this.authService.authStatus$, { initialValue: 'loading' });
 
   constructor(private readonly authService: AuthService) {}

@@ -116,7 +116,9 @@ none is solved yet.
   `swirlapp-*` services and images, or the bare `swirl-demo-app` names of the
   Argo CD Application, Kubernetes resources, Vault paths and CI cache keys.
   Both are open under
-  [Template Experience](../TODO.md#priority-template-experience).
+  [Template Experience](../TODO.md#priority-template-experience), and
+  [ADR 0015](adr/0015-template-distribution.md) plans a Copier generator that
+  asks for these names.
 - **A pinned stack without a support matrix.** CI builds and tests on Java 25,
   Spring Boot 4 and Angular 22 only
   ([ADR 0003](adr/0003-platform-stack-and-profiles.md)). The PostgreSQL, Redis,

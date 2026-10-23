@@ -115,7 +115,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 ## Priority: Template Experience
 
 - [ ] Make the dev container application-only and point each development environment at shared infrastructure namespaces; retain local infrastructure as an explicit opt-in profile.
-- [ ] Add a template initialization script for group ID, package, service names, image registry, domains, namespaces, and identity-provider settings.
+- [ ] Add a template initialization script for group ID, package, service names, image registry, domains, namespaces, and identity-provider settings. [ADR 0015](docs/adr/0015-template-distribution.md) makes this the Copier questionnaire.
 - [ ] Separate example-domain modules from reusable starters so adopters can remove users/orders without untangling infrastructure code.
 - [ ] Package request IDs, Problem Details, rate limiting, auditing, Kafka reliability, security defaults, and test fixtures as optional internal starters.
 - [ ] Add a third minimal reference service only if it proves a missing pattern such as synchronous resilience, saga compensation, or gRPC.
@@ -124,7 +124,7 @@ Parts of tasks that cannot advance without the owner's decision or information. 
 
 ## Product Direction (added 2026-10-05)
 
-The product is the template itself; the user and order domain stays the smallest example that proves each pattern, as the rules above require. Generators such as JHipster or Spring Initializr produce a project once and leave it; they give no evidence that the result passes a security review, and generated projects drift from the template as soon as it improves. The niche to own is **the audited service starter for regulated enterprise teams**: Java and Angular teams in banking, insurance, energy and the public sector who must pass security, architecture and supplier reviews (DORA, NIS2, ISO/IEC 27001) before anything reaches production. [ADR 0014](docs/adr/0014-template-scope-and-audience.md) records this scope, the audience and the non-goals.
+The product is the template itself; the user and order domain stays the smallest example that proves each pattern, as the rules above require. Generators such as Spring Initializr produce a project once and leave it, and JHipster's upgrade only regenerates applications built on its own generator; neither gives evidence that the result passes a security review, and projects drift from the template as soon as it improves. The niche to own is **the audited service starter for regulated enterprise teams**: Java and Angular teams in banking, insurance, energy and the public sector who must pass security, architecture and supplier reviews (DORA, NIS2, ISO/IEC 27001) before anything reaches production. [ADR 0014](docs/adr/0014-template-scope-and-audience.md) records this scope, the audience and the non-goals.
 
 Differentiators:
 
@@ -149,7 +149,7 @@ These items make what the template is (a reusable service starter whose user and
 
 ### Generator And Upgrade Stream
 
-- [ ] **ADR — distribution:** compare a templating generator with a stored answers file and three-way regeneration, a Maven archetype with an Angular schematic, and published starters only. The choice must let adopters receive later template changes; a one-shot copy does not. Builds on the initialization-script and starter items above.
+- [x] **ADR — distribution:** compare a templating generator with a stored answers file and three-way regeneration, a Maven archetype with an Angular schematic, and published starters only. The choice must let adopters receive later template changes; a one-shot copy does not. Builds on the initialization-script and starter items above. Decided in [ADR 0015](docs/adr/0015-template-distribution.md): Copier, with updates opened as merge requests by Renovate's `copier` manager, and runtime code moving into starters.
 - [ ] Capability selection at generation (Kafka with outbox, Redis cache, Keycloak, generated API clients, web UI): unselected patterns are absent from the generated code rather than disabled by configuration.
 - [ ] Versioned template releases with semantic versions, a changelog, an upgrade guide per major version and a long-term-support line.
 - [ ] Template update merge requests: a scheduled job in each generated project compares its template version with the latest release and opens a merge request with the changes, migration notes and marked conflicts.

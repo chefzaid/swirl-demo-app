@@ -2,5 +2,6 @@
   "appSubdomain": "demo",
   "trustedProxyCIDRs": "10.42.0.0/16",
   "highAvailability": false,
-  "databaseName": "swirl_demo_app_uat"
+  "databaseName": "swirl_demo_app_uat",
+  "apiDocs": true
 }

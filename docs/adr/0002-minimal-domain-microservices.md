@@ -39,3 +39,15 @@ Cross-service consistency is eventual and failures must be explicit.
 New functional features require strong justification: they should prove a missing technical pattern rather than expand the product for its own sake.
 
 If reusable infrastructure accumulates, it may be extracted into optional internal starters so example services can be removed cleanly.
+
+## Amendment: scope and the SPA's flows (2026-10-23)
+
+`swirlapp-web` now also edits and deletes users and orders, through the
+`PUT` and `DELETE` endpoints of both services, so "login and create/list flows
+only" above no longer holds: the SPA covers login and the create, list, edit
+and delete flows of both resources. The domain itself stays as minimal as this
+ADR decided.
+
+[ADR 0014](0014-template-scope-and-audience.md) records who the template is for,
+what it aims to become and its non-goals, and treats this user and order flow as
+the smallest example that proves each pattern rather than a product domain.

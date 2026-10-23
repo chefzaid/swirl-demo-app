@@ -2,7 +2,7 @@
 
 This guide catalogs capabilities already represented in Swirl Demo App. Planned work belongs in [TODO.md](../TODO.md), so this file distinguishes implemented behavior from future intent.
 
-Swirl Demo App is a technical template. Its user directory and order flow are intentionally small: they exist to exercise reusable full-stack and distributed-system patterns, not to grow into a product domain.
+Swirl Demo App is a technical template. Its user directory and order flow are intentionally small: they exist to exercise reusable full-stack and distributed-system patterns, not to grow into a product domain. It is for Java and Angular teams whose services must pass security, architecture and supplier reviews ([ADR 0014](adr/0014-template-scope-and-audience.md)).
 
 ## Minimal Demonstration Flow
 

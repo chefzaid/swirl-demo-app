@@ -126,6 +126,7 @@ mask build all
 - `EventRetentionTest`: published outbox rows and inbox entries older than the retention are purged, and a dry run only counts them
 - `SchedulerLockTest`: a scheduler lock has one holder until released, and the retention job skips its run while another replica holds the lock
 - `OrderEventOutboxTest` and `OutboxRelayTest`: events are stored per environment topic and keyed by order, nothing is stored without messaging, acknowledged events are marked published, rejected or unreadable ones stay pending, old rows are purged, and the backlog is exported
+- `OutboxTracingTest`: a record relayed from a scheduler-style poll carries the trace of the request that recorded the event, not the poll's
 - `OrderResultListenerTest`: approval/rejection, duplicate results, deleted orders, superseded edit results, invalid status/state, newer schema versions, retryable behavior, and the inbox (an applied result is recorded; a known event ID is skipped and counted)
 - `OrderControllerTest`: create/get/list/edit/delete responses and input/path/query error contracts
 - `CacheConfigTest`: Redis serialization and TTL configuration

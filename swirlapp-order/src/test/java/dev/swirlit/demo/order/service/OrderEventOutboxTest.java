@@ -9,6 +9,8 @@ import dev.swirlit.demo.common.event.OrderEvent;
 import dev.swirlit.demo.order.domain.OutboxEvent;
 import dev.swirlit.demo.order.repository.OutboxEventRepository;
 
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.propagation.Propagator;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import tools.jackson.databind.json.JsonMapper;
@@ -29,7 +31,7 @@ class OrderEventOutboxTest {
     @Test
     void recordsTheEventForTheEnvironmentsTopicKeyedByOrder() {
         var outbox = new OrderEventOutbox(repository, JSON, true, "swirl-demo-app.uat.order_topic",
-                Clock.fixed(NOW, ZoneOffset.UTC));
+                Clock.fixed(NOW, ZoneOffset.UTC), Tracer.NOOP, Propagator.NOOP);
         var event = new OrderEvent(7L, 2L, 2001L, null, OrderStatus.PENDING, NOW);
 
         outbox.enqueue(event);
@@ -45,7 +47,7 @@ class OrderEventOutboxTest {
 
     @Test
     void recordsNothingWhenMessagingIsDisabled() {
-        new OrderEventOutbox(repository, JSON, false, "order_topic", Clock.systemUTC())
+        new OrderEventOutbox(repository, JSON, false, "order_topic", Clock.systemUTC(), Tracer.NOOP, Propagator.NOOP)
                 .enqueue(new OrderEvent(7L, 2L, 2001L, null, OrderStatus.PENDING, NOW));
 
         verify(repository, never()).save(any());

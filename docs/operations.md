@@ -420,7 +420,7 @@ unrelated Git changes still require a new run.
 
 ### GitHub and GitLab differ
 
-GitHub pushes start the repository reconciler directly. GitLab branch and tag pushes invoke it through the managed repository-dispatch webhook, including GitLab CI commits marked `[skip ci]`. The workflow normally fast-forwards or merges the mirrors without force pushing, and its monthly schedule renews the GitLab credential before expiry. Inspect the **Sync GitHub and GitLab** workflow and the GitLab webhook delivery log if synchronization fails; a true content conflict leaves that branch for a person to reconcile while the other branches still sync, and the run then fails; a conflicting immutable tag stops the run. Neither discards repository history.
+GitHub pushes start the repository reconciler directly. GitLab branch and tag pushes invoke it through the managed repository-dispatch webhook, including GitLab CI commits marked `[skip ci]`. The workflow normally fast-forwards or merges the mirrors without force pushing, and its monthly schedule renews the GitLab credential before expiry. Dependabot branches (`dependabot/*`) are the exception: Dependabot rebases them by force on GitHub and deletes them when their pull request closes, so the workflow replaces or deletes the GitLab copy to match, with a lease on the exact commit it fetched, and never merges them or copies them back to GitHub. Inspect the **Sync GitHub and GitLab** workflow and the GitLab webhook delivery log if synchronization fails; a true content conflict leaves that branch for a person to reconcile while the other branches still sync, and the run then fails; a conflicting immutable tag stops the run. Neither discards repository history.
 
 ## Rate-Limit Incidents
 

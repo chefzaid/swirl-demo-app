@@ -258,7 +258,7 @@ Implemented platform features:
 - Argo CD refresh, exact-revision wait, self-healing, and pruning
 - post-rollout service smoke tests and real browser acceptance
 - optional Ansible Kustomize apply helper and one-time CI/CD configuration script
-- push-triggered, bidirectional GitHub/GitLab reconciliation for branches and tags without force pushing
+- push-triggered, bidirectional GitHub/GitLab reconciliation for branches and tags without force pushing, except GitHub-owned Dependabot branches, which GitLab mirrors
 
 GitLab is the CI/CD source of truth; GitHub is the public mirror.
 

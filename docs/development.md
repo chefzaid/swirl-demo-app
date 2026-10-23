@@ -81,7 +81,7 @@ The repository currently targets:
 
 Docker builds the complete stack, so Java and Node are required on the host only for direct development.
 
-Dependabot ([`.github/dependabot.yml`](../.github/dependabot.yml)) proposes weekly upgrades for Maven, npm, Dockerfile, and Compose dependencies. Minor and patch updates arrive grouped per ecosystem, Angular packages always move together, and major updates arrive one per dependency. The branches sync to GitLab, so the normal pipeline verifies each upgrade. Dependabot does not read `.gitlab-ci.yml`; update its digest-pinned job images by hand, and keep the toolchain versions above in step with merged upgrades.
+Dependabot ([`.github/dependabot.yml`](../.github/dependabot.yml)) proposes weekly upgrades for Maven, npm, Dockerfile, and Compose dependencies. Minor and patch updates arrive grouped per ecosystem, Angular packages always move together, and major updates arrive one per dependency. The branches sync to GitLab, rebases and deletions included, so the normal pipeline verifies each upgrade. Dependabot does not read `.gitlab-ci.yml`; update its digest-pinned job images by hand, and keep the toolchain versions above in step with merged upgrades.
 
 ## Fastest Complete Start
 

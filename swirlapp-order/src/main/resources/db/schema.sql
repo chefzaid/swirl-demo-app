@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS order_outbox (
     payload TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     published_at TIMESTAMP WITH TIME ZONE,
-    attempts INTEGER NOT NULL DEFAULT 0
+    attempts INTEGER NOT NULL DEFAULT 0,
+    trace_parent VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS order_inbox (

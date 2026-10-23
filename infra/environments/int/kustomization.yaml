@@ -18,11 +18,11 @@ configMapGenerator:
   - runtime-config.json=web-runtime-config.json
 images:
 - name: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-user
-  digest: sha256:5020122e6fd9dfcc14a0a4b7c52cc2e4f85b80824b948db71f0255c7a6843955
+  digest: sha256:6388cfdac4a11644cbaf67366e0b3882900ff26b5d0a2e1dffab50e73de5393b
 - name: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-order
-  digest: sha256:4e47b4f107cff1f01ffc6a49b07cd25c047f6a39a5615578690b99994ee03487
+  digest: sha256:03ef90c55ba6dc3d4d198ce532c765202f39ac421634a3b468fb311bc16a5ab8
 - name: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-web
-  digest: sha256:729ce605de13745bcd769e8da085b0f73fbd5650f2be2a3a8cf93a07ad7a3b72
+  digest: sha256:0cdb3fd5e49c965f911b4cf589097b791bed314fa78f7f932dbe2ccad35f4705
 patches:
 - target:
     kind: Ingress
@@ -34,6 +34,11 @@ patches:
     \  value: Swirl Demo App\n- op: replace\n  path: /metadata/annotations/gethomepage.dev~1group\n\
     \  value: Applications - INT\n- op: replace\n  path: /metadata/annotations/traefik.ingress.kubernetes.io~1router.middlewares\n\
     \  value: apps-int-swirl-demo-app-upload-limit@kubernetescrd\n"
+- target:
+    kind: Middleware
+    name: swirl-demo-app-rate-limit
+  patch: "apiVersion: traefik.io/v1alpha1\nkind: Middleware\nmetadata:\n  name: swirl-demo-app-rate-limit\n\
+    $patch: delete\n"
 - target:
     kind: Service
     name: swirlapp-user
@@ -60,7 +65,7 @@ patches:
     title\\\": \\\"Swirl Demo App INT Overview\\\",\\n  \\\"tags\\\": [\\n    \\\"\
     swirl-demo-app\\\"\\\n      ,\\n    \\\"spring-boot\\\",\\n    \\\"provisioned\\\
     \"\\n  ],\\n  \\\"timezone\\\": \\\"browser\\\"\\\n      ,\\n  \\\"schemaVersion\\\
-    \": 41,\\n  \\\"version\\\": 1,\\n  \\\"refresh\\\": \\\"30s\\\",\\n  \\\"\\\n\
+    \": 41,\\n  \\\"version\\\": 2,\\n  \\\"refresh\\\": \\\"30s\\\",\\n  \\\"\\\n\
     \      time\\\": {\\n    \\\"from\\\": \\\"now-6h\\\",\\n    \\\"to\\\": \\\"\
     now\\\"\\n  },\\n  \\\"templating\\\"\\\n      : {\\n    \\\"list\\\": [\\n  \
     \    {\\n        \\\"name\\\": \\\"application\\\",\\n        \\\"\\\n      label\\\
@@ -241,7 +246,275 @@ patches:
     \ {{container}}\\\"\\\n      ,\\n          \\\"instant\\\": true,\\n         \
     \ \\\"format\\\": \\\"table\\\"\\n        }\\n\\\n      \\      ],\\n      \\\"\
     options\\\": {\\n        \\\"showHeader\\\": true\\n      }\\n   \\\n      \\\
-    \ }\\n  ]\\n}\\n\"\n"
+    \ },\\n    {\\n      \\\"id\\\": 11,\\n      \\\"type\\\": \\\"timeseries\\\"\
+    ,\\n      \\\"title\\\"\\\n      : \\\"API 5xx Ratio (objective 0.5%)\\\",\\n\
+    \      \\\"gridPos\\\": {\\n        \\\"x\\\":\\\n      \\ 0,\\n        \\\"y\\\
+    \": 27,\\n        \\\"w\\\": 8,\\n        \\\"h\\\": 8\\n      },\\n  \\\n   \
+    \   \\    \\\"datasource\\\": {\\n        \\\"type\\\": \\\"prometheus\\\",\\\
+    n        \\\"uid\\\":\\\n      \\ \\\"prometheus\\\"\\n      },\\n      \\\"targets\\\
+    \": [\\n        {\\n          \\\"refId\\\"\\\n      : \\\"A\\\",\\n         \
+    \ \\\"expr\\\": \\\"sum by (app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\",uri!~\\\\\\\
+    \"/actuator.*\\\\\\\",status=~\\\\\\\n      \\\"5..\\\\\\\"}[5m])) / sum by (app)\
+    \ (rate(http_server_requests_seconds_count{namespace=\\\\\\\n      \\\"apps-int\\\
+    \\\\\",app=~\\\\\\\"$application\\\\\\\",uri!~\\\\\\\"/actuator.*\\\\\\\"}[5m]))\\\
+    \",\\n\\\n      \\          \\\"legendFormat\\\": \\\"{{app}}\\\"\\n        }\\\
+    n      ],\\n      \\\"fieldConfig\\\"\\\n      : {\\n        \\\"defaults\\\"\
+    : {\\n          \\\"unit\\\": \\\"percentunit\\\",\\n       \\\n      \\   \\\"\
+    custom\\\": {\\n            \\\"thresholdsStyle\\\": {\\n              \\\"mode\\\
+    \"\\\n      : \\\"line\\\"\\n            }\\n          },\\n          \\\"thresholds\\\
+    \": {\\n     \\\n      \\       \\\"mode\\\": \\\"absolute\\\",\\n           \
+    \ \\\"steps\\\": [\\n              {\\n\\\n      \\                \\\"color\\\
+    \": \\\"green\\\"\\n              },\\n              {\\n \\\n      \\       \
+    \        \\\"color\\\": \\\"red\\\",\\n                \\\"value\\\": 0.005\\\
+    n    \\\n      \\          }\\n            ]\\n          }\\n        },\\n   \
+    \     \\\"overrides\\\"\\\n      : []\\n      },\\n      \\\"options\\\": {\\\
+    n        \\\"legend\\\": {\\n          \\\"displayMode\\\"\\\n      : \\\"table\\\
+    \",\\n          \\\"placement\\\": \\\"bottom\\\"\\n        }\\n      }\\n   \
+    \ },\\n\\\n      \\    {\\n      \\\"id\\\": 12,\\n      \\\"type\\\": \\\"timeseries\\\
+    \",\\n      \\\"title\\\"\\\n      : \\\"API Requests Slower Than 300 ms (objective\
+    \ 5%)\\\",\\n      \\\"gridPos\\\": {\\n\\\n      \\        \\\"x\\\": 8,\\n \
+    \       \\\"y\\\": 27,\\n        \\\"w\\\": 8,\\n        \\\"h\\\": 8\\n\\\n \
+    \     \\      },\\n      \\\"datasource\\\": {\\n        \\\"type\\\": \\\"prometheus\\\
+    \",\\n    \\\n      \\    \\\"uid\\\": \\\"prometheus\\\"\\n      },\\n      \\\
+    \"targets\\\": [\\n        {\\n  \\\n      \\        \\\"refId\\\": \\\"A\\\"\
+    ,\\n          \\\"expr\\\": \\\"1 - sum by (app) (rate(http_server_requests_seconds_bucket{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\",uri!~\\\\\\\
+    \"/actuator.*\\\\\\\",le=\\\\\\\"0.3\\\\\\\n      \\\"}[5m])) / sum by (app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\",uri!~\\\\\\\
+    \"/actuator.*\\\\\\\"}[5m]))\\\",\\n\\\n      \\          \\\"legendFormat\\\"\
+    : \\\"{{app}}\\\"\\n        }\\n      ],\\n      \\\"fieldConfig\\\"\\\n     \
+    \ : {\\n        \\\"defaults\\\": {\\n          \\\"unit\\\": \\\"percentunit\\\
+    \",\\n       \\\n      \\   \\\"custom\\\": {\\n            \\\"thresholdsStyle\\\
+    \": {\\n              \\\"mode\\\"\\\n      : \\\"line\\\"\\n            }\\n\
+    \          },\\n          \\\"thresholds\\\": {\\n     \\\n      \\       \\\"\
+    mode\\\": \\\"absolute\\\",\\n            \\\"steps\\\": [\\n              {\\\
+    n\\\n      \\                \\\"color\\\": \\\"green\\\"\\n              },\\\
+    n              {\\n \\\n      \\               \\\"color\\\": \\\"red\\\",\\n\
+    \                \\\"value\\\": 0.05\\n     \\\n      \\         }\\n        \
+    \    ]\\n          }\\n        },\\n        \\\"overrides\\\":\\\n      \\ []\\\
+    n      },\\n      \\\"options\\\": {\\n        \\\"legend\\\": {\\n          \\\
+    \"displayMode\\\"\\\n      : \\\"table\\\",\\n          \\\"placement\\\": \\\"\
+    bottom\\\"\\n        }\\n      }\\n    },\\n\\\n      \\    {\\n      \\\"id\\\
+    \": 13,\\n      \\\"type\\\": \\\"timeseries\\\",\\n      \\\"title\\\"\\\n  \
+    \    : \\\"Kafka Consumer Lag\\\",\\n      \\\"gridPos\\\": {\\n        \\\"x\\\
+    \": 16,\\n      \\\n      \\  \\\"y\\\": 27,\\n        \\\"w\\\": 8,\\n      \
+    \  \\\"h\\\": 8\\n      },\\n      \\\"datasource\\\"\\\n      : {\\n        \\\
+    \"type\\\": \\\"prometheus\\\",\\n        \\\"uid\\\": \\\"prometheus\\\"\\n \
+    \ \\\n      \\    },\\n      \\\"targets\\\": [\\n        {\\n          \\\"refId\\\
+    \": \\\"A\\\",\\n    \\\n      \\      \\\"expr\\\": \\\"max by (app, topic) (kafka_consumer_fetch_manager_records_lag_max{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"})\\\",\\n \
+    \         \\\"legendFormat\\\": \\\"\\\n      {{app}} {{topic}}\\\"\\n       \
+    \ }\\n      ],\\n      \\\"fieldConfig\\\": {\\n       \\\n      \\ \\\"defaults\\\
+    \": {\\n          \\\"unit\\\": \\\"short\\\"\\n        },\\n        \\\"overrides\\\
+    \"\\\n      : []\\n      },\\n      \\\"options\\\": {\\n        \\\"legend\\\"\
+    : {\\n          \\\"displayMode\\\"\\\n      : \\\"table\\\",\\n          \\\"\
+    placement\\\": \\\"bottom\\\"\\n        }\\n      }\\n    },\\n\\\n      \\  \
+    \  {\\n      \\\"id\\\": 14,\\n      \\\"type\\\": \\\"timeseries\\\",\\n    \
+    \  \\\"title\\\"\\\n      : \\\"Event Retries and Dead Letters (per 5 minutes)\\\
+    \",\\n      \\\"gridPos\\\": {\\n\\\n      \\        \\\"x\\\": 0,\\n        \\\
+    \"y\\\": 35,\\n        \\\"w\\\": 8,\\n        \\\"h\\\": 8\\n\\\n      \\   \
+    \   },\\n      \\\"datasource\\\": {\\n        \\\"type\\\": \\\"prometheus\\\"\
+    ,\\n    \\\n      \\    \\\"uid\\\": \\\"prometheus\\\"\\n      },\\n      \\\"\
+    targets\\\": [\\n        {\\n  \\\n      \\        \\\"refId\\\": \\\"A\\\",\\\
+    n          \\\"expr\\\": \\\"sum by (app, topic) (increase(swirl_events_failed_deliveries_total{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"}[5m]))\\\"\
+    ,\\n          \\\"legendFormat\\\"\\\n      : \\\"failed {{app}} {{topic}}\\\"\
+    \\n        },\\n        {\\n          \\\"refId\\\":\\\n      \\ \\\"B\\\",\\\
+    n          \\\"expr\\\": \\\"sum by (app, topic) (increase(swirl_events_dead_lettered_total{namespace=\\\
+    \\\\\n      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"}[5m]))\\\"\
+    ,\\n          \\\"legendFormat\\\"\\\n      : \\\"dead-lettered {{app}} {{topic}}\\\
+    \"\\n        }\\n      ],\\n      \\\"fieldConfig\\\"\\\n      : {\\n        \\\
+    \"defaults\\\": {\\n          \\\"unit\\\": \\\"short\\\"\\n        },\\n  \\\n\
+    \      \\      \\\"overrides\\\": []\\n      },\\n      \\\"options\\\": {\\n\
+    \        \\\"legend\\\"\\\n      : {\\n          \\\"displayMode\\\": \\\"table\\\
+    \",\\n          \\\"placement\\\": \\\"bottom\\\"\\\n      \\n        }\\n   \
+    \   }\\n    },\\n    {\\n      \\\"id\\\": 15,\\n      \\\"type\\\": \\\"timeseries\\\
+    \"\\\n      ,\\n      \\\"title\\\": \\\"Cache Hit Ratio\\\",\\n      \\\"gridPos\\\
+    \": {\\n        \\\"x\\\"\\\n      : 8,\\n        \\\"y\\\": 35,\\n        \\\"\
+    w\\\": 8,\\n        \\\"h\\\": 8\\n      },\\n  \\\n      \\    \\\"datasource\\\
+    \": {\\n        \\\"type\\\": \\\"prometheus\\\",\\n        \\\"uid\\\":\\\n \
+    \     \\ \\\"prometheus\\\"\\n      },\\n      \\\"targets\\\": [\\n        {\\\
+    n          \\\"refId\\\"\\\n      : \\\"A\\\",\\n          \\\"expr\\\": \\\"\
+    sum by (app, cache) (rate(cache_gets_total{namespace=\\\\\\\n      \\\"apps-int\\\
+    \\\\\",app=~\\\\\\\"$application\\\\\\\",result=\\\\\\\"hit\\\\\\\"}[5m])) / sum\
+    \ by\\\n      \\ (app, cache) (rate(cache_gets_total{namespace=\\\\\\\"apps-int\\\
+    \\\\\",app=~\\\\\\\"$application\\\\\\\n      \\\"}[5m]))\\\",\\n          \\\"\
+    legendFormat\\\": \\\"{{app}} {{cache}}\\\"\\n        }\\n\\\n      \\      ],\\\
+    n      \\\"fieldConfig\\\": {\\n        \\\"defaults\\\": {\\n          \\\"unit\\\
+    \"\\\n      : \\\"percentunit\\\"\\n        },\\n        \\\"overrides\\\": []\\\
+    n      },\\n      \\\"\\\n      options\\\": {\\n        \\\"legend\\\": {\\n\
+    \          \\\"displayMode\\\": \\\"table\\\",\\n\\\n      \\          \\\"placement\\\
+    \": \\\"bottom\\\"\\n        }\\n      }\\n    },\\n    {\\n  \\\n      \\   \
+    \ \\\"id\\\": 16,\\n      \\\"type\\\": \\\"timeseries\\\",\\n      \\\"title\\\
+    \": \\\"Cache\\\n      \\ Errors and Rate-Limit Rejections\\\",\\n      \\\"gridPos\\\
+    \": {\\n        \\\"x\\\":\\\n      \\ 16,\\n        \\\"y\\\": 35,\\n       \
+    \ \\\"w\\\": 8,\\n        \\\"h\\\": 8\\n      },\\n \\\n      \\     \\\"datasource\\\
+    \": {\\n        \\\"type\\\": \\\"prometheus\\\",\\n        \\\"uid\\\"\\\n  \
+    \    : \\\"prometheus\\\"\\n      },\\n      \\\"targets\\\": [\\n        {\\\
+    n          \\\"refId\\\"\\\n      : \\\"A\\\",\\n          \\\"expr\\\": \\\"\
+    sum by (app, cache) (rate(swirl_cache_errors_total{namespace=\\\\\\\n      \\\"\
+    apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"}[5m]))\\\",\\n          \\\"\
+    legendFormat\\\"\\\n      : \\\"cache errors {{app}} {{cache}}\\\"\\n        },\\\
+    n        {\\n          \\\"refId\\\"\\\n      : \\\"B\\\",\\n          \\\"expr\\\
+    \": \\\"sum by (app) (rate(swirl_rate_limit_rejections_total{namespace=\\\\\\\n\
+    \      \\\"apps-int\\\\\\\",app=~\\\\\\\"$application\\\\\\\"}[5m]))\\\",\\n \
+    \         \\\"legendFormat\\\"\\\n      : \\\"429 {{app}}\\\"\\n        }\\n \
+    \     ],\\n      \\\"fieldConfig\\\": {\\n        \\\"\\\n      defaults\\\":\
+    \ {\\n          \\\"unit\\\": \\\"reqps\\\"\\n        },\\n        \\\"overrides\\\
+    \"\\\n      : []\\n      },\\n      \\\"options\\\": {\\n        \\\"legend\\\"\
+    : {\\n          \\\"displayMode\\\"\\\n      : \\\"table\\\",\\n          \\\"\
+    placement\\\": \\\"bottom\\\"\\n        }\\n      }\\n    }\\n\\\n      \\  ]\\\
+    n}\\n\"\n"
+- target:
+    kind: ConfigMap
+    name: swirl-demo-app-prometheus-rules
+  patch: "- op: replace\n  path: /data\n  value:\n    swirl-demo-app-int-slo-rules.yaml:\
+    \ \"# Prometheus recording and alerting rules\\\n      \\ for the objectives in\
+    \ docs/slo.md.\\n# Every selector names namespace=\\\"apps-int\\\"\\\n      ;\
+    \ render-deployment.py rewrites it so\\n# each environment's copy covers only\\\
+    \n      \\ that environment's namespace.\\n# Validate with: promtool check rules\
+    \ infra/observability/slo-rules.yaml\\n\\\n      # Unit tests:    promtool test\
+    \ rules infra/observability/slo-rules.test.yaml\\n\\\n      groups:\\n  - name:\
+    \ swirl-demo-app-sli\\n    rules:\\n      # Availability SLI:\\\n      \\ share\
+    \ of API requests answered with a 5xx.\\n      - record: swirl:api_error_ratio:rate5m\\\
+    n\\\n      \\        expr: |\\n          sum by (namespace, app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \",status=~\\\"5..\\\"\\\n      }[5m]))\\n          / sum by (namespace, app)\
+    \ (rate(http_server_requests_seconds_count{namespace=\\\"\\\n      apps-int\\\"\
+    ,app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\"}[5m]))\\n    \\\n\
+    \      \\  - record: swirl:api_error_ratio:rate30m\\n        expr: |\\n      \
+    \    sum by\\\n      \\ (namespace, app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \"apps-int\\\"\\\n      ,app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \",status=~\\\"5..\\\"}[30m]))\\n\\\n      \\          / sum by (namespace, app)\
+    \ (rate(http_server_requests_seconds_count{namespace=\\\"\\\n      apps-int\\\"\
+    ,app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\"}[30m]))\\n   \\\n\
+    \      \\   - record: swirl:api_error_ratio:rate1h\\n        expr: |\\n      \
+    \    sum by\\\n      \\ (namespace, app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \"apps-int\\\"\\\n      ,app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \",status=~\\\"5..\\\"}[1h]))\\n\\\n      \\          / sum by (namespace, app)\
+    \ (rate(http_server_requests_seconds_count{namespace=\\\"\\\n      apps-int\\\"\
+    ,app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\"}[1h]))\\n    \\\n\
+    \      \\  - record: swirl:api_error_ratio:rate6h\\n        expr: |\\n       \
+    \   sum by\\\n      \\ (namespace, app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \"apps-int\\\"\\\n      ,app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \",status=~\\\"5..\\\"}[6h]))\\n\\\n      \\          / sum by (namespace, app)\
+    \ (rate(http_server_requests_seconds_count{namespace=\\\"\\\n      apps-int\\\"\
+    ,app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\"}[6h]))\\n    \\\n\
+    \      \\  # Latency SLI: share of API requests slower than 300 ms (the bucket\
+    \ the services\\\n      \\ publish).\\n      - record: swirl:api_slow_ratio:rate5m\\\
+    n        expr: |\\n\\\n      \\          1 - sum by (namespace, app) (rate(http_server_requests_seconds_bucket{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \",le=\\\"0.3\\\"}[5m]))\\n\\\n      \\          / sum by (namespace, app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \"}[5m]))\\n    \\\n      \\  - record: swirl:api_slow_ratio:rate30m\\n      \
+    \  expr: |\\n          1 - sum\\\n      \\ by (namespace, app) (rate(http_server_requests_seconds_bucket{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \",le=\\\"0.3\\\"}[30m]))\\n\\\n      \\          / sum by (namespace, app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \"}[30m]))\\n   \\\n      \\   - record: swirl:api_slow_ratio:rate1h\\n      \
+    \  expr: |\\n          1 - sum\\\n      \\ by (namespace, app) (rate(http_server_requests_seconds_bucket{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \",le=\\\"0.3\\\"}[1h]))\\n\\\n      \\          / sum by (namespace, app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \"}[1h]))\\n    \\\n      \\  - record: swirl:api_slow_ratio:rate6h\\n       \
+    \ expr: |\\n          1 - sum\\\n      \\ by (namespace, app) (rate(http_server_requests_seconds_bucket{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \",le=\\\"0.3\\\"}[6h]))\\n\\\n      \\          / sum by (namespace, app) (rate(http_server_requests_seconds_count{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",uri!~\\\"/actuator.*\\\
+    \"}[6h]))\\n\\n  -\\\n      \\ name: swirl-demo-app-alerts\\n    rules:\\n   \
+    \   # Multi-window burn rates:\\\n      \\ 14.4x spends 2% of a 30-day budget\
+    \ in an hour, 6x spends 5% in six hours.\\n\\\n      \\      - alert: SwirlApiErrorBudgetFastBurn\\\
+    n        expr: swirl:api_error_ratio:rate1h{namespace=\\\"\\\n      apps-int\\\
+    \"} > 14.4 * 0.005 and swirl:api_error_ratio:rate5m{namespace=\\\"apps-int\\\"\
+    \\\n      } > 14.4 * 0.005\\n        for: 2m\\n        labels:\\n          severity:\
+    \ critical\\n\\\n      \\        annotations:\\n          summary: \\\"{{ $labels.app\
+    \ }} in {{ $labels.namespace\\\n      \\ }} is burning its availability budget\
+    \ fast\\\"\\n          description: \\\"{{\\\n      \\ $value | humanizePercentage\
+    \ }} of API requests failed with 5xx over the last\\\n      \\ 5 minutes.\\\"\\\
+    n          runbook: docs/slo.md#availability-alerts\\n      -\\\n      \\ alert:\
+    \ SwirlApiErrorBudgetSlowBurn\\n        expr: swirl:api_error_ratio:rate6h{namespace=\\\
+    \"\\\n      apps-int\\\"} > 6 * 0.005 and swirl:api_error_ratio:rate30m{namespace=\\\
+    \"apps-int\\\"\\\n      } > 6 * 0.005\\n        for: 15m\\n        labels:\\n\
+    \          severity: warning\\n\\\n      \\        annotations:\\n          summary:\
+    \ \\\"{{ $labels.app }} in {{ $labels.namespace\\\n      \\ }} is steadily burning\
+    \ its availability budget\\\"\\n          description: \\\"\\\n      {{ $value\
+    \ | humanizePercentage }} of API requests failed with 5xx over the last\\\n  \
+    \    \\ 30 minutes.\\\"\\n          runbook: docs/slo.md#availability-alerts\\\
+    n      -\\\n      \\ alert: SwirlApiLatencyBudgetFastBurn\\n        expr: swirl:api_slow_ratio:rate1h{namespace=\\\
+    \"\\\n      apps-int\\\"} > 14.4 * 0.05 and swirl:api_slow_ratio:rate5m{namespace=\\\
+    \"apps-int\\\"\\\n      } > 14.4 * 0.05\\n        for: 2m\\n        labels:\\\
+    n          severity: critical\\n\\\n      \\        annotations:\\n          summary:\
+    \ \\\"{{ $labels.app }} in {{ $labels.namespace\\\n      \\ }} is burning its\
+    \ latency budget fast\\\"\\n          description: \\\"{{ $value\\\n      \\ |\
+    \ humanizePercentage }} of API requests took longer than 300 ms over the last\\\
+    \n      \\ 5 minutes.\\\"\\n          runbook: docs/slo.md#latency-alerts\\n \
+    \     - alert:\\\n      \\ SwirlApiLatencyBudgetSlowBurn\\n        expr: swirl:api_slow_ratio:rate6h{namespace=\\\
+    \"\\\n      apps-int\\\"} > 6 * 0.05 and swirl:api_slow_ratio:rate30m{namespace=\\\
+    \"apps-int\\\"\\\n      } > 6 * 0.05\\n        for: 15m\\n        labels:\\n \
+    \         severity: warning\\n\\\n      \\        annotations:\\n          summary:\
+    \ \\\"{{ $labels.app }} in {{ $labels.namespace\\\n      \\ }} is steadily burning\
+    \ its latency budget\\\"\\n          description: \\\"{{ $value\\\n      \\ |\
+    \ humanizePercentage }} of API requests took longer than 300 ms over the last\\\
+    \n      \\ 30 minutes.\\\"\\n          runbook: docs/slo.md#latency-alerts\\n\
+    \      - alert:\\\n      \\ SwirlTargetDown\\n        expr: up{namespace=\\\"\
+    apps-int\\\",app=~\\\"swirlapp-(user|order)\\\"\\\n      } == 0\\n        for:\
+    \ 5m\\n        labels:\\n          severity: critical\\n   \\\n      \\     annotations:\\\
+    n          summary: \\\"{{ $labels.app }} pod {{ $labels.pod\\\n      \\ }} in\
+    \ {{ $labels.namespace }} cannot be scraped\\\"\\n          description:\\\n \
+    \     \\ \\\"Prometheus has not scraped this target for 5 minutes.\\\"\\n    \
+    \      runbook:\\\n      \\ docs/slo.md#saturation-and-target-alerts\\n      -\
+    \ alert: SwirlDatabasePoolSaturated\\n\\\n      \\        expr: max by (namespace,\
+    \ app) (hikaricp_connections_pending{namespace=\\\"\\\n      apps-int\\\",app=~\\\
+    \"swirlapp-(user|order)\\\"}) > 0\\n        for: 5m\\n        labels:\\n\\\n \
+    \     \\          severity: warning\\n        annotations:\\n          summary:\
+    \ \\\"{{\\\n      \\ $labels.app }} in {{ $labels.namespace }} is waiting for\
+    \ database connections\\\"\\\n      \\n          description: \\\"{{ $value }}\
+    \ requests have waited for a pooled connection\\\n      \\ for 5 minutes.\\\"\\\
+    n          runbook: docs/slo.md#saturation-and-target-alerts\\n\\\n      \\  \
+    \    - alert: SwirlHeapNearLimit\\n        expr: |\\n          max by (namespace,\\\
+    \n      \\ app, pod) (\\n            sum by (namespace, app, pod) (jvm_memory_used_bytes{namespace=\\\
+    \"\\\n      apps-int\\\",app=~\\\"swirlapp-(user|order)\\\",area=\\\"heap\\\"\
+    })\\n            / sum\\\n      \\ by (namespace, app, pod) (jvm_memory_max_bytes{namespace=\\\
+    \"apps-int\\\",app=~\\\"\\\n      swirlapp-(user|order)\\\",area=\\\"heap\\\"\
+    } > 0)\\n          ) > 0.9\\n        for:\\\n      \\ 15m\\n        labels:\\\
+    n          severity: warning\\n        annotations:\\n\\\n      \\          summary:\
+    \ \\\"{{ $labels.app }} pod {{ $labels.pod }} has used over\\\n      \\ 90% of\
+    \ its heap for 15 minutes\\\"\\n          description: \\\"Heap use is {{\\\n\
+    \      \\ $value | humanizePercentage }} of the maximum.\\\"\\n          runbook:\
+    \ docs/slo.md#saturation-and-target-alerts\\n\\\n      \\      - alert: SwirlConsumerLagHigh\\\
+    n        expr: max by (namespace, app,\\\n      \\ topic) (kafka_consumer_fetch_manager_records_lag_max{namespace=\\\
+    \"apps-int\\\"\\\n      ,app=~\\\"swirlapp-(user|order)\\\"}) > 1000\\n      \
+    \  for: 10m\\n        labels:\\n\\\n      \\          severity: warning\\n   \
+    \     annotations:\\n          summary: \\\"{{\\\n      \\ $labels.app }} in {{\
+    \ $labels.namespace }} is more than 1000 records behind\\\n      \\ on {{ $labels.topic\
+    \ }}\\\"\\n          description: \\\"The consumer has lagged\\\n      \\ for\
+    \ 10 minutes; events are processed late.\\\"\\n          runbook: docs/slo.md#event-backlog-alerts\\\
+    n\\\n      \\      - alert: SwirlEventsDeadLettered\\n        expr: sum by (namespace,\
+    \ app,\\\n      \\ topic) (increase(swirl_events_dead_lettered_total{namespace=\\\
+    \"apps-int\\\",app=~\\\"\\\n      swirlapp-(user|order)\\\"}[15m])) > 0\\n   \
+    \     labels:\\n          severity: warning\\n\\\n      \\        annotations:\\\
+    n          summary: \\\"{{ $labels.app }} in {{ $labels.namespace\\\n      \\\
+    \ }} sent records from {{ $labels.topic }} to the dead-letter topic\\\"\\n   \
+    \ \\\n      \\      description: \\\"{{ $value }} records exhausted their retries\
+    \ in the last\\\n      \\ 15 minutes.\\\"\\n          runbook: docs/slo.md#event-backlog-alerts\\\
+    n     \\\n      \\ - alert: SwirlOutboxBacklog\\n        expr: max by (namespace,\
+    \ app) (swirl_outbox_pending{namespace=\\\"\\\n      apps-int\\\",app=\\\"swirlapp-order\\\
+    \"}) > 100\\n        for: 10m\\n        labels:\\n\\\n      \\          severity:\
+    \ warning\\n        annotations:\\n          summary: \\\"{{\\\n      \\ $labels.app\
+    \ }} in {{ $labels.namespace }} has {{ $value }} order events waiting\\\n    \
+    \  \\ in the outbox\\\"\\n          description: \\\"The outbox relay has not\
+    \ caught\\\n      \\ up for 10 minutes; orders stay PENDING until their events\
+    \ publish.\\\"\\n   \\\n      \\       runbook: docs/operations.md#order-events-are-waiting-in-the-outbox\\\
+    n\\\n      \\      - alert: SwirlCacheFailing\\n        expr: sum by (namespace,\
+    \ app, cache)\\\n      \\ (rate(swirl_cache_errors_total{namespace=\\\"apps-int\\\
+    \",app=~\\\"swirlapp-(user|order)\\\"\\\n      }[5m])) > 0\\n        for: 10m\\\
+    n        labels:\\n          severity: warning\\n\\\n      \\        annotations:\\\
+    n          summary: \\\"{{ $labels.app }} in {{ $labels.namespace\\\n      \\\
+    \ }} has been reading {{ $labels.cache }} without its cache for 10 minutes\\\"\
+    \\\n      \\n          description: \\\"Cache operations fail and fall through\
+    \ to the database;\\\n      \\ check Redis.\\\"\\n          runbook: docs/slo.md#saturation-and-target-alerts\\\
+    n\"\n"
 - target:
     kind: NetworkPolicy
   patch: "apiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name:\

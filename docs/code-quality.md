@@ -1,8 +1,9 @@
 # Code Quality
 
 Swirl Demo App combines tests and coverage with backend/frontend Sonar analysis and
-dependency reports. This guide covers manual scans, automatic analysis and the
-contract to preserve when creating an application from this template. See the
+dependency reports. This guide covers what a service built from this template
+accepts today, manual scans, automatic analysis and the contract to preserve
+when creating an application from this template. See the
 [testing guide](testing.md) for test commands and
 [ADR 0008](adr/0008-code-quality-and-verification.md#amendment-source-analysis-and-discovery-2026-09-08)
 for the source-analysis decision and rationale.
@@ -80,6 +81,69 @@ retains its task reference in `quality-reports/report-task.txt`.
 Source/test filters determine which files are analyzed. Coverage exclusions
 affect coverage metrics; they do not exclude those files from issue analysis.
 Review both when adding modules or moving source directories.
+
+## Before You Adopt
+
+A service built from this template today accepts the conditions below. Each
+links to where it was decided or to the open roadmap item that would lift it;
+none is solved yet.
+
+- **GPL 3.0 for distributed services.** Code copied from the template keeps the
+  GPL 3.0, so a service distributed to others must be released under it, with
+  its source. Running the backend services for others over a network does not
+  convey them, but the Angular bundle is copied to every visitor's browser, so
+  its source has to be offered as well. See
+  [ADR 0013](adr/0013-gpl-license.md), and have the adopting organisation's own
+  legal review confirm how this applies to its services.
+- **The `swirl-cloud` platform for CI and cluster delivery.** Docker Compose runs
+  the complete stack on any Docker host, but the GitLab pipeline needs the
+  platform's project runners (the `swirl-cloud-application-*` tags in
+  [`.gitlab-ci.yml`](../.gitlab-ci.yml)) and its internal hosts
+  (`REGISTRY_PUSH_HOST`, `PACKAGE_REGISTRY_API_V4_URL`, `SONAR_HOST_URL`), and
+  its deploy jobs expect Argo CD in `infra`. Kubernetes delivery goes through
+  the platform's
+  [onboarding contract](deployment.md#add-or-reconfigure-this-repository), which
+  supplies Argo CD, Vault, Traefik, Keycloak and each environment's PostgreSQL,
+  Redis and Kafka. A generic Kubernetes target is open under
+  [Enterprise Patterns](../TODO.md#enterprise-patterns-minimal-domain-tested-failure-modes).
+- **An example you rename and remove by hand.** The user and order example
+  sits beside the reusable code in both services and in `swirlapp-common`
+  (`OrderEvent` and `OrderStatus` share the module with the security, Kafka and
+  web infrastructure). Platform onboarding rewrites the platform settings that
+  [`infra/onboarding.json`](../infra/onboarding.json) lists, such as the
+  registry, GitLab project path, Sonar key, domain and Keycloak realm, but no
+  script renames the group ID, the `dev.swirlit.demo` packages, the
+  `swirlapp-*` services and images, or the bare `swirl-demo-app` names of the
+  Argo CD Application, Kubernetes resources, Vault paths and CI cache keys.
+  Both are open under
+  [Template Experience](../TODO.md#priority-template-experience).
+- **A pinned stack without a support matrix.** CI builds and tests on Java 25,
+  Spring Boot 4 and Angular 22 only
+  ([ADR 0003](adr/0003-platform-stack-and-profiles.md)). The PostgreSQL, Redis,
+  Kafka and Keycloak images are pinned for the local Compose stack and exercised
+  only by its manual
+  [acceptance run](testing.md#containerized-full-stack-acceptance); backend tests
+  use H2, a simple cache and mocks, and deployed environments use the platform's
+  versions. The compatibility matrix and upgrade tests are open under
+  [Template Experience](../TODO.md#priority-template-experience), and integration
+  tests against real backing services under
+  [Delivery And Data Correctness](../TODO.md#priority-delivery-and-data-correctness).
+- **Verification that reports but does not gate.** The build job's
+  compilation, packaging and repository checks (Markdown, links, manifest
+  policy, Prometheus rules, delivery-script tests) and the delivery-policy check
+  stop delivery, but failing unit tests, coverage below 85 percent, Sonar
+  findings and high or critical Trivy findings stay visible and never block a
+  snapshot or a release ([ADR 0009](adr/0009-explicit-delivery-jobs.md)).
+  Opt-in quality-gate enforcement is open under
+  [Testing And Quality](../TODO.md#priority-testing-and-quality), and release
+  approval under [Compliance Evidence](../TODO.md#compliance-evidence).
+- **No compliance evidence yet.** The optional `03-security` job scans
+  dependencies, infrastructure code and secrets and publishes a CycloneDX
+  source SBOM ([Secrets And Supply Chain](security.md#secrets-and-supply-chain)), but there
+  is no OWASP ASVS mapping, threat model or release evidence pack to hand a
+  reviewer. They are open under [Compliance Evidence](../TODO.md#compliance-evidence),
+  and until they ship the template claims none of them
+  ([ADR 0014](adr/0014-template-scope-and-audience.md)).
 
 ## Adapting The Template
 

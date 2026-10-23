@@ -141,9 +141,11 @@ none is solved yet.
   approval under [Compliance Evidence](../TODO.md#compliance-evidence).
 - **No compliance evidence yet.** The optional `03-security` job scans
   dependencies, infrastructure code and secrets and publishes a CycloneDX
-  source SBOM ([Secrets And Supply Chain](security.md#secrets-and-supply-chain)), but there
-  is no OWASP ASVS mapping, threat model or release evidence pack to hand a
-  reviewer. They are open under [Compliance Evidence](../TODO.md#compliance-evidence),
+  source SBOM ([Secrets And Supply Chain](security.md#secrets-and-supply-chain)), and the
+  [Threat Model](threat-model.md) lists the threats the reference flow still leaves
+  open, but there is no OWASP ASVS mapping or release evidence pack to hand a
+  reviewer, and the threat model is not yet regenerated for the capabilities a
+  project keeps. They are open under [Compliance Evidence](../TODO.md#compliance-evidence),
   and until they ship the template claims none of them
   ([ADR 0014](adr/0014-template-scope-and-audience.md)).
 

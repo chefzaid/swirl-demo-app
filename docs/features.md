@@ -260,7 +260,7 @@ Implemented platform features:
 - startup, liveness, and readiness probes
 - requests and limits for application and CI containers
 - restrictive application pod security contexts
-- a [manifest policy check](testing.md#kubernetes-and-delivery-verification) in the build job that renders the base, both overlays, and every environment and fails on a workload without the non-root security context, resource requests, probes, a pinned image or, where the target ships NetworkPolicies, an egress policy
+- a [manifest policy check](testing.md#kubernetes-and-delivery-verification) in the build job that renders the base, both overlays, and every environment and fails on a workload without the non-root security context, resource requests, probes that tolerate a loaded node, a pinned image or, where the target ships NetworkPolicies, an egress policy
 - ingress NetworkPolicy for application pods, NGINX, Prometheus, and GitLab CI smoke tests
 - egress NetworkPolicy limiting application pods to DNS, the shared datastores, the identity provider and public HTTPS
 - Vault-backed database and CI credentials through External Secrets

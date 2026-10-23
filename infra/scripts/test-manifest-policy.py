@@ -15,8 +15,8 @@ CONTAINER = {
     "securityContext": {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True,
                         "capabilities": {"drop": ["ALL"]}},
     "resources": {"requests": {"cpu": "100m", "memory": "64Mi"}, "limits": {"memory": "128Mi"}},
-    "livenessProbe": {"httpGet": {"path": "/live", "port": 8080}},
-    "readinessProbe": {"httpGet": {"path": "/ready", "port": 8080}},
+    "livenessProbe": {"httpGet": {"path": "/live", "port": 8080}, "timeoutSeconds": 5, "failureThreshold": 6},
+    "readinessProbe": {"httpGet": {"path": "/ready", "port": 8080}, "timeoutSeconds": 3},
 }
 DEPLOYMENT = {
     "kind": "Deployment", "metadata": {"name": "app"},
@@ -52,6 +52,9 @@ class ManifestPolicyTest(unittest.TestCase):
             "limit memory": lambda pod: pod["containers"][0]["resources"].pop("limits"),
             "pin an image": lambda pod: pod["containers"][0].update(image="registry.example.test:5050/team/app:latest"),
             "livenessProbe": lambda pod: pod["containers"][0].pop("livenessProbe"),
+            "wait at least 5 seconds": lambda pod: pod["containers"][0]["livenessProbe"].pop("timeoutSeconds"),
+            "at least a minute": lambda pod: pod["containers"][0]["livenessProbe"].update(failureThreshold=3),
+            "wait at least 3 seconds": lambda pod: pod["containers"][0]["readinessProbe"].update(timeoutSeconds=1),
         }
         for expected, change in cases.items():
             with self.subTest(expected):

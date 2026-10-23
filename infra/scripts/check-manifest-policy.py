@@ -39,7 +39,22 @@ def container_violations(container, long_running):
     ]
     if long_running:
         checks += [(container.get(probe), f"must define a {probe}") for probe in ("livenessProbe", "readinessProbe")]
+        checks += probe_checks(container)
     return [message for passed, message in checks if not passed]
+
+
+def probe_checks(container):
+    """Probes that wait out a loaded node: Kubernetes' 1-second default timeout restarts working containers."""
+    liveness = container.get("livenessProbe") or {}
+    readiness = container.get("readinessProbe") or {}
+    if not liveness or not readiness:
+        return []
+    return [
+        (liveness.get("timeoutSeconds", 1) >= 5, "livenessProbe must wait at least 5 seconds (timeoutSeconds)"),
+        (liveness.get("periodSeconds", 10) * liveness.get("failureThreshold", 3) >= 60,
+         "livenessProbe must fail for at least a minute before a restart (periodSeconds × failureThreshold)"),
+        (readiness.get("timeoutSeconds", 1) >= 3, "readinessProbe must wait at least 3 seconds (timeoutSeconds)"),
+    ]
 
 
 def selects(selector, labels):

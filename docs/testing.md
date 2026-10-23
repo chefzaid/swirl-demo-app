@@ -353,7 +353,7 @@ Check the workload policy on the base, the HA and canary overlays and every comm
 python3 infra/scripts/check-manifest-policy.py
 ```
 
-Every Deployment, StatefulSet, DaemonSet, Job and CronJob must run as non-root with a `RuntimeDefault` seccomp profile and no service-account token, without host namespaces; every container must block privilege escalation, use a read-only root filesystem, drop all capabilities, request CPU and memory, limit memory, and pin its image; long-running containers also need liveness and readiness probes. A target that ships NetworkPolicies must select every workload with an egress policy. Pass Kustomize directories as arguments to check others.
+Every Deployment, StatefulSet, DaemonSet, Job and CronJob must run as non-root with a `RuntimeDefault` seccomp profile and no service-account token, without host namespaces; every container must block privilege escalation, use a read-only root filesystem, drop all capabilities, request CPU and memory, limit memory, and pin its image; long-running containers also need liveness and readiness probes that tolerate a loaded node: a liveness probe waits at least 5 seconds for an answer and fails for at least a minute (`periodSeconds` × `failureThreshold`) before a restart, and a readiness probe waits at least 3 seconds, where Kubernetes' default is 1. A target that ships NetworkPolicies must select every workload with an egress policy. Pass Kustomize directories as arguments to check others.
 
 Validate the Prometheus alert rules and replay their unit tests, including the check that a copy ignores other namespaces (the build job runs both; see [Service Levels And Alerts](slo.md#loading-and-testing-the-rules)):
 

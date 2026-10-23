@@ -1,6 +1,6 @@
 # Security Reference
 
-This document describes Swirl Demo App's implemented security posture, trust boundaries, and limitations. It is a reusable baseline, not a compliance certification or a substitute for threat modeling the application created from this template.
+This document describes Swirl Demo App's implemented security posture, trust boundaries, and limitations. It is a reusable baseline, not a compliance certification or a substitute for threat modeling the application created from this template. [Threat Model](threat-model.md) applies STRIDE to the reference flow and the delivery path and lists the threats these controls leave open.
 
 ## Security Posture Summary
 
@@ -553,6 +553,7 @@ Before merging a sensitive change:
 - [Operations](./operations.md)
 - [Testing](./testing.md)
 - [Architecture and ADRs](./architecture.md)
+- [Threat Model](./threat-model.md)
 
 ### Runtime dependency maintenance
 

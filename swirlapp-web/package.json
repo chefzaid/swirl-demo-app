@@ -1,6 +1,6 @@
 {
   "name": "swirlapp-web",
-  "version": "1.13.66",
+  "version": "1.14.0",
   "description": "Swirl Demo App is a production-shaped Java and Angular service template for teams whose services must pass security, architecture and supplier reviews.",
   "scripts": {
     "ng": "ng",

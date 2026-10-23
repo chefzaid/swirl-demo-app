@@ -48,3 +48,19 @@ The template currently demonstrates authentication only. Role/authority mapping 
 The imported realm credentials/client secret are disposable demo values and must be replaced/removed for real environments.
 
 Changing from bearer headers to cookie-backed application sessions would require revisiting CSRF and session security.
+
+## Amendment: realm roles and method authorization (2026-10-23)
+
+The consequence above that role mapping and method authorization remain planned
+no longer holds. Each service maps the Keycloak realm roles in a token's
+`realm_access.roles` claim to `ROLE_<role>` authorities through
+`RealmRoleAuthoritiesConverter` in `swirlapp-common`, and enables `@PreAuthorize`
+whenever security is enabled. Rules that need configuration live behind beans
+such as `UserAccess` and `OperatorAccess`, so tests can call them directly:
+deleting a user needs the role named by `APP_SECURITY_ROLES_USER_ADMIN`, and the
+dead-letter endpoint the role named by `APP_SECURITY_ROLES_OPERATOR`. A blank
+variable lets any authenticated caller through, which is what deployed
+environments use until their realm has the roles (the owner's decision of
+2026-10-14). [Backend Authorization](../security.md#backend-authorization)
+describes the rules, and ownership or relationship-based policies stay roadmap
+work.

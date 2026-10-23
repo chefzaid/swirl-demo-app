@@ -188,6 +188,7 @@ Statuses:
 - [ADR 0012: Version Order Events By Major Schema Version And Evolve Them Additively](./adr/0012-event-schema-compatibility.md)
 - [ADR 0013: Keep The Template And Generated Code Under GPL 3.0](./adr/0013-gpl-license.md)
 - [ADR 0014: Treat The Template As The Product, For Teams Facing Regulated Reviews](./adr/0014-template-scope-and-audience.md)
+- [ADR 0015: Distribute The Template Through Copier, With Updates As Merge Requests](./adr/0015-template-distribution.md)
 
 ## Proposed ADRs For Roadmap Work
 
@@ -198,7 +199,7 @@ Create decisions before implementing:
 - consumer-driven contract testing for service and event contracts
 - envelope encryption and key rotation
 - per-environment replica and resource sizing (Kustomize or Helm), and which environments run the canary overlay
-- shared internal Spring starters versus copyable source modules
+- packaging of the internal Spring starters that [ADR 0015](./adr/0015-template-distribution.md) moves runtime code into
 
 ## ADR Template
 

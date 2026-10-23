@@ -4,8 +4,8 @@ umask 077
 
 APP_NAME="${APP_NAME:-swirl-demo-app}"
 APP_DISPLAY_NAME="${APP_DISPLAY_NAME:-Swirl Demo App}"
-PROJECT_DESCRIPTION="${PROJECT_DESCRIPTION:-Reference microservices application with Spring Boot, Angular, GitOps, and production observability.}"
-PROJECT_TOPICS="${PROJECT_TOPICS:-angular,gitops,java,microservices,spring-boot}"
+PROJECT_DESCRIPTION="${PROJECT_DESCRIPTION:-Swirl Demo App is a production-shaped Java and Angular service template for teams whose services must pass security, architecture and supplier reviews.}"
+PROJECT_TOPICS="${PROJECT_TOPICS:-angular,gitops,java,microservices,spring-boot,template}"
 GITLAB_PROJECT_PATH="${GITLAB_PROJECT_PATH:-swirlit/swirl-demo-app}"
 GITLAB_NAMESPACE="${GITLAB_NAMESPACE:-${GITLAB_PROJECT_PATH%/*}}"
 GITLAB_URL="${GITLAB_URL:-}"

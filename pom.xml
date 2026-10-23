@@ -16,7 +16,7 @@
     <version>1.13.0</version>
     <packaging>pom</packaging>
     <name>swirlapp-parent</name>
-    <description>Swirl Demo App Java 25 microservices demo</description>
+    <description>Swirl Demo App is a production-shaped Java and Angular service template for teams whose services must pass security, architecture and supplier reviews.</description>
 
     <licenses>
         <license>

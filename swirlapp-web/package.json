@@ -1,7 +1,7 @@
 {
   "name": "swirlapp-web",
   "version": "1.13.0",
-  "description": "Swirl Demo App Web",
+  "description": "Swirl Demo App is a production-shaped Java and Angular service template for teams whose services must pass security, architecture and supplier reviews.",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --host 0.0.0.0 --port 4200 --proxy-config proxy.conf.json",

@@ -37,7 +37,7 @@ write_release_environment() {
 finalize_release() {
   local release_json existing_release
   release_json="$(jq -n --arg tag "$release_tag" --arg name "Swirl Demo App $APP_VERSION" \
-    --arg description "Published immutable Swirl Demo App images $APP_VERSION for promotion through central Argo CD." \
+    --arg description "Swirl Demo App is a production-shaped Java and Angular service template for teams whose services must pass security, architecture and supplier reviews. Release $APP_VERSION publishes immutable images for promotion through central Argo CD." \
     --arg package_url "${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/packages" \
     '{tag_name:$tag,name:$name,description:$description,assets:{links:[{name:"Generic package artifacts and checksums",url:$package_url,link_type:"package"}]}}')"
   if curl --fail --show-error --silent --request POST --header "JOB-TOKEN: $CI_JOB_TOKEN" \

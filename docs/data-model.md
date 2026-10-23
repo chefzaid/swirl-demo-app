@@ -125,7 +125,7 @@ Topics:
 
 Records are keyed by stringified order ID. Ordering is therefore expected only for one order within a partition, not globally across all orders.
 
-The event is serialized as JSON. There is not yet a schema registry or formal compatibility policy; that work is tracked in [TODO.md](../TODO.md).
+The event is serialized as JSON without Java type headers. It carries a major schema version and evolves additively under the rules in [ADR 0012](adr/0012-event-schema-compatibility.md); there is no schema registry.
 
 ## Service Data Ownership
 
@@ -171,7 +171,7 @@ Inbox entries are deleted with the outbox rows after seven days by `EventRetenti
 - `users` caches individual user lookups by ID.
 - `orders` caches individual order lookups by ID.
 - list queries are intentionally not cached.
-- creates evict the relevant cache region.
+- creates, edits and deletes evict the relevant cache region.
 - order-result processing evicts the affected order key.
 - UAT and production Redis entries expire after ten minutes.
 - the default development profile uses an in-memory cache.

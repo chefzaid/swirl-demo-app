@@ -194,11 +194,10 @@ Statuses:
 Create decisions before implementing:
 
 - HTTP resilience reference adapter
-- distributed rate limiting and edge ownership
-- role/authority mapping and method authorization
-- event schema compatibility and contract testing
+- distributed rate limiting at the gateway or Redis layer
+- consumer-driven contract testing for service and event contracts
 - envelope encryption and key rotation
-- environment overlays, autoscaling, disruption, and canary policy
+- per-environment replica and resource sizing (Kustomize or Helm), and which environments run the canary overlay
 - shared internal Spring starters versus copyable source modules
 
 ## ADR Template

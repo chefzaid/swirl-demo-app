@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../services/order.service';
 import { UserService } from '../services/user.service';
-import { CreateOrderRequest, Order } from '../models/order.model';
+import { CreateOrderRequest, Order, OrderStatus } from '../models/order.model';
 import { User } from '../models/user.model';
 
 @Component({
@@ -25,6 +25,12 @@ export class OrderComponent implements OnInit {
   readonly saving = signal(false);
   readonly pendingDeleteOrderId = signal<number | null>(null);
   readonly deletingOrderId = signal<number | null>(null);
+  readonly statusNotes: Record<OrderStatus, string> = {
+    PENDING: 'Waiting for the user service to check that the owner exists.',
+    APPROVED: 'Approved: the user service found the owner.',
+    REJECTED: 'Rejected: the user service found no user with this ID.',
+    COMPLETED: 'Completed: a reserved status; no step of this example moves an order here.'
+  };
 
   constructor(
     private readonly orderService: OrderService,

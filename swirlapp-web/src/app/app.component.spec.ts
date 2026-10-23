@@ -39,6 +39,22 @@ describe('AppComponent', () => {
     expect(render({ ...identity, apiDocsEnabled: false }).querySelector('a.nav-docs')).toBeNull();
   });
 
+  it('names the app in the brand, whose accessible name is its visible text', () => {
+    const brand = render(null).querySelector('a.brand') as HTMLAnchorElement;
+    expect(brand.querySelector('strong')?.textContent).toBe('Swirl Demo App');
+    expect(brand.querySelector('small')?.textContent).toBe('cluster lab');
+    expect(brand.hasAttribute('aria-label')).toBe(false);
+  });
+
+  it('claims no platform or environment status it does not check', () => {
+    authService.isLoggedIn$ = of(false);
+    const text = render(null).textContent ?? '';
+    authService.isLoggedIn$ = of(true);
+    expect(text).not.toContain('Platform online');
+    expect(text).not.toContain('Live reference environment');
+    expect(text).toContain('Reference flow of a service template');
+  });
+
   it('signs out through the authentication service', () => {
     (render(null).querySelector('button.logout-button') as HTMLButtonElement).click();
     expect(authService.logout).toHaveBeenCalled();

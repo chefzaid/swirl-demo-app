@@ -210,7 +210,7 @@ CI uses `npm run test:ci`, which writes `swirlapp-web/test-results.xml` for GitL
 
 ### Local UI smoke
 
-`e2e/home.spec.ts` checks that the login route and SSO call to action render. `e2e/accessibility.spec.ts` runs axe-core WCAG 2.2 AA rules on the login, user, and order screens, with the APIs answered from fixtures and CSS transitions turned off so contrast is measured on settled colors, and checks that the primary navigation and the user form are reachable and usable from the keyboard. When `WEB_URL` is unset, Playwright starts the Angular development server automatically.
+`e2e/home.spec.ts` checks that the login route and SSO call to action render, that each route has its own tab title, and that the brand, the template sentence and the order status notes appear without the removed fixed status claims. `e2e/accessibility.spec.ts` runs axe-core WCAG 2.2 AA rules on the login, user, and order screens, plus the experimental Label in Name rule (WCAG 2.5.3) that axe runs only when enabled, with the APIs answered from fixtures and CSS transitions turned off so contrast is measured on settled colors, and checks that the primary navigation and the user form are reachable and usable from the keyboard. When `WEB_URL` is unset, Playwright starts the Angular development server automatically.
 
 ```bash
 cd swirlapp-web

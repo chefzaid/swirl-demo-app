@@ -26,8 +26,7 @@
 .order-details dl:last-child { text-align: right; }
 .order-details dt { color: #8a9995; font-size: 9px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
 .order-details dd { overflow: hidden; margin: 6px 0 0; color: #334946; font-size: 12px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
-.event-confirmation { display: flex; align-items: center; gap: 8px; color: #6f817d; font-size: 9px; font-weight: 750; letter-spacing: .03em; }
-.event-confirmation i { width: 7px; height: 7px; background: var(--mint); border: 2px solid #bcebd2; border-radius: 50%; box-sizing: content-box; }
+.status-note { margin: 0; color: #5f716d; font-size: 10px; font-weight: 650; line-height: 1.45; }
 .order-actions { position: relative; z-index: 1; display: flex; gap: 7px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e6ebe5; }
 .card-action { flex: 1; min-height: 34px; padding: 0 10px; color: #405451; background: transparent; border: 1px solid #cbd5cf; border-radius: 9px; font-size: 10px; font-weight: 800; cursor: pointer; }
 .card-action:hover:not(:disabled) { background: #f0f4ef; }

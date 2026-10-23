@@ -187,6 +187,7 @@ Statuses:
 - [ADR 0011: Publish Order Events Through A Polling Transactional Outbox](./adr/0011-transactional-outbox.md)
 - [ADR 0012: Version Order Events By Major Schema Version And Evolve Them Additively](./adr/0012-event-schema-compatibility.md)
 - [ADR 0013: Keep The Template And Generated Code Under GPL 3.0](./adr/0013-gpl-license.md)
+- [ADR 0014: Treat The Template As The Product, For Teams Facing Regulated Reviews](./adr/0014-template-scope-and-audience.md)
 
 ## Proposed ADRs For Roadmap Work
 

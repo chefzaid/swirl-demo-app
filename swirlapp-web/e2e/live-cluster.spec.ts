@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 
 const target = new URL(process.env['WEB_URL'] ?? 'http://127.0.0.1:4200');
 const localDemo = ['localhost', '127.0.0.1', '[::1]', 'web'].includes(target.hostname);
@@ -14,6 +14,24 @@ interface CreatedUser {
   id: number;
   name: string;
   username: string;
+}
+
+// Refreshes the order list until Kafka validation has set the card's status.
+async function expectOrderStatus(page: Page, orderCard: Locator, status: string): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const refreshedOrders = page.waitForResponse(
+          (response) =>
+            response.url().endsWith('/api/orders') && response.request().method() === 'GET',
+        );
+        await page.getByRole('button', { name: 'Refresh' }).click();
+        expect((await refreshedOrders).status()).toBe(200);
+        return (await orderCard.locator('.order-status').textContent())?.trim();
+      },
+      { timeout: 30_000 },
+    )
+    .toBe(status);
 }
 
 test('authenticates through Keycloak and loads both secured workflows', async (
@@ -39,23 +57,10 @@ test('authenticates through Keycloak and loads both secured workflows', async (
   await page.goto('/login');
   expect((await discoveryResponse).status()).toBe(200);
 
-  // Production starts OIDC immediately. Local environments retain the
-  // explicit button so the same test covers both supported entry paths.
-  const loginButton = page.getByRole('button', { name: 'Login with SSO' });
-  const redirectedAutomatically = await Promise.race([
-    page
-      .waitForURL((url) => url.pathname.includes(`/auth/realms/${realm}/`))
-      .then(() => true),
-    loginButton.waitFor({ state: 'visible' }).then(() => false),
-  ]);
-  if (!redirectedAutomatically) {
-    await expect(page.getByText('One small app.')).toBeVisible();
-    await expect(loginButton).toBeEnabled();
-    await Promise.all([
-      page.waitForURL((url) => url.pathname.includes(`/auth/realms/${realm}/`)),
-      loginButton.click(),
-    ]);
-  }
+  // Only builds with environment.prod.ts enable OIDC, and they start the code
+  // flow as soon as discovery is ready. The login button is enabled for that
+  // same moment, so clicking it would race the redirect; wait for it instead.
+  await page.waitForURL((url) => url.pathname.includes(`/auth/realms/${realm}/`));
 
   await expect(page.locator('#username')).toBeVisible();
   await page.locator('#username').fill(username);
@@ -137,20 +142,7 @@ test('authenticates through Keycloak and loads both secured workflows', async (
     });
 
     await expect(orderCard).toBeVisible();
-    await expect
-      .poll(
-        async () => {
-          const refreshedOrders = page.waitForResponse(
-            (response) =>
-              response.url().endsWith('/api/orders') && response.request().method() === 'GET',
-          );
-          await page.getByRole('button', { name: 'Refresh' }).click();
-          expect((await refreshedOrders).status()).toBe(200);
-          return (await orderCard.locator('.order-status').textContent())?.trim();
-        },
-        { timeout: 30_000 },
-      )
-      .toBe('APPROVED');
+    await expectOrderStatus(page, orderCard, 'APPROVED');
 
     await orderCard.getByRole('button', { name: `Edit order #${createdOrder.id}` }).click();
     await expect(
@@ -165,31 +157,12 @@ test('authenticates through Keycloak and loads both secured workflows', async (
     await page.getByRole('button', { name: 'Save changes' }).click();
     expect((await updatedOrderResponse).status()).toBe(200);
     await expect(orderCard).toContainText('#1002');
-    await expect
-      .poll(
-        async () => {
-          const refreshedOrders = page.waitForResponse(
-            (response) =>
-              response.url().endsWith('/api/orders') && response.request().method() === 'GET',
-          );
-          await page.getByRole('button', { name: 'Refresh' }).click();
-          expect((await refreshedOrders).status()).toBe(200);
-          return (await orderCard.locator('.order-status').textContent())?.trim();
-        },
-        { timeout: 30_000 },
-      )
-      .toBe('APPROVED');
+    await expectOrderStatus(page, orderCard, 'APPROVED');
 
-    await orderCard.getByRole('button', { name: `Delete order #${createdOrder.id}` }).click();
-    const deletedOrderResponse = page.waitForResponse(
-      (response) =>
-        response.url().endsWith(`/api/orders/${createdOrder.id}`) &&
-        response.request().method() === 'DELETE',
-    );
-    await orderCard.getByRole('button', { name: `Confirm delete order #${createdOrder.id}` }).click();
-    expect((await deletedOrderResponse).status()).toBe(204);
-    await expect(orderCard).toHaveCount(0);
+    await expect(orderCard).toContainText('Approved: the user service found the owner.');
 
+    // Rejection path: once the owner is deleted, editing the order sends it for
+    // validation again and the user service rejects it.
     await page.getByRole('link', { name: 'Users' }).click();
     await expect(createdUserRow).toBeVisible();
     await createdUserRow.getByRole('button', { name: `Delete ${createdUser.name}` }).click();
@@ -201,5 +174,29 @@ test('authenticates through Keycloak and loads both secured workflows', async (
     await createdUserRow.getByRole('button', { name: `Confirm delete ${createdUser.name}` }).click();
     expect((await deletedUserResponse).status()).toBe(204);
     await expect(createdUserRow).toHaveCount(0);
+
+    await page.getByRole('link', { name: 'Orders' }).click();
+    await orderCard.getByRole('button', { name: `Edit order #${createdOrder.id}` }).click();
+    await page.locator('#editProductInput').fill('1003');
+    const rejectedOrderResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith(`/api/orders/${createdOrder.id}`) &&
+        response.request().method() === 'PUT',
+    );
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    expect((await rejectedOrderResponse).status()).toBe(200);
+    await expect(orderCard).toContainText('#1003');
+    await expectOrderStatus(page, orderCard, 'REJECTED');
+    await expect(orderCard).toContainText('Rejected: the user service found no user with this ID.');
+
+    await orderCard.getByRole('button', { name: `Delete order #${createdOrder.id}` }).click();
+    const deletedOrderResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith(`/api/orders/${createdOrder.id}`) &&
+        response.request().method() === 'DELETE',
+    );
+    await orderCard.getByRole('button', { name: `Confirm delete order #${createdOrder.id}` }).click();
+    expect((await deletedOrderResponse).status()).toBe(204);
+    await expect(orderCard).toHaveCount(0);
   }
 });

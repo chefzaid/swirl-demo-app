@@ -100,6 +100,22 @@ cd swirlapp-web && npm ci && npm test
 
 See the [Development Guide](./docs/development.md) for dependency-free local development and the [Testing Guide](./docs/testing.md) for the complete verification matrix.
 
+### Try The Flow
+
+With the stack running and signed in, walk the order-validation flow from the browser. The services log JSON lines; this shows the ones each step names:
+
+```bash
+docker compose -f infra/compose/compose.yaml logs swirlapp-user swirlapp-order | grep -E 'Audit|Demo notification|Rejecting'
+```
+
+1. **Create a user.** On **Users**, enter a display name, username and email, then choose **Create User**. The user service logs `Audit user.created user <id> by <subject>: success` with its `traceId` ([auditing](./docs/features.md#transactions-persistence-and-auditing)).
+2. **Create an order for it.** On **Orders**, pick the user as **Order owner**, enter a product ID and choose **Create Order**. The card shows `PENDING`, the order service logs `Audit order.created order <id>`, and its transactional outbox publishes the validation request to the `order_topic` Kafka topic ([event-driven processing](./docs/features.md#event-driven-processing)).
+3. **Watch it become `APPROVED`.** The user service finds the user, logs `Demo notification user=<id> order=<id> product=<product>` with the same `traceId` as the `order.created` line ([observability](./docs/features.md#observability)), and answers on `order_result_topic`. Choose **Refresh**: the card shows `APPROVED` and the owner's name.
+4. **Reach `REJECTED`.** On **Users**, delete the user. On **Orders**, choose **Edit** on the order, change its product ID and choose **Save changes**. The edit sets the order back to `PENDING` and sends it for validation again ([event-driven processing](./docs/features.md#event-driven-processing)); the user no longer exists, so the user service logs `Rejecting order <id> because user <id> does not exist` with the `traceId` of the `order.updated` audit line. Choose **Refresh**: the card shows `REJECTED`.
+5. **Open the API.** The header's **API** link opens the Swagger UI at <http://localhost:4200/api/docs>, with the users and orders OpenAPI documents ([REST API and contracts](./docs/features.md#rest-api-and-contracts)).
+
+The topics, with their `.DLT` dead-letter topics, are listed by `docker compose -f infra/compose/compose.yaml exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list`. The [authenticated integration test](./docs/testing.md#authenticated-integration) walks the same path, rejection included, so these statuses stay true.
+
 ## License
 
 GPL 3.0, for the template and the code it generates. See [LICENSE](./LICENSE) and [ADR 0013](./docs/adr/0013-gpl-license.md) for what that means for services built from it.

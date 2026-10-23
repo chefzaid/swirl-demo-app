@@ -188,7 +188,7 @@ Mask uses Java 25 when `infra/scripts/mask-helpers.sh` can locate it. Direct Mav
 - Java, Spring, Angular, TypeScript, YAML, Docker, database, and Git editor extensions
 - persistent Maven and npm dependency volumes
 
-Only the `swirl-demo-app` workspace service starts automatically. PostgreSQL, Redis, Kafka, and Keycloak are behind the optional `local-infra` profile.
+Only the `swirl-demo-app` workspace service starts automatically. PostgreSQL, Redis, Kafka, and Keycloak are behind the optional `local-infra` profile, pinned to the same images as `infra/compose/compose.yaml`; the build job's `infra/scripts/check-compose-images.py` fails when the two differ.
 
 After opening the repository with **Reopen in Container**, use the normal direct commands. To opt into the dev-container infrastructure definition:
 

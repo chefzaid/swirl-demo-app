@@ -9,7 +9,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: Applications - PROD
     gethomepage.dev/href: https://demo.swirlit.dev
-    gethomepage.dev/icon: mdi-application-braces-outline
+    gethomepage.dev/icon: /icons/swirl-demo-app.svg
     gethomepage.dev/name: Swirl Demo App
     gethomepage.dev/weight: "20"
     gethomepage.dev/pod-selector: app=swirlapp-web

@@ -105,7 +105,7 @@ variables:
         - .cache/npm/
       policy: pull-push
   before_script:
-    - apk add --no-cache bash chromium git nodejs npm python3
+    - apk add --no-cache bash git nodejs npm python3
     - export APP_VERSION="$(infra/scripts/current-version.sh)"
   script:
     - infra/scripts/ci-verify.sh test

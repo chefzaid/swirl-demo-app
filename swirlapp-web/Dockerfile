@@ -7,7 +7,7 @@ COPY angular.json tsconfig.json tsconfig.app.json tsconfig.spec.json .browsersli
 COPY src ./src
 RUN npm run build-prod
 
-FROM docker.io/nginxinc/nginx-unprivileged:1.30.4-alpine@sha256:bc69cfff69f75aef06daeda8dea70de95fa9ad97a03fe134cd4e5e6789d51124
+FROM docker.io/nginxinc/nginx-unprivileged:1.31.5-alpine@sha256:19c132c9ab02d3b783f478743dafc7a7f42e27aa7d2bdcbec1bb1128ca8f2a07
 USER root
 RUN apk upgrade --no-cache
 USER 101:101

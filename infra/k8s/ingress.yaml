@@ -11,7 +11,7 @@ metadata:
     gethomepage.dev/href: https://demo.swirlit.dev
     gethomepage.dev/icon: /icons/swirl-demo-app.svg
     gethomepage.dev/name: Swirl Demo App
-    gethomepage.dev/weight: "20"
+    gethomepage.dev/weight: "5"
     gethomepage.dev/pod-selector: app=swirlapp-web
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"

@@ -13,7 +13,7 @@ data:
       "tags": ["swirl-demo-app", "spring-boot", "provisioned"],
       "timezone": "browser",
       "schemaVersion": 41,
-      "version": 2,
+      "version": 3,
       "refresh": "30s",
       "time": {"from": "now-6h", "to": "now"},
       "templating": {
@@ -23,9 +23,9 @@ data:
             "label": "Application",
             "type": "query",
             "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "query": {"query": "label_values(up{job=\"kubernetes-pods\",namespace=\"apps\"}, app)", "refId": "PrometheusVariableQueryEditor-VariableQuery"},
+            "query": {"query": "label_values(up{job=\"kubernetes-pods\",namespace=\"apps\",app=~\"swirlapp-.*\"}, app)", "refId": "PrometheusVariableQueryEditor-VariableQuery"},
             "includeAll": true,
-            "allValue": ".*",
+            "allValue": "swirlapp-.*",
             "multi": true,
             "refresh": 1,
             "current": {"text": "All", "value": ["$__all"]}
@@ -49,7 +49,7 @@ data:
           "title": "Request Rate",
           "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m]))", "instant": true}],
+          "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m])) or vector(0)", "instant": true}],
           "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "colorMode": "value", "graphMode": "area"}
         },
@@ -59,7 +59,7 @@ data:
           "title": "5xx Error Rate",
           "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",status=~\"5..\"}[5m]))", "instant": true}],
+          "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",status=~\"5..\"}[5m])) or vector(0)", "instant": true}],
           "fieldConfig": {"defaults": {"unit": "reqps", "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 0.01}]}}, "overrides": []},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "colorMode": "value", "graphMode": "area"}
         },
@@ -70,7 +70,7 @@ data:
           "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
           "datasource": {"type": "prometheus", "uid": "prometheus"},
           "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_sum{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m])), 0.000001)", "instant": true}],
-          "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+          "fieldConfig": {"defaults": {"unit": "s", "noValue": "No API requests"}, "overrides": []},
           "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "colorMode": "value", "graphMode": "area"}
         },
         {
@@ -80,7 +80,7 @@ data:
           "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
           "datasource": {"type": "prometheus", "uid": "prometheus"},
           "targets": [{"refId": "A", "expr": "sum by (app, status) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m]))", "legendFormat": "{{app}} HTTP {{status}}"}],
-          "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+          "fieldConfig": {"defaults": {"unit": "reqps", "noValue": "No API requests"}, "overrides": []},
           "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
         },
         {
@@ -132,7 +132,7 @@ data:
           "title": "Swirl Demo App Pod Restarts",
           "gridPos": {"x": 0, "y": 20, "w": 24, "h": 7},
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "targets": [{"refId": "A", "expr": "kube_pod_container_status_restarts_total{namespace=\"apps\"}", "legendFormat": "{{pod}} / {{container}}", "instant": true, "format": "table"}],
+          "targets": [{"refId": "A", "expr": "kube_pod_container_status_restarts_total{namespace=\"apps\",container=~\"swirlapp-user|swirlapp-order|swirlapp-web\"}", "legendFormat": "{{pod}} / {{container}}", "instant": true, "format": "table"}],
           "options": {"showHeader": true}
         },
         {
@@ -141,8 +141,8 @@ data:
           "title": "API 5xx Ratio (objective 0.5%)",
           "gridPos": {"x": 0, "y": 27, "w": 8, "h": 8},
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "targets": [{"refId": "A", "expr": "sum by (app) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\",status=~\"5..\"}[5m])) / sum by (app) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m]))", "legendFormat": "{{app}}"}],
-          "fieldConfig": {"defaults": {"unit": "percentunit", "custom": {"thresholdsStyle": {"mode": "line"}}, "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 0.005}]}}, "overrides": []},
+          "targets": [{"refId": "A", "expr": "(sum by (app) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\",status=~\"5..\"}[5m])) or sum by (app) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m])) * 0) / sum by (app) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m]))", "legendFormat": "{{app}}"}],
+          "fieldConfig": {"defaults": {"unit": "percentunit", "noValue": "No API requests", "custom": {"thresholdsStyle": {"mode": "line"}}, "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 0.005}]}}, "overrides": []},
           "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
         },
         {
@@ -152,7 +152,7 @@ data:
           "gridPos": {"x": 8, "y": 27, "w": 8, "h": 8},
           "datasource": {"type": "prometheus", "uid": "prometheus"},
           "targets": [{"refId": "A", "expr": "1 - sum by (app) (rate(http_server_requests_seconds_bucket{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\",le=\"0.3\"}[5m])) / sum by (app) (rate(http_server_requests_seconds_count{namespace=\"apps\",app=~\"$application\",uri!~\"/actuator.*\"}[5m]))", "legendFormat": "{{app}}"}],
-          "fieldConfig": {"defaults": {"unit": "percentunit", "custom": {"thresholdsStyle": {"mode": "line"}}, "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 0.05}]}}, "overrides": []},
+          "fieldConfig": {"defaults": {"unit": "percentunit", "noValue": "No API requests", "custom": {"thresholdsStyle": {"mode": "line"}}, "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "red", "value": 0.05}]}}, "overrides": []},
           "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
         },
         {
@@ -172,7 +172,7 @@ data:
           "gridPos": {"x": 0, "y": 35, "w": 8, "h": 8},
           "datasource": {"type": "prometheus", "uid": "prometheus"},
           "targets": [{"refId": "A", "expr": "sum by (app, topic) (increase(swirl_events_failed_deliveries_total{namespace=\"apps\",app=~\"$application\"}[5m]))", "legendFormat": "failed {{app}} {{topic}}"}, {"refId": "B", "expr": "sum by (app, topic) (increase(swirl_events_dead_lettered_total{namespace=\"apps\",app=~\"$application\"}[5m]))", "legendFormat": "dead-lettered {{app}} {{topic}}"}],
-          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "fieldConfig": {"defaults": {"unit": "short", "noValue": "No retries or dead letters"}, "overrides": []},
           "options": {"legend": {"displayMode": "table", "placement": "bottom"}}
         },
         {

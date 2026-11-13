@@ -174,7 +174,7 @@ def forward_keycloak(namespace):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--realm", default="swirlit")
+    parser.add_argument("--realm", default="swirl")
     parser.add_argument("--namespace", default=os.environ.get("INFRA_NAMESPACE", "infra"))
     parser.add_argument("--render", action="store_true", help="Print the public client configuration only")
     args = parser.parse_args()

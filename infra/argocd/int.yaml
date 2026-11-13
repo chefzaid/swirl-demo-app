@@ -14,7 +14,7 @@ metadata:
 spec:
   project: applications-int
   source:
-    repoURL: http://gitlab.swirlit.internal/swirlit/swirl-demo-app.git
+    repoURL: http://gitlab.swirl.internal/swirl/swirl-demo-app.git
     targetRevision: a4c47848fc98994c459f7b09476cd2287f16249b
     path: infra/environments/int
   destination:

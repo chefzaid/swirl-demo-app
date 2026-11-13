@@ -1,5 +1,5 @@
 {
   "keycloakUrl": "https://keycloak.swirlit.dev/auth",
-  "keycloakRealm": "swirlit",
+  "keycloakRealm": "swirl",
   "keycloakClientId": "swirl-demo-app-prod-web"
 }

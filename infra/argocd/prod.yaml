@@ -14,7 +14,7 @@ metadata:
 spec:
   project: applications-prod
   source:
-    repoURL: http://gitlab.swirlit.internal/swirlit/swirl-demo-app.git
+    repoURL: http://gitlab.swirl.internal/swirl/swirl-demo-app.git
     targetRevision: b152153c21892ce4689efaf92f71ec59016ee877
     path: infra/environments/prod
   destination:

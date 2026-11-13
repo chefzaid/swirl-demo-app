@@ -14,7 +14,7 @@ metadata:
 spec:
   project: applications-uat
   source:
-    repoURL: http://gitlab.swirlit.internal/swirlit/swirl-demo-app.git
+    repoURL: http://gitlab.swirl.internal/swirl/swirl-demo-app.git
     targetRevision: 473e9f925a92315b92c1f1adf23a690c3425af61
     path: infra/environments/uat
   destination:

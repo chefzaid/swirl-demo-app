@@ -4,7 +4,7 @@ umask 077
 
 REPOSITORY_ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
 REPOSITORY_NAME="${REPOSITORY_NAME:-$(basename "$REPOSITORY_ROOT")}"
-GITLAB_PROJECT_PATH="${GITLAB_PROJECT_PATH:-swirlit/swirl-demo-app}"
+GITLAB_PROJECT_PATH="${GITLAB_PROJECT_PATH:-swirl/swirl-demo-app}"
 GITLAB_URL="${GITLAB_URL:-https://gitlab.swirlit.dev}"
 GITHUB_OWNER="${GITHUB_OWNER:-chefzaid}"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-swirl-demo-app}"

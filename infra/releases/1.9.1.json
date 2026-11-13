@@ -6,15 +6,15 @@
   "pipelineId": "579",
   "images": {
     "swirlapp-user": {
-      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-user",
+      "repository": "registry.swirlit.dev/swirl/swirl-demo-app/swirlapp-user",
       "digest": "sha256:b67cb6c230ef1122c9009e665809b0e6a6f769f6d9ee6bcf8d1b4ac8caa93a68"
     },
     "swirlapp-order": {
-      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-order",
+      "repository": "registry.swirlit.dev/swirl/swirl-demo-app/swirlapp-order",
       "digest": "sha256:6a6078f051eabbfc426be3b653af7d7fb83bb4695a777b1b4c5dfa42b914ca26"
     },
     "swirlapp-web": {
-      "repository": "registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-web",
+      "repository": "registry.swirlit.dev/swirl/swirl-demo-app/swirlapp-web",
       "digest": "sha256:140d9d1c9cce06a269c4223b8446c97aa8d65096180eebd64400a123ef897c3a"
     }
   }

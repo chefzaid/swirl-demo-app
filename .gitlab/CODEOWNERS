@@ -1,7 +1,7 @@
-# Default ownership keeps every change visible to the SwirlIT maintainers.
-* @swirlit
+# Default ownership keeps every change visible to the Swirl maintainers.
+* @swirl
 
 # Delivery controls require infrastructure review.
-/.gitlab-ci.yml @swirlit
-/infra/ @swirlit
-/sonar-project.properties @swirlit
+/.gitlab-ci.yml @swirl
+/infra/ @swirl
+/sonar-project.properties @swirl

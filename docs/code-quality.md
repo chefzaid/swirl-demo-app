@@ -19,7 +19,7 @@ normal CI or manual scans. See the
 The platform's `infra/sonar-apps-discovery` CronJob runs every 15 minutes. It
 follows Argo CD tracking annotations from managed local workloads to their source
 repositories and deduplicates components from the same repository. Swirl Demo App's web,
-user and order Deployments therefore share one Sonar project, `swirlit:swirl-demo-app`.
+user and order Deployments therefore share one Sonar project, `swirl:swirl-demo-app`.
 Repositories must belong to the platform's configured GitLab hosts and group.
 
 Discovery provisions missing Sonar projects, binds them to GitLab and supplies a
@@ -157,7 +157,7 @@ none is solved yet.
    manage the workloads and their tracking annotations so discovery can identify
    their source owner.
 2. Set `sonar.projectKey` to the GitLab repository path with every `/` replaced
-   by `:`: `swirlit/my-app` becomes `swirlit:my-app`. Update the display name,
+   by `:`: `swirl/my-app` becomes `swirl:my-app`. Update the display name,
    backend/frontend source and test paths, Java binaries/libraries and coverage
    paths in `sonar-project.properties`. When retaining the optional bootstrap
    scripts, also adapt their `APP_NAME`, `GITLAB_PROJECT_PATH` and

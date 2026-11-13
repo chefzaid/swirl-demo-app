@@ -35,8 +35,8 @@ class FakeKeycloak:
 
     def request(self, method, path, body=None):
         self.calls.append((method, path, deepcopy(body)))
-        if path.endswith("/swirlit") and method == "GET":
-            return {"realm": "swirlit"}
+        if path.endswith("/swirl") and method == "GET":
+            return {"realm": "swirl"}
         if path.endswith("/client-scopes") and method == "GET":
             return [{"name": name, "id": scope_id} for name, scope_id in self.scopes.items()]
         for mode in self.assignments:
@@ -91,8 +91,8 @@ class ClientTests(unittest.TestCase):
 
     def test_create_then_repeat_keeps_one_client_and_each_mapper(self):
         api = FakeKeycloak()
-        first = module.reconcile(api, "swirlit", self.desired)
-        second = module.reconcile(api, "swirlit", self.desired)
+        first = module.reconcile(api, "swirl", self.desired)
+        second = module.reconcile(api, "swirl", self.desired)
         self.assertEqual(first, second)
         self.assertEqual(len(api.clients), 2)
         self.assertEqual(len(api.mappers), 2)
@@ -102,7 +102,7 @@ class ClientTests(unittest.TestCase):
     def test_adopts_existing_client_and_repairs_mapper_without_replacing_identity(self):
         api = FakeKeycloak(existing=True)
         api.mappers.append({"id": "operator-mapper", "name": "operator-owned"})
-        self.assertEqual(module.reconcile(api, "swirlit", self.desired), "original-uuid")
+        self.assertEqual(module.reconcile(api, "swirl", self.desired), "original-uuid")
         self.assertEqual(api.mappers[0]["id"], "original-mapper")
         self.assertEqual(api.mappers[0]["config"]["claim.name"], "groups")
         self.assertEqual(api.mappers[1], {"id": "operator-mapper", "name": "operator-owned"})
@@ -115,14 +115,14 @@ class ClientTests(unittest.TestCase):
         self.assertEqual(api.assignments["optional"], {"groups", "offline_access"})
         self.assertNotIn("secret", api.clients[1])
         self.assertEqual(api.clients[1]["webOrigins"], self.desired["webOrigins"])
-        module.reconcile(api, "swirlit", self.desired)
+        module.reconcile(api, "swirl", self.desired)
         self.assertEqual(api.assignments["optional"], {"groups", "offline_access"})
 
     def test_missing_shared_scope_fails_before_mutations(self):
         api = FakeKeycloak()
         del api.scopes["groups"]
         with self.assertRaisesRegex(RuntimeError, "client scopes are missing: groups"):
-            module.reconcile(api, "swirlit", self.desired)
+            module.reconcile(api, "swirl", self.desired)
         self.assertTrue(all(method == "GET" for method, _, _ in api.calls))
 
     def test_scope_readback_rejects_an_acknowledged_but_ineffective_change(self):
@@ -134,25 +134,25 @@ class ClientTests(unittest.TestCase):
 
         api = IneffectiveScopeUpdate(existing=True)
         with self.assertRaisesRegex(RuntimeError, "did not converge"):
-            module.reconcile(api, "swirlit", self.desired)
+            module.reconcile(api, "swirl", self.desired)
 
     def test_missing_realm_fails_before_writing(self):
         class MissingRealm(FakeKeycloak):
             def request(self, method, path, body=None):
-                if path.endswith("/swirlit"):
+                if path.endswith("/swirl"):
                     raise RuntimeError("Realm does not exist")
                 return super().request(method, path, body)
 
         api = MissingRealm()
         with self.assertRaisesRegex(RuntimeError, "Realm does not exist"):
-            module.reconcile(api, "swirlit", self.desired)
+            module.reconcile(api, "swirl", self.desired)
         self.assertEqual(api.calls, [])
 
     def test_ambiguous_client_fails_before_writing(self):
         api = FakeKeycloak(existing=True)
         api.clients.append({"id": "ambiguous-uuid", "clientId": "swirlapp-web"})
         with self.assertRaisesRegex(RuntimeError, "exactly one"):
-            module.reconcile(api, "swirlit", self.desired)
+            module.reconcile(api, "swirl", self.desired)
         self.assertTrue(all(method == "GET" for method, _, _ in api.calls))
 
 

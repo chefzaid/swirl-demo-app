@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: swirlapp-web
-        image: registry.swirlit.dev/swirlit/swirl-demo-app/swirlapp-web:v3
+        image: registry.swirlit.dev/swirl/swirl-demo-app/swirlapp-web:v3
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false

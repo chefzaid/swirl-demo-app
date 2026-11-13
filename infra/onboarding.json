@@ -29,15 +29,15 @@
   ],
   "replacements": [
     {
-      "from": "registry.swirlit.dev/swirlit/swirl-demo-app",
+      "from": "registry.swirlit.dev/swirl/swirl-demo-app",
       "to": "{{REGISTRY_HOST}}/{{GITLAB_PROJECT_PATH}}"
     },
     {
-      "from": "https://gitlab.swirlit.dev/swirlit/swirl-demo-app",
+      "from": "https://gitlab.swirlit.dev/swirl/swirl-demo-app",
       "to": "{{GITLAB_PUBLIC_URL}}/{{GITLAB_PROJECT_PATH}}"
     },
     {
-      "from": "http://gitlab.swirlit.internal/swirlit/swirl-demo-app",
+      "from": "http://gitlab.swirl.internal/swirl/swirl-demo-app",
       "to": "{{GITLAB_INTERNAL_URL}}/{{GITLAB_PROJECT_PATH}}"
     },
     {
@@ -45,11 +45,11 @@
       "to": "{{GITLAB_PUBLIC_URL}}"
     },
     {
-      "from": "http://gitlab.swirlit.internal",
+      "from": "http://gitlab.swirl.internal",
       "to": "{{GITLAB_INTERNAL_URL}}"
     },
     {
-      "from": "gitlab-registry.swirlit.internal:5050",
+      "from": "gitlab-registry.swirl.internal:5050",
       "to": "{{REGISTRY_PUSH_HOST}}"
     },
     {
@@ -69,7 +69,7 @@
       "to": "sonarqube.{{PUBLIC_DOMAIN}}"
     },
     {
-      "from": ".swirlit.internal",
+      "from": ".swirl.internal",
       "to": ".{{INTERNAL_DNS_ZONE}}"
     },
     {
@@ -77,23 +77,23 @@
       "to": "{{TLS_SECRET_NAME}}"
     },
     {
-      "from": "swirlit:swirl-demo-app",
+      "from": "swirl:swirl-demo-app",
       "to": "{{SONAR_PROJECT_KEY}}"
     },
     {
-      "from": "swirlit/swirl-demo-app",
+      "from": "swirl/swirl-demo-app",
       "to": "{{GITLAB_PROJECT_PATH}}"
     },
     {
-      "from": "swirlit/$APP_NAME",
+      "from": "swirl/$APP_NAME",
       "to": "{{GITLAB_PROJECT_PATH}}"
     },
     {
-      "from": "swirlit/$REPOSITORY_NAME",
+      "from": "swirl/$REPOSITORY_NAME",
       "to": "{{GITLAB_PROJECT_PATH}}"
     },
     {
-      "from": "swirlit:$APP_NAME",
+      "from": "swirl:$APP_NAME",
       "to": "{{SONAR_PROJECT_KEY}}"
     },
     {
@@ -101,7 +101,7 @@
       "to": "GITLAB_PROJECT_ID: '{{GITLAB_PROJECT_ID}}'"
     },
     {
-      "from": "/realms/swirlit",
+      "from": "/realms/swirl",
       "to": "/realms/{{KEYCLOAK_REALM}}"
     },
     {
@@ -117,27 +117,27 @@
       "to": "GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY:-{{GITHUB_REPOSITORY}}}\""
     },
     {
-      "from": "default=\"swirlit\"",
+      "from": "default=\"swirl\"",
       "to": "default=\"{{KEYCLOAK_REALM}}\""
     },
     {
-      "from": "DB_HOST=postgres.swirlit.internal",
+      "from": "DB_HOST=postgres.swirl.internal",
       "to": "DB_HOST=postgres.{{INTERNAL_DNS_ZONE}}"
     },
     {
-      "from": "KAFKA_BOOTSTRAP_SERVERS=kafka.swirlit.internal:9092",
+      "from": "KAFKA_BOOTSTRAP_SERVERS=kafka.swirl.internal:9092",
       "to": "KAFKA_BOOTSTRAP_SERVERS=kafka.{{INTERNAL_DNS_ZONE}}:9092"
     },
     {
-      "from": "REDIS_HOST=redis.swirlit.internal",
+      "from": "REDIS_HOST=redis.swirl.internal",
       "to": "REDIS_HOST=redis.{{INTERNAL_DNS_ZONE}}"
     },
     {
-      "from": "JWT_ISSUER_URI=https://keycloak.swirlit.dev/auth/realms/swirlit",
+      "from": "JWT_ISSUER_URI=https://keycloak.swirlit.dev/auth/realms/swirl",
       "to": "JWT_ISSUER_URI=https://keycloak.{{PUBLIC_DOMAIN}}/auth/realms/{{KEYCLOAK_REALM}}"
     },
     {
-      "from": "JWT_JWK_SET_URI=http://keycloak.swirlit.internal:8080/auth/realms/swirlit/protocol/openid-connect/certs",
+      "from": "JWT_JWK_SET_URI=http://keycloak.swirl.internal:8080/auth/realms/swirl/protocol/openid-connect/certs",
       "to": "JWT_JWK_SET_URI=http://keycloak.{{INTERNAL_DNS_ZONE}}:8080/auth/realms/{{KEYCLOAK_REALM}}/protocol/openid-connect/certs"
     },
     {
@@ -149,7 +149,7 @@
       "to": "\"keycloakUrl\": \"https://keycloak.{{PUBLIC_DOMAIN}}/auth\""
     },
     {
-      "from": "\"keycloakRealm\": \"swirlit\"",
+      "from": "\"keycloakRealm\": \"swirl\"",
       "to": "\"keycloakRealm\": \"{{KEYCLOAK_REALM}}\""
     }
   ],

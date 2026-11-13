@@ -41,8 +41,8 @@ variables:
   NEW_MAJOR_VERSION:
     value: ""
     description: "Major version number for the manual set-major-version job (for example: 2)."
-  REGISTRY_PUSH_HOST: "gitlab-registry.swirlit.internal:5050"
-  PACKAGE_REGISTRY_API_V4_URL: "http://gitlab.swirlit.internal/api/v4"
+  REGISTRY_PUSH_HOST: "gitlab-registry.swirl.internal:5050"
+  PACKAGE_REGISTRY_API_V4_URL: "http://gitlab.swirl.internal/api/v4"
   SONAR_HOST_URL: "http://sonarqube.infra.svc.cluster.local:9000"
   SONAR_USER_HOME: "$CI_PROJECT_DIR/.cache/sonar"
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.cache/maven"

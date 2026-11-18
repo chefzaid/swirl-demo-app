@@ -39,3 +39,14 @@ The [code-quality guide](../code-quality.md) describes how template adopters
 preserve this contract while changing repository names, source paths and build
 tools. [ADR 0008](0008-code-quality-and-verification.md#amendment-source-analysis-and-discovery-2026-09-08)
 records the source-analysis decision and rationale.
+
+## Amendment: environment jobs and versioned images (2026-11-18)
+
+The `int`/`uat`/`prod` delivery keeps the jobs above and adds `00-delivery-policy`,
+`01-snapshot`, `01-publish` and `02-deploy-uat`. `03-package` verifies the three
+runtime images in every build pipeline before `01-snapshot`, `01-release` or
+`01-publish` builds and pushes them. A pipeline with `PLAYWRIGHT_SCHEDULE=true`
+runs build, test, package and E2E, with E2E required, and nothing after. Each
+environment deploys its images as `<image>:<version>@sha256:<digest>`, so the
+digest stays the deployed identity and the tag shows the version. The
+[pipeline jobs](../deployment.md#pipeline-jobs) table is the current reference.

@@ -400,9 +400,10 @@ This is expected: automated self-heal is enabled. Make the change under `infra/k
 
 Inspect the explicit delivery jobs:
 
+- `03-package`: builds the three runtime images without pushing them; publication waits for it
 - `01-snapshot`: publishes an integration snapshot from the selected branch
-- `01-release`: publishes stable release artifacts/images from the default branch
-- `02-deploy`: applies the Application, waits for the exact GitOps revision, and runs smoke checks
+- `01-release` (`01-publish` in commit pipelines): publishes stable release artifacts/images from the default branch
+- `02-deploy` (`02-deploy-uat` after `01-publish`): applies the Application, waits for the exact GitOps revision and the tagged image digests, and runs smoke checks
 - optional `01-e2e`: retains browser acceptance output but cannot suppress release or deploy
 
 Compare:

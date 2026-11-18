@@ -115,6 +115,10 @@ state_path =''', 1)
             self.assertEqual(fixture.git("show", "origin/trunk:VERSION").stdout, "1.1.0\n")
         image_sets = [app["status"]["summary"]["images"] for app in previous.values()]
         self.assertTrue(all(images == image_sets[0] for images in image_sets))
+        manifest = json.loads(fixture.git("show", "v1.0.1:infra/releases/1.0.1.json").stdout)
+        self.assertEqual(manifest["imageTag"], "1.0.1")
+        self.assertEqual(image_sets[0], [manifest["images"][name]["repository"] + ":1.0.1@" + manifest["images"][name]["digest"]
+                                         for name in RENDER.IMAGES])
 
     def test_prod_only_promotes_the_verified_uat_release(self):
         fixture = self.fixture
@@ -277,12 +281,17 @@ class SnapshotTests(PromotionTests):
         manifest = json.loads(fixture.git("show", runtime + ":infra/snapshots/84.json").stdout)
         self.assertEqual(manifest["sourceBranch"], self.env["CI_COMMIT_BRANCH"])
         self.assertEqual(manifest["releaseVersion"], "snapshot-" + source + "-84")
+        self.assertEqual(manifest["imageTag"], "2.0.0-SNAPSHOT-" + source[:8])
+        self.assertEqual(app["status"]["summary"]["images"],
+                         [manifest["images"][name]["repository"] + ":2.0.0-SNAPSHOT-" + source[:8] + "@" +
+                          manifest["images"][name]["digest"] for name in RENDER.IMAGES])
         self.assertEqual(json.loads(fixture.git("show", runtime + ":infra/environments/int/settings.json").stdout)["appSubdomain"], "demo")
         fixture.git("checkout", "-q", "--detach", source)
         (fixture.work / "release.env").unlink()
         result = self.snapshot()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(fixture.builds.read_text(), "build\nbuild\n")
+        self.assertIn("SNAPSHOT_IMAGE_TAG=2.0.0-SNAPSHOT-" + source[:8], (fixture.work / "release.env").read_text())
         self.assertEqual(fixture.git("rev-parse", "origin/" + self.snapshot_branch).stdout.strip(), pointer)
 
     def test_snapshots_and_branch_promotions_cannot_reach_uat_or_prod(self):

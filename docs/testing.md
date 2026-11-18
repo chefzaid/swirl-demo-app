@@ -294,6 +294,15 @@ Artifacts:
 
 Artifacts may contain entered test data. Use only disposable credentials and records.
 
+## Scheduled E2E Runs
+
+On a push or merge request the Playwright suites (`01-e2e`: smoke, accessibility and visual) wait to be started by hand.
+A pipeline whose `PLAYWRIGHT_SCHEDULE` variable is `true`, started by a schedule or by hand, builds, tests and packages,
+then runs the suites on its own and fails when they fail; the quality and security reports, the snapshot, the release
+and every deploy skip such a pipeline. To run them every night, create a pipeline schedule on `main` (CI/CD →
+Schedules, for instance `30 2 * * *` in `Europe/Paris`) with the variable `PLAYWRIGHT_SCHEDULE` set to `true`. Its
+report is kept 7 days, as on any pipeline.
+
 ## Containerized Full-Stack Acceptance
 
 Run the whole production-shaped local system plus Playwright:

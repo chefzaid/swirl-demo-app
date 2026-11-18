@@ -24,6 +24,9 @@ variables:
   GIT_DEPTH: "0"
   SONAR_SCAN_ONLY: "false"
   APP_ONBOARDING: "false"
+  PLAYWRIGHT_SCHEDULE:
+    value: "false"
+    description: "true in the nightly schedule that builds, tests, packages and runs the Playwright E2E suite on its own (see docs/testing.md#scheduled-e2e-runs); no report, snapshot, release or deploy."
   DEPLOYMENT_ENVIRONMENT:
     value: "int"
     options: ["int", "uat", "prod"]
@@ -138,11 +141,45 @@ variables:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH'
 
+03-package:
+  stage: build
+  needs:
+    - job: 01-build
+      artifacts: true
+    - job: 02-test
+      artifacts: false
+  image:
+    name: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
+    entrypoint: [""]
+  cache:
+    - key: swirl-demo-app-kaniko-executor-v2
+      paths:
+        - .cache/kaniko/
+      policy: pull-push
+  before_script:
+    - apk add --no-cache bash crane git
+    - export APP_VERSION="$(infra/scripts/current-version.sh)"
+    - mkdir -p .cache/kaniko /kaniko/ssl/certs
+    - test -s "$KANIKO_EXECUTOR" || crane export "$KANIKO_IMAGE" | tar -xOf - kaniko/executor > "$KANIKO_EXECUTOR"
+    - chmod 0755 "$KANIKO_EXECUTOR"
+    - cp /etc/ssl/certs/ca-certificates.crt /kaniko/ssl/certs/ca-certificates.crt
+  script:
+    - infra/scripts/ci-container-build.sh verify
+  rules:
+    - if: '$RELEASE_VERSION != ""'
+      when: never
+    - if: '$SONAR_SCAN_ONLY == "true"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
 01-e2e:
   stage: verify
   needs:
     - job: 01-build
       artifacts: true
+    - job: 03-package
+      artifacts: false
   image:
     name: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
     entrypoint: [""]
@@ -170,6 +207,8 @@ variables:
   rules:
     - if: '$RELEASE_VERSION != ""'
       when: never
+    - if: '$PLAYWRIGHT_SCHEDULE == "true" && ($CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web")'
+      allow_failure: false
     - if: '$SONAR_SCAN_ONLY == "true"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -216,6 +255,8 @@ variables:
   rules:
     - if: '$RELEASE_VERSION != ""'
       when: never
+    - if: '$PLAYWRIGHT_SCHEDULE == "true"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$PIPELINE_MODE == "full" && $CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$PIPELINE_MODE == "full" && $CI_COMMIT_BRANCH'
@@ -261,6 +302,8 @@ variables:
   rules:
     - if: '$RELEASE_VERSION != ""'
       when: never
+    - if: '$PLAYWRIGHT_SCHEDULE == "true"'
+      when: never
     - if: '$SONAR_SCAN_ONLY == "true"'
       when: never
     - if: '$PIPELINE_MODE == "full" && $CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -278,6 +321,8 @@ variables:
   needs:
     - job: 01-build
       artifacts: true
+    - job: 03-package
+      artifacts: false
   image:
     name: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
     entrypoint: [""]
@@ -311,6 +356,8 @@ variables:
   rules:
     - if: '$RELEASE_VERSION != ""'
       when: never
+    - if: '$PLAYWRIGHT_SCHEDULE == "true"'
+      when: never
     - if: '$SONAR_SCAN_ONLY == "true"'
       when: never
     - if: '$NEW_MAJOR_VERSION != ""'
@@ -330,6 +377,8 @@ variables:
   needs:
     - job: 01-build
       artifacts: true
+    - job: 03-package
+      artifacts: false
   image:
     name: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
     entrypoint: [""]
@@ -359,7 +408,7 @@ variables:
       - package-output/
       - release.env
   rules:
-    - if: '$RELEASE_VERSION != "" || $SONAR_SCAN_ONLY == "true" || $APP_ONBOARDING == "true" || $DEPLOYMENT_ENVIRONMENT != "int" || $NEW_MAJOR_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $SONAR_SCAN_ONLY == "true" || $PLAYWRIGHT_SCHEDULE == "true" || $APP_ONBOARDING == "true" || $DEPLOYMENT_ENVIRONMENT != "int" || $NEW_MAJOR_VERSION != ""'
       when: never
     - if: '$CI_COMMIT_BRANCH'
 
@@ -401,6 +450,8 @@ variables:
       - package-output/deployment.json
   rules:
     - if: '$SONAR_SCAN_ONLY == "true"'
+      when: never
+    - if: '$PLAYWRIGHT_SCHEDULE == "true"'
       when: never
     - if: '$NEW_MAJOR_VERSION != ""'
       when: never
@@ -452,6 +503,7 @@ set-major-version:
   needs:
     - job: 00-delivery-policy
       artifacts: false
+  dependencies: []
   resource_group: swirl-demo-app-release
   interruptible: false
   before_script:
@@ -461,6 +513,8 @@ set-major-version:
   manual_confirmation: "Set the next Swirl Demo App major version from NEW_MAJOR_VERSION?"
   rules:
     - if: '$RELEASE_VERSION != ""'
+      when: never
+    - if: '$PLAYWRIGHT_SCHEDULE == "true"'
       when: never
     - if: '$SONAR_SCAN_ONLY == "true"'
       when: never

@@ -213,7 +213,12 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(choice["value"], "int")
         self.assertEqual(choice["options"], ["int", "uat", "prod"])
         self.assertTrue(choice["description"])
-        self.assertNotIn("03-package", pipeline)
+        # Like Indezy and Thoughty, every build pipeline verifies the runtime images before anything publishes them.
+        self.assertEqual(pipeline["03-package"]["script"], ["infra/scripts/ci-container-build.sh verify"])
+        self.assertEqual([(item["job"], item["artifacts"]) for item in pipeline["03-package"]["needs"]],
+                         [("01-build", True), ("02-test", False)])
+        for name in ("01-e2e", "01-release", "01-snapshot"):
+            self.assertIn({"job": "03-package", "artifacts": False}, pipeline[name]["needs"])
         self.assertEqual(pipeline["01-release"]["resource_group"], "swirl-demo-app-release")
         self.assertEqual(pipeline["set-major-version"]["resource_group"], "swirl-demo-app-release")
         self.assertEqual(pipeline["02-deploy"]["resource_group"], "swirl-demo-app-$DEPLOYMENT_ENVIRONMENT")
@@ -224,8 +229,24 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(pipeline["default"]["tags"], ["swirl-cloud-application-int"])
         self.assertEqual(pipeline["01-release"]["tags"], ["swirl-cloud-application-release"])
         self.assertEqual(pipeline["02-deploy"]["tags"], ["swirl-cloud-application-$DEPLOYMENT_ENVIRONMENT"])
-        for name in ("01-build", "02-test", "01-e2e", "02-quality", "03-security", "01-release", "set-major-version"):
+        for name in ("01-build", "02-test", "03-package", "01-e2e", "02-quality", "03-security", "01-release", "set-major-version"):
             self.assertEqual(pipeline[name]["rules"][0], {"if": '$RELEASE_VERSION != ""', "when": "never"})
+
+    def test_nightly_e2e_schedule_runs_the_suite_and_nothing_after_it(self):
+        schedule = {"CI_PIPELINE_SOURCE": "schedule", "CI_COMMIT_BRANCH": "trunk", "CI_DEFAULT_BRANCH": "trunk",
+                    "PIPELINE_MODE": "standard", "DEPLOYMENT_ENVIRONMENT": "int", "APP_ONBOARDING": "false",
+                    "SONAR_SCAN_ONLY": "false", "PLAYWRIGHT_SCHEDULE": "true"}
+        for job in ("01-build", "02-test", "03-package", "01-e2e"):
+            self.assertEqual(job_rule(job, schedule), "on_success", job)
+        for job in ("02-quality", "03-security", "01-release", "01-snapshot", "02-deploy", "01-publish",
+                    "02-deploy-uat", "set-major-version"):
+            self.assertEqual(job_rule(job, schedule), "never", job)
+        self.assertEqual(job_rule("set-major-version", {**schedule, "NEW_MAJOR_VERSION": "2"}), "never")
+        self.assertEqual(job_rule("01-e2e", {**schedule, "PLAYWRIGHT_SCHEDULE": "false"}), "manual")
+        self.assertEqual(job_rule("01-e2e", {**schedule, "CI_PIPELINE_SOURCE": "push"}), "manual")
+        pipeline = yaml.safe_load((ROOT / ".gitlab-ci.yml").read_text())
+        rule = next(rule for rule in pipeline["01-e2e"]["rules"] if "PLAYWRIGHT_SCHEDULE" in rule["if"])
+        self.assertFalse(rule["allow_failure"])
 
     def test_any_branch_web_pipeline_including_open_merge_request_can_deploy_only_to_int(self):
         variables = {"CI_PIPELINE_SOURCE": "web", "CI_COMMIT_BRANCH": "feature/é;$(example)",

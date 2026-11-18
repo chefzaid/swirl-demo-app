@@ -17,6 +17,8 @@ IMAGES = ("swirlapp-user", "swirlapp-order", "swirlapp-web")
 SHA = re.compile(r"[0-9a-f]{40}")
 DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
 VERSION = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)")
+# A snapshot image carries its build's version and source commit, for example 1.15.4-0b92a2e1.
+SNAPSHOT_TAG = re.compile(VERSION.pattern + r"(?:-SNAPSHOT)?-([0-9a-f]{8})")
 LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
 RESERVED_NAMESPACES = {"default", "infra", "corp", "gitlab-runners", "longhorn-system", "external-secrets"}
 SHARED_NAMESPACE = "apps"
@@ -120,7 +122,27 @@ def release_manifest(value, registry, project, environment="int"):
     for name, image in value["images"].items():
         require(image.get("repository") == f"{registry}/{project}/{name}" and DIGEST.fullmatch(image.get("digest", "")),
                 "Release image must use this project's central registry and an immutable digest")
+    image_tag(value)
     return value
+
+
+def image_tag(release):
+    """The tag deployed with each digest, so a running pod names its version."""
+    version = release["releaseVersion"]
+    tag = release.get("imageTag", version)
+    if release.get("kind", "release") == "release":
+        require(tag == version, "A release deploys the image tag of its own version")
+    else:
+        # Snapshots published before image tags were recorded carry their identity as the tag.
+        match = SNAPSHOT_TAG.fullmatch(tag) if isinstance(tag, str) else None
+        require(tag == version or match and match.group(1) == release["sourceRevision"][:8],
+                "A snapshot image tag must name its version and source commit")
+    return tag
+
+
+def image_reference(release, name):
+    image = release["images"][name]
+    return f"{image['repository']}:{image_tag(release)}@{image['digest']}"
 
 
 def settings(root, selected, environment):
@@ -206,7 +228,7 @@ def render(root, inventory, environment, release, revision, repository_url=None,
                 "repository": repository_url, "project": f"applications-{environment}",
                 "url": "https://" + host, "runtimeConfig": web, "revision": revision, "databaseName": database,
                 "destination": {"name": selected["clusterName"], "namespace": namespace},
-                "images": [release["images"][name]["repository"] + "@" + release["images"][name]["digest"] for name in IMAGES]}
+                "images": [image_reference(release, name) for name in IMAGES]}
     if check_only:
         return metadata
     backend = {
@@ -291,7 +313,8 @@ def render(root, inventory, environment, release, revision, repository_url=None,
                         {"name": "swirl-demo-app-backend-config", "behavior": "replace", "envs": ["backend-runtime.properties"],
                          "options": {"annotations": {"argocd.argoproj.io/sync-wave": "-2"}}},
                         {"name": "swirlapp-web-config", "behavior": "replace", "files": ["runtime-config.json=web-runtime-config.json"]}],
-                    "images": [{"name": release["images"][name]["repository"], "digest": release["images"][name]["digest"]} for name in IMAGES],
+                    "images": [{"name": release["images"][name]["repository"], "newTag": image_tag(release),
+                                "digest": release["images"][name]["digest"]} for name in IMAGES],
                     "patches": patches}
     app = {"apiVersion": "argoproj.io/v1alpha1", "kind": "Application",
            "metadata": {"name": metadata["application"], "namespace": "infra",

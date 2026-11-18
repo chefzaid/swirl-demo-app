@@ -310,6 +310,29 @@ class RenderingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exact source"):
             RENDER.render(self.root, INVENTORY, "int", snapshot, "a" * 40)
 
+    def deployed_images(self, environment):
+        rendered = subprocess.run(["kubectl", "kustomize", f"infra/environments/{environment}"], cwd=self.root,
+                                  text=True, capture_output=True, check=True)
+        return {item["metadata"]["name"]: item["spec"]["template"]["spec"]["containers"][0]["image"]
+                for item in yaml.safe_load_all(rendered.stdout) if item["kind"] == "Deployment"}
+
+    def test_deployed_images_carry_their_version_tag_with_the_digest(self):
+        metadata = RENDER.render(self.root, INVENTORY, "prod", RELEASE, "a" * 40)
+        expected = {name: f"{image['repository']}:1.0.1@{image['digest']}" for name, image in RELEASE["images"].items()}
+        self.assertEqual(self.deployed_images("prod"), expected)
+        self.assertEqual(metadata["images"], [expected[name] for name in RENDER.IMAGES])
+        snapshot = {**copy.deepcopy(RELEASE), "kind": "snapshot", "sourceBranch": "feature/x",
+                    "releaseVersion": "snapshot-" + RELEASE["sourceRevision"] + "-" + RELEASE["pipelineId"],
+                    "imageTag": "1.0.4-" + RELEASE["sourceRevision"][:8]}
+        RENDER.render(self.root, INVENTORY, "int", snapshot, "a" * 40)
+        self.assertEqual(self.deployed_images("int"),
+                         {name: f"{image['repository']}:1.0.4-aaaaaaaa@{image['digest']}" for name, image in RELEASE["images"].items()})
+        for tag in ("1.0.4-bbbbbbbb", "latest", "1.0.4", "snapshot-other"):
+            with self.subTest(tag=tag), self.assertRaisesRegex(ValueError, "version and source commit"):
+                RENDER.render(self.root, INVENTORY, "int", {**snapshot, "imageTag": tag}, "a" * 40)
+        with self.assertRaisesRegex(ValueError, "its own version"):
+            RENDER.render(self.root, INVENTORY, "prod", {**RELEASE, "imageTag": "1.0.2"}, "a" * 40)
+
     def test_api_docs_switch_reaches_backend_and_web_configuration(self):
         environment = self.root / "infra/environments/prod"
         metadata = RENDER.render(self.root, INVENTORY, "prod", RELEASE, "a" * 40)

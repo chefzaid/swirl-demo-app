@@ -15,7 +15,7 @@ configure_git_identity() {
 trailer() { git show -s --format="%(trailers:key=$2,valueonly)" "$1"; }
 
 write_manifest() {
-  local manifest_path="${1:-infra/releases/$APP_VERSION.json}" kind="${2:-release}" name digest images='{}'
+  local manifest_path="${1:-infra/releases/$APP_VERSION.json}" kind="${2:-release}" tag="${3:-$APP_VERSION}" name digest images='{}'
   for name in swirlapp-user swirlapp-order swirlapp-web; do
     digest="$(cat "package-output/image-digests/$name")"
     [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || fail 'The image publisher did not return an immutable digest.'
@@ -23,8 +23,9 @@ write_manifest() {
       '. + {($name): {repository:$repository,digest:$digest}}' <<<"$images")"
   done
   mkdir -p "$(dirname "$manifest_path")"
-  jq -n --arg kind "$kind" --arg branch "${CI_COMMIT_BRANCH:-}" --arg version "$APP_VERSION" --arg source "$CI_COMMIT_SHA" --arg pipeline "$CI_PIPELINE_ID" \
-    --argjson images "$images" '{version:1,kind:$kind,releaseVersion:$version,sourceRevision:$source,pipelineId:$pipeline,images:$images} +
+  jq -n --arg kind "$kind" --arg branch "${CI_COMMIT_BRANCH:-}" --arg version "$APP_VERSION" --arg tag "$tag" \
+    --arg source "$CI_COMMIT_SHA" --arg pipeline "$CI_PIPELINE_ID" --argjson images "$images" \
+    '{version:1,kind:$kind,releaseVersion:$version,imageTag:$tag,sourceRevision:$source,pipelineId:$pipeline,images:$images} +
     (if $kind == "snapshot" then {sourceBranch:$branch} else {} end)' \
     > "$manifest_path"
 }
@@ -78,7 +79,8 @@ recover_publication() {
   manifest="$(git show "$published:infra/releases/$APP_VERSION.json")" || return 1
   jq -e --arg version "$APP_VERSION" --arg source "$CI_COMMIT_SHA" --arg pipeline "$CI_PIPELINE_ID" \
     --arg prefix "$CI_REGISTRY/$CI_PROJECT_PATH/" '
-    .version == 1 and (.kind // "release") == "release" and .releaseVersion == $version and .sourceRevision == $source and .pipelineId == $pipeline and
+    .version == 1 and (.kind // "release") == "release" and .releaseVersion == $version and (.imageTag // $version) == $version and
+    .sourceRevision == $source and .pipelineId == $pipeline and
     (.images | keys) == ["swirlapp-order", "swirlapp-user", "swirlapp-web"] and
     (.images | to_entries | all(.value.repository == ($prefix + .key) and (.value.digest | test("^sha256:[0-9a-f]{64}$"))))' \
     <<<"$manifest" >/dev/null || return 1
@@ -160,6 +162,10 @@ snapshot_identity() {
      "${CI_COMMIT_SHA:-}" =~ ^[0-9a-f]{40}$ ]] || fail 'Branch snapshots can only deploy to int with a source branch and pipeline identity.'
   git check-ref-format "refs/heads/$CI_COMMIT_BRANCH" >/dev/null || fail 'Invalid source branch.'
   export APP_VERSION="snapshot-$CI_COMMIT_SHA-$CI_PIPELINE_ID"
+  # Deployed with the digest, so int pods show the version this commit builds.
+  SNAPSHOT_IMAGE_TAG="$(infra/scripts/current-version.sh)-${CI_COMMIT_SHA:0:8}"
+  [[ "$SNAPSHOT_IMAGE_TAG" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-SNAPSHOT)?-[0-9a-f]{8}$ ]] ||
+    fail 'Cannot derive the snapshot image tag from VERSION.'
   snapshot_branch="gitops/int/$CI_PIPELINE_ID"
   snapshot_manifest="infra/snapshots/$CI_PIPELINE_ID.json"
 }
@@ -182,9 +188,9 @@ load_snapshot() {
      "$(git rev-parse "$publication:$snapshot_manifest")" == "$(git rev-parse "$tip:$snapshot_manifest")" ]] ||
     fail 'The snapshot publication receipt is invalid.'
   manifest="$(git show "$publication:$snapshot_manifest")"
-  jq -e --arg version "$APP_VERSION" --arg source "$CI_COMMIT_SHA" --arg pipeline "$CI_PIPELINE_ID" \
+  jq -e --arg version "$APP_VERSION" --arg tag "$SNAPSHOT_IMAGE_TAG" --arg source "$CI_COMMIT_SHA" --arg pipeline "$CI_PIPELINE_ID" \
     --arg branch "$CI_COMMIT_BRANCH" --arg prefix "$CI_REGISTRY/$CI_PROJECT_PATH/" '
-    .version == 1 and .kind == "snapshot" and .releaseVersion == $version and .sourceRevision == $source and
+    .version == 1 and .kind == "snapshot" and .releaseVersion == $version and .imageTag == $tag and .sourceRevision == $source and
     .pipelineId == $pipeline and .sourceBranch == $branch and
     (.images | keys) == ["swirlapp-order", "swirlapp-user", "swirlapp-web"] and
     (.images | to_entries | all(.value.repository == ($prefix + .key) and (.value.digest | test("^sha256:[0-9a-f]{64}$"))))' \
@@ -208,8 +214,8 @@ publish_snapshot() {
     # the default branch. Never replace another environment's desired state.
     git restore --source "refs/remotes/origin/$CI_DEFAULT_BRANCH" -- \
       infra/deployment-environments.json infra/argocd/application.yaml infra/environments/int/settings.json
-    infra/scripts/ci-container-build.sh publish
-    write_manifest "$snapshot_manifest" snapshot
+    IMAGE_TAG="$SNAPSHOT_IMAGE_TAG" infra/scripts/ci-container-build.sh publish
+    write_manifest "$snapshot_manifest" snapshot "$SNAPSHOT_IMAGE_TAG"
     verify_snapshot_source
     git checkout --quiet -B "$snapshot_branch" "$CI_COMMIT_SHA"
     configure_git_identity
@@ -220,8 +226,8 @@ publish_snapshot() {
     git push origin "HEAD:refs/heads/$snapshot_branch"
     load_snapshot
   fi
-  printf 'APP_VERSION=%s\nSNAPSHOT_VERSION=%s\nSNAPSHOT_BRANCH=%s\n' \
-    "$APP_VERSION" "$APP_VERSION" "$snapshot_branch" > release.env
+  printf 'APP_VERSION=%s\nSNAPSHOT_VERSION=%s\nSNAPSHOT_BRANCH=%s\nSNAPSHOT_IMAGE_TAG=%s\n' \
+    "$APP_VERSION" "$APP_VERSION" "$snapshot_branch" "$SNAPSHOT_IMAGE_TAG" > release.env
 }
 
 smoke_curl() {
@@ -307,7 +313,7 @@ uat_release() {
 
 deploy_release() {
   local selected_version="${RELEASE_VERSION:-}" original_revision tip application_name repository_url pointer_file
-  local delivery_branch snapshot=false snapshot_branch snapshot_manifest SNAPSHOT_PUBLICATION
+  local delivery_branch snapshot=false snapshot_branch snapshot_manifest SNAPSHOT_PUBLICATION SNAPSHOT_IMAGE_TAG
   [[ "${DEPLOYMENT_ENVIRONMENT:-}" =~ ^(int|uat|prod)$ ]] || fail 'Select int, uat or prod.'
   [[ "${SONAR_SCAN_ONLY:-false}" != true && -n "${CI_DEFAULT_BRANCH:-}" && -n "${CI_COMMIT_BRANCH:-}" ]] ||
     fail 'Deployment requires a branch delivery pipeline.'

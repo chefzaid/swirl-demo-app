@@ -14,12 +14,12 @@ the selected environment.
 | `infra/observability/` | Prometheus SLO recording and alert rules with their `promtool` tests, shipped to each environment as a labelled ConfigMap scoped to its namespace. |
 | `infra/overlays/ha/` | Optional application replica and disruption-budget profile. |
 | `infra/overlays/canary/` | Optional Argo Rollouts canary example with an error-rate analysis. |
-| `infra/environments/<env>/` | Generated environment settings, runtime ConfigMaps, ingress and image digests. |
+| `infra/environments/<env>/` | Generated environment settings, runtime ConfigMaps, ingress and image tags with their digests. |
 | `infra/argocd/application.yaml` | Onboarding template; do not apply it to deploy an environment. |
 | `infra/argocd/<env>.yaml` | Selected environment's central Argo CD Application and pinned source revision. |
 | `infra/deployment-environments.json` | Public platform inventory copied during onboarding. |
-| `infra/releases/<version>.json` | Published release identity and immutable component image digests. |
-| `infra/snapshots/<pipeline-id>.json` | Snapshot provenance and digests on its dedicated integration delivery branch. |
+| `infra/releases/<version>.json` | Published release identity, image tag and immutable component image digests. |
+| `infra/snapshots/<pipeline-id>.json` | Snapshot provenance, image tag and digests on its dedicated integration delivery branch. |
 | `infra/keycloak/` | Browser client template and disposable local realm. |
 | `infra/compose/` | Local authenticated development stack. |
 | `infra/scripts/` | Rendering, release and maintenance helpers. |
@@ -111,14 +111,29 @@ The release publishes three images in the central project registry:
 ```
 
 Each image is built once during publication. The release manifest records its
-`sha256` digest, publishing pipeline and source revision; deployment uses those
-digests. Environment promotion reuses the published images and does not rebuild
-Java, Angular or containers. Public settings load at runtime, so the same web
-image works with every environment hostname and browser client.
+`sha256` digest, image tag, publishing pipeline and source revision; deployment
+uses those digests. Environment promotion reuses the published images and does
+not rebuild Java, Angular or containers. Public settings load at runtime, so the
+same web image works with every environment hostname and browser client.
 
-Integration snapshots use `snapshot-<source-commit>-<pipeline-id>` image tags and
-also deploy by digest. They are not GitLab releases and cannot deploy to `uat`
-or `prod`; a source version ending in `-SNAPSHOT` is supported for integration.
+Every environment overlay pins each image as `<image>:<tag>@sha256:<digest>`.
+The digest decides what runs; the tag names the version, so each pod's first
+container image shows it, as with the platform's other applications. The
+platform portal reads the version of the `app=swirlapp-web` pods from that tag. `uat` and `prod`
+carry the release version, for example
+`registry.swirlit.dev/swirl/swirl-demo-app/swirlapp-web:1.15.3@sha256:...`, and
+the user and order images carry the same tag.
+
+Integration snapshots push two tags: `snapshot-<source-commit>-<pipeline-id>`,
+their immutable identity, and `<version>-<short-commit>`, where the version is
+the one the commit builds (`infra/scripts/current-version.sh`, also the build
+version its JARs report) and the short commit is the first eight characters of
+its SHA, for example `1.15.4-0b92a2e1`. `int` deploys the second tag with the
+digest. A new pipeline for the same commit moves that tag, but each deployment
+keeps its own digest, and the identity tag keeps every published digest
+addressable. Snapshots are not GitLab releases and cannot deploy to `uat` or
+`prod`; a source version ending in `-SNAPSHOT` is supported for integration and
+stays in the tag, for example `2.0.3-SNAPSHOT-0b92a2e1`.
 
 ## Add or reconfigure this repository
 
@@ -196,11 +211,12 @@ Release promotion skips build, test, scan, publication and version-change jobs.
 Deployment verifies the annotated release tag, GitLab release and image digests.
 Snapshots and unfinished releases are rejected for `uat` and `prod`.
 
-Commit pipelines build, test and deploy `int` automatically and leave publication
-manual. Optional E2E, quality and security reports do not gate release.
-Compilation/package artifacts are produced by `01-build`; `01-release` (manual and
-onboarding pipelines) or `01-publish` (commit pipelines) builds and publishes the
-containers once. `01-snapshot` publishes integration containers. `02-deploy` and
+Commit pipelines build, test, package and deploy `int` automatically and leave
+publication manual. Optional E2E, quality and security reports do not gate release.
+Compilation/package artifacts are produced by `01-build`, and `03-package` checks
+that the runtime images build. `01-release` (manual and onboarding pipelines) or
+`01-publish` (commit pipelines) then builds, tags and pushes the release images
+once; `01-snapshot` does the same for integration images. `02-deploy` and
 `02-deploy-uat` depend on the appropriate successful publication unless promoting
 an existing release.
 
@@ -212,7 +228,7 @@ promotion pipeline from the latest default branch after reviewing that change.
 Release deployment commits the selected environment overlay, then a separate Application
 pointer to that exact runtime commit. Both commits are pushed before CI applies
 only the selected central Application. CI verifies its destination, source path,
-pinned revision, three image digests, `Synced`/`Healthy` status and Deployment
+pinned revision, three tagged image digests, `Synced`/`Healthy` status and Deployment
 health. Public checks verify the SPA, exact runtime identity configuration and
 both API health routes. These checks use the selected public hostname for both
 shared-cluster and remote environments.
@@ -231,14 +247,44 @@ Kubernetes admission checks keep each Application bound to its assigned project,
 repository and target. Shared instance runners are disabled for this project;
 other applications keep their existing runner configuration.
 
+### Pipeline jobs
+
+`.gitlab-ci.yml` uses the job names, modes and conventions of the platform's
+other applications, plus four jobs for the three environments
+(`00-delivery-policy`, `01-snapshot`, `01-publish` and `02-deploy-uat`).
+A promotion pipeline is one started with `RELEASE_VERSION`.
+
+| Job | Stage | Runs | What it does |
+| --- | --- | --- | --- |
+| `00-delivery-policy` | .pre | every pipeline | required: refuses an invalid environment, release or major-version request before anything builds |
+| `01-build` | build | every pipeline except promotion | required: delivery-script, manifest, alert-rule and documentation checks, both JARs and the production web archive |
+| `02-test` | build | every pipeline except promotion | allowed to fail: backend and frontend tests and the coverage policy |
+| `03-package` | build | every pipeline except promotion and Sonar scan-only | required: builds the three runtime images with Kaniko, without pushing |
+| `01-e2e` | verify | manual; automatic in the [nightly E2E schedule](testing.md#scheduled-e2e-runs) | allowed to fail, except in the schedule: the Playwright smoke, accessibility and visual suites |
+| `02-quality` | verify | automatic on the default branch and in full mode, manual otherwise | allowed to fail: Sonar analysis from the test artifacts |
+| `03-security` | verify | automatic in full mode, manual otherwise | allowed to fail: Trivy scan and CycloneDX SBOM, failing on high or critical findings |
+| `01-snapshot` | release | every branch commit pipeline for `int` | publishes the integration snapshot (above) |
+| `01-release` | release | default branch for `uat`: manual with confirmation, automatic in full mode and API onboarding | publishes a release (above) |
+| `01-publish` | release | default-branch commit pipelines, manual with confirmation | `01-release` for commit pipelines |
+| `02-deploy` | release | after `01-snapshot` or `01-release`, or for a promotion | deploys the selected environment (above) |
+| `02-deploy-uat` | release | after `01-publish` | deploys the release it published to `uat` |
+| `set-major-version` | version | default branch, manual, in a pipeline started with `NEW_MAJOR_VERSION` | prepares `<NEW_MAJOR_VERSION>.0.0` and synchronizes the Maven and npm manifests |
+
+`PIPELINE_MODE=full` runs quality and security automatically; E2E stays manual.
+A pipeline with `PLAYWRIGHT_SCHEDULE=true` runs build, tests, package and the
+E2E suites, nothing after. `SONAR_SCAN_ONLY=true` runs only build, test and
+quality. Publication and deployment jobs are not interruptible and hold a
+resource group.
+
 ## Version Lifecycle
 
 [`VERSION`](../VERSION) establishes the `major.minor.patch` baseline. Builds add
 one patch step for each first-parent commit since that baseline. Publication tags
 the computed version, records the immutable image manifest and prepares the next
 minor baseline with patch zero. Releasing `1.0.3`, for example, prepares `1.1.0`.
-Promotion and integration snapshots do not change the baseline or create another
-release tag. Initial API onboarding retains its stable release-and-deploy flow.
+Release images are tagged with that version, and integration snapshot images with
+the computed version and their commit (see [Images](#images)). Promotion and
+integration snapshots do not change the baseline or create another release tag. Initial API onboarding retains its stable release-and-deploy flow.
 
 For a deliberate major change, set `NEW_MAJOR_VERSION` when starting a normal
 pipeline and run `set-major-version` on the default branch. It updates Maven and

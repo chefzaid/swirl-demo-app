@@ -31,6 +31,14 @@ case "$mode" in
     ;;
 esac
 
+# IMAGE_TAG optionally adds the version tag a deployment shows (snapshots keep
+# their snapshot-<commit>-<pipeline> identity tag as well).
+image_tag="${IMAGE_TAG:-$APP_VERSION}"
+[[ "$image_tag" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]] || {
+  printf 'Invalid image tag: %s\n' "$image_tag" >&2
+  exit 2
+}
+
 build_image() {
   local name="$1" context="$2" dockerfile="$3"
   local repository="$REGISTRY_PUSH_HOST/$CI_PROJECT_PATH/$name"
@@ -40,6 +48,9 @@ build_image() {
     --destination "$repository:$APP_VERSION"
     --insecure-registry "$REGISTRY_PUSH_HOST"
   )
+  if [[ "$image_tag" != "$APP_VERSION" ]]; then
+    options+=(--destination "$repository:$image_tag")
+  fi
   if [[ "$mode" == publish ]]; then
     options+=(--cache=true --cache-repo "$repository/cache" --cache-ttl=720h
       --digest-file "$repository_root/package-output/image-digests/$name")

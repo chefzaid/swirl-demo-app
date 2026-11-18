@@ -50,6 +50,13 @@ only the selected environment's namespace. All three environments
 can share the platform cluster; remote clusters are optional. See the
 [delivery flow](docs/deployment.md#delivery-flow) for prerequisites and verification.
 
+Every environment runs its images as `<image>:<version>@sha256:<digest>`, so its
+pods name the version they run: the release version on `uat` and `prod`, and
+`<version>-<short-commit>` for an `int` snapshot ([images](docs/deployment.md#images)).
+The pipeline uses the same jobs as the platform's other applications, from
+`01-build` to `set-major-version`, plus the environment jobs listed in
+[pipeline jobs](docs/deployment.md#pipeline-jobs).
+
 CI submits Sonar analysis for both the Java backend and Angular frontend. The
 platform's scheduled discovery currently covers its local workloads; remote
 application clusters need separate telemetry/discovery integration. See

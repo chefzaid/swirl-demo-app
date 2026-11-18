@@ -72,9 +72,9 @@ The complete stack uses the `prod` Spring profile, Keycloak JWTs, PostgreSQL/Fly
 The repository currently targets:
 
 - Java 25.0.5
-- Maven 3.9.16
+- Maven 3.10.0
 - Spring Boot 4.1.2
-- Node.js 24 LTS
+- Node.js 26 LTS
 - npm 12.2.2
 - Angular 22.2
 - TypeScript 6.0
@@ -181,8 +181,8 @@ Mask uses Java 25 when `infra/scripts/mask-helpers.sh` can locate it. Direct Mav
 `.devcontainer/` builds an application development image containing:
 
 - Amazon Corretto Java 25
-- Maven 3.9.16
-- Node.js 24
+- Maven 3.10.0
+- Node.js 26
 - npm 12.2.2
 - Angular CLI 22
 - Java, Spring, Angular, TypeScript, YAML, Docker, database, and Git editor extensions

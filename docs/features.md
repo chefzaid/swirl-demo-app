@@ -240,7 +240,7 @@ Implemented developer and packaging support:
 - dependency-free default backend profile using H2, simple cache, disabled Kafka listeners, and disabled authentication
 - complete Docker Compose environment with application images and all runtime dependencies
 - Compose health checks and dependency ordering
-- VS Code dev container with Java 25, Maven 3.9, Node 24, npm 12, and Angular CLI 22
+- VS Code dev container with Java 25, Maven 3.10, Node 26, npm 12, and Angular CLI 22
 - optional dev-container infrastructure profile
 - Mask task commands for install, test, coverage, build, and component startup
 - multi-stage source-build Dockerfiles

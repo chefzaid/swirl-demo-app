@@ -1,4 +1,4 @@
-FROM docker.io/library/maven:3.9.16-amazoncorretto-25-alpine@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2 AS build
+FROM docker.io/library/maven:3.10.0-amazoncorretto-25-alpine@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97 AS build
 WORKDIR /workspace
 
 COPY pom.xml ./

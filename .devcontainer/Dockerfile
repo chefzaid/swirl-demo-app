@@ -5,8 +5,8 @@ FROM mcr.microsoft.com/devcontainers/base:bookworm
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NODE_VERSION=24
-ENV MAVEN_VERSION=3.9.16
+ENV NODE_VERSION=26
+ENV MAVEN_VERSION=3.10.0
 ENV MAVEN_HOME=/opt/maven
 ENV JAVA_HOME=/usr/lib/jvm/java-25-amazon-corretto
 ENV PATH=$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH
@@ -33,8 +33,8 @@ RUN wget -qO- https://apt.corretto.aws/corretto.key \
     && ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/maven \
     && rm apache-maven-${MAVEN_VERSION}-bin.tar.gz
 
-# Install Node.js 24.x using NodeSource repository
-RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+# Install Node.js 26.x using NodeSource repository
+RUN curl -fsSL https://deb.nodesource.com/setup_26.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 

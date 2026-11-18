@@ -52,7 +52,7 @@ variables:
 
 00-delivery-policy:
   stage: .pre
-  image: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
+  image: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
   before_script:
     - apk add --no-cache bash
   script:
@@ -60,7 +60,7 @@ variables:
 
 01-build:
   stage: build
-  image: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
+  image: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
   cache:
     - key: swirl-demo-app-maven-v2
       paths:
@@ -71,7 +71,7 @@ variables:
         - .cache/npm/
       policy: pull-push
   before_script:
-    - apk add --no-cache bash git jq kubectl nodejs npm prometheus python3 py3-yaml
+    - apk add --no-cache bash git jq kubectl nodejs-current npm prometheus python3 py3-yaml
     - export APP_VERSION="$(infra/scripts/current-version.sh)"
   script:
     - infra/scripts/ci-verify.sh build
@@ -94,7 +94,7 @@ variables:
   needs:
     - job: 01-build
       artifacts: false
-  image: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
+  image: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
   cache:
     - key: swirl-demo-app-maven-v2
       paths:
@@ -105,7 +105,7 @@ variables:
         - .cache/npm/
       policy: pull-push
   before_script:
-    - apk add --no-cache bash git nodejs npm python3
+    - apk add --no-cache bash git nodejs-current npm python3
     - export APP_VERSION="$(infra/scripts/current-version.sh)"
   script:
     - infra/scripts/ci-verify.sh test
@@ -185,7 +185,7 @@ variables:
     - job: 02-test
       artifacts: true
   image:
-    name: node:24.22.3-bookworm-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
+    name: node:26.13.1-bookworm-slim@sha256:5df79989ed685e09f0a98019db4cebfb22fb9df1a53c0161664a011f7ff6b0f1
     entrypoint: [""]
   cache:
     - key: swirl-demo-app-maven-v2
@@ -279,7 +279,7 @@ variables:
     - job: 01-build
       artifacts: true
   image:
-    name: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
+    name: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
     entrypoint: [""]
   cache:
     - key: swirl-demo-app-kaniko-executor-v2
@@ -331,7 +331,7 @@ variables:
     - job: 01-build
       artifacts: true
   image:
-    name: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
+    name: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
     entrypoint: [""]
   cache:
     - key: swirl-demo-app-kaniko-executor-v2
@@ -376,7 +376,7 @@ variables:
       artifacts: true
       optional: true
   image:
-    name: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
+    name: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
     entrypoint: [""]
   resource_group: swirl-demo-app-$DEPLOYMENT_ENVIRONMENT
   interruptible: false
@@ -447,7 +447,7 @@ set-major-version:
   stage: version
   tags: [swirl-cloud-application-release]
   image:
-    name: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
+    name: docker.io/library/maven@sha256:a697e2f303fca5675052a656daefab51d845c79e6121a26edbdf8e3e4832ed97
     entrypoint: [""]
   needs:
     - job: 00-delivery-policy

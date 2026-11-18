@@ -289,6 +289,13 @@ module. `ci-verify.sh` reads the job's CPU quota from its cgroup and caps
 Angular's build and Vitest at one worker less (`NG_BUILD_MAX_WORKERS`,
 `VITEST_MAX_WORKERS`), since Node counts the host's threads.
 
+Every Kaniko build (`03-package`, `01-snapshot`, `01-release`, `01-publish`)
+pulls its Docker Hub base images through the GitLab group's Dependency Proxy
+(`--registry-mirror "$CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX"`, with the job's
+`CI_DEPENDENCY_PROXY_*` credentials in Kaniko's Docker config), so Docker Hub's
+anonymous pull limit cannot fail a build; if the proxy fails, Kaniko falls back
+to Docker Hub.
+
 ## Version Lifecycle
 
 [`VERSION`](../VERSION) establishes the `major.minor.patch` baseline. Builds add

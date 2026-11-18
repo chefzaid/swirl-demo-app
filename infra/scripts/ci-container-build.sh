@@ -10,6 +10,24 @@ mode="${1:-verify}"
 : "${KANIKO_EXECUTOR:?KANIKO_EXECUTOR is required}"
 
 kaniko_options=()
+mirror_options=()
+# Credentials reach jq through the environment, never the command line or the log.
+auths='{}'
+add_auth() {
+  auths="$(REGISTRY_HOST="$1" REGISTRY_USERNAME="$2" REGISTRY_PASSWORD="$3" jq -c \
+    '. + {(env.REGISTRY_HOST): {username: env.REGISTRY_USERNAME, password: env.REGISTRY_PASSWORD}}' <<<"$auths")"
+}
+
+# Docker Hub base images come through the GitLab group's Dependency Proxy, which
+# avoids Docker Hub's anonymous pull limit; Kaniko falls back to Docker Hub if the
+# mirror fails. The proxy answers on its server with and without :443.
+if [[ -n "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-}" && -n "${CI_DEPENDENCY_PROXY_SERVER:-}" &&
+      -n "${CI_DEPENDENCY_PROXY_USER:-}" && -n "${CI_DEPENDENCY_PROXY_PASSWORD:-}" ]]; then
+  mirror_options+=(--registry-mirror "$CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX")
+  add_auth "$CI_DEPENDENCY_PROXY_SERVER" "$CI_DEPENDENCY_PROXY_USER" "$CI_DEPENDENCY_PROXY_PASSWORD"
+  add_auth "${CI_DEPENDENCY_PROXY_SERVER%:443}" "$CI_DEPENDENCY_PROXY_USER" "$CI_DEPENDENCY_PROXY_PASSWORD"
+fi
+
 case "$mode" in
   verify)
     kaniko_options+=(--no-push --cache=false)
@@ -17,12 +35,7 @@ case "$mode" in
   publish)
     : "${CI_REGISTRY_USER:?CI_REGISTRY_USER is required}"
     : "${CI_REGISTRY_PASSWORD:?CI_REGISTRY_PASSWORD is required}"
-    mkdir -p /kaniko/.docker
-    jq -n --arg registry "$REGISTRY_PUSH_HOST" --arg username "$CI_REGISTRY_USER" \
-      --arg password "$CI_REGISTRY_PASSWORD" \
-      '{auths:{($registry):{username:$username,password:$password}}}' \
-      > /kaniko/.docker/config.json
-    export DOCKER_CONFIG=/kaniko/.docker
+    add_auth "$REGISTRY_PUSH_HOST" "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD"
     mkdir -p package-output/image-digests
     ;;
   *)
@@ -30,6 +43,12 @@ case "$mode" in
     exit 2
     ;;
 esac
+
+if [[ "$auths" != '{}' ]]; then
+  mkdir -p /kaniko/.docker
+  (umask 077 && jq '{auths: .}' <<<"$auths" > /kaniko/.docker/config.json)
+  export DOCKER_CONFIG=/kaniko/.docker
+fi
 
 # IMAGE_TAG optionally adds the version tag a deployment shows (snapshots keep
 # their snapshot-<commit>-<pipeline> identity tag as well).
@@ -47,6 +66,7 @@ build_image() {
     --dockerfile "$dockerfile"
     --destination "$repository:$APP_VERSION"
     --insecure-registry "$REGISTRY_PUSH_HOST"
+    "${mirror_options[@]}"
   )
   if [[ "$image_tag" != "$APP_VERSION" ]]; then
     options+=(--destination "$repository:$image_tag")

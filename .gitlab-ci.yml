@@ -165,7 +165,7 @@ variables:
         - .cache/kaniko/
       policy: pull-push
   before_script:
-    - apk add --no-cache bash crane git
+    - apk add --no-cache bash crane git jq
     - export APP_VERSION="$(infra/scripts/current-version.sh)"
     - mkdir -p .cache/kaniko /kaniko/ssl/certs
     - test -s "$KANIKO_EXECUTOR" || crane export "$KANIKO_IMAGE" | tar -xOf - kaniko/executor > "$KANIKO_EXECUTOR"

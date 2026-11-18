@@ -190,12 +190,17 @@ onboarding run can verify and resume its own work.
 | --- | --- | --- |
 | `int` | Every commit, on any branch. | Build, publish and deploy an immutable snapshot automatically. |
 | `uat` | **Publish** (`01-publish`) on a default-branch commit pipeline. | Publish a stable release, then `02-deploy-uat` deploys it automatically. |
-| `prod` | Manual **New pipeline** on the default branch with `DEPLOYMENT_ENVIRONMENT=prod`. | Promote the release running on `uat`; nothing is built. |
+| `prod` | A default-branch pipeline with `DEPLOYMENT_ENVIRONMENT=prod`, started from **Run pipeline** in GitLab or from a command line with `mask promote prod` ([below](#promote-prod-from-a-command-line)). | Promote the release running on `uat`; nothing is built. |
 
 `prod` never publishes and never deploys a release directly. It reads the latest
 `uat` deployment record on the default branch and requires the live `uat`
 Application to be `Synced`/`Healthy` on that exact runtime revision. Leave
-`RELEASE_VERSION` empty to promote it; any other version is refused.
+`RELEASE_VERSION` empty to promote it; any other version is refused. Only a
+pipeline started from the GitLab UI or the API can deploy `prod`; pushes,
+schedules, triggers and onboarding never do. A `prod` pipeline runs only
+`00-delivery-policy` and `02-deploy`: build, test, package, coverage, quality,
+scan, publication and version jobs are skipped, since `02-deploy` reuses the
+published images and needs none of their artifacts.
 
 A manual pipeline with `PIPELINE_MODE=full` can also redeploy a branch snapshot to
 `int`, redeploy an existing release to `int` or `uat` with `RELEASE_VERSION`, or
@@ -207,7 +212,7 @@ branch. Feature branches need the current CI helpers, so merge or rebase older
 branches once when adopting this delivery flow. A branch with an open merge
 request can still start an explicit web deployment pipeline.
 
-Release promotion skips build, test, scan, publication and version-change jobs.
+Release promotion, and every `prod` pipeline, skips build, test, scan, publication and version-change jobs.
 Deployment verifies the annotated release tag, GitLab release and image digests.
 Snapshots and unfinished releases are rejected for `uat` and `prod`.
 
@@ -247,12 +252,33 @@ Kubernetes admission checks keep each Application bound to its assigned project,
 repository and target. Shared instance runners are disabled for this project;
 other applications keep their existing runner configuration.
 
+### Promote prod from a command line
+
+Starting a pipeline through the API needs the same GitLab permission as
+**Run pipeline**, so the same promotion runs from a terminal:
+
+```sh
+export GITLAB_TOKEN=...   # api scope; a role allowed to run pipelines with variables
+mask promote prod         # or: infra/scripts/promote-prod.sh
+```
+
+[`promote-prod.sh`](../infra/scripts/promote-prod.sh) creates the
+default-branch pipeline with `DEPLOYMENT_ENVIRONMENT=prod`
+(`POST /projects/:id/pipeline`), prints each job as its status changes, then the
+result of every job and the version `prod` now runs, read from `02-deploy`. It
+exits non-zero with the failing job's URL when the promotion fails. `--no-wait`
+returns once the pipeline exists, `--token-file PATH` reads the token from a
+file instead (the token is never printed or put on a command line), and
+`--gitlab-url`, `--project` and `--ref` override the defaults, which come from
+`infra/onboarding-values.json` and the project's default branch. Requires
+Bash, curl and jq.
+
 ### Pipeline jobs
 
 `.gitlab-ci.yml` uses the job names, modes and conventions of the platform's
 other applications, plus four jobs for the three environments
 (`00-delivery-policy`, `01-snapshot`, `01-publish` and `02-deploy-uat`).
-A promotion pipeline is one started with `RELEASE_VERSION`.
+A promotion pipeline is one started with `RELEASE_VERSION` or with `DEPLOYMENT_ENVIRONMENT=prod`.
 
 | Job | Stage | Runs | What it does |
 | --- | --- | --- | --- |
@@ -346,11 +372,13 @@ python3 infra/scripts/test-onboarding.py
 python3 infra/scripts/test-release.py
 python3 infra/scripts/test-deployment.py
 python3 infra/scripts/test-promotion.py
+python3 infra/scripts/test-promote-prod.py
 ```
 
 These checks need Python with PyYAML, Git, Bash, jq and kubectl. They use disposable
 Git repositories and fake APIs to verify publication recovery, routing, target
-ownership, independent pins, digest promotion and wrong-target refusal. Set
+ownership, independent pins, digest promotion, wrong-target refusal and the
+command-line prod promotion. Set
 `SWIRL_CLOUD_SOURCE=/path/to/swirl-cloud` for the actual onboarding renderer checks.
 No live deployment is needed.
 

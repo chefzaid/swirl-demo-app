@@ -93,7 +93,7 @@ variables:
       - swirlapp-web/dist/
       - swirlapp-web/swirlapp-web-*.tar.gz
   rules:
-    - if: '$RELEASE_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH'
@@ -146,7 +146,7 @@ variables:
       - '**/target/surefire-reports/'
       - '**/target/classes/'
   rules:
-    - if: '$RELEASE_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH'
@@ -174,7 +174,7 @@ variables:
   script:
     - infra/scripts/ci-container-build.sh verify
   rules:
-    - if: '$RELEASE_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$SONAR_SCAN_ONLY == "true"'
       when: never
@@ -213,7 +213,7 @@ variables:
       - swirlapp-web/playwright-report/
   manual_confirmation: "Run the optional Playwright E2E tests for $CI_COMMIT_SHORT_SHA?"
   rules:
-    - if: '$RELEASE_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$PLAYWRIGHT_SCHEDULE == "true" && ($CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web")'
       allow_failure: false
@@ -250,7 +250,7 @@ variables:
       - coverage-policy-junit.xml
       - coverage-policy.env
   rules:
-    - if: '$RELEASE_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH'
@@ -290,7 +290,7 @@ variables:
     paths:
       - quality-reports/
   rules:
-    - if: '$RELEASE_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$PLAYWRIGHT_SCHEDULE == "true"'
       when: never
@@ -340,7 +340,7 @@ variables:
     paths:
       - security-reports/
   rules:
-    - if: '$RELEASE_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$PLAYWRIGHT_SCHEDULE == "true"'
       when: never
@@ -394,15 +394,13 @@ variables:
       - release.env
   manual_confirmation: "Release the successful Swirl Demo App build for $CI_COMMIT_SHORT_SHA?"
   rules:
-    - if: '$RELEASE_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$PLAYWRIGHT_SCHEDULE == "true"'
       when: never
     - if: '$SONAR_SCAN_ONLY == "true"'
       when: never
     - if: '$NEW_MAJOR_VERSION != ""'
-      when: never
-    - if: '$DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "api" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $APP_ONBOARDING == "true"'
     - if: '$DEPLOYMENT_ENVIRONMENT == "int"'
@@ -499,7 +497,9 @@ variables:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $DEPLOYMENT_ENVIRONMENT == "uat"'
       variables:
         DEPLOYMENT_TIER: staging
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $DEPLOYMENT_ENVIRONMENT == "prod"'
+    # prod promotes the release running on uat, started from the GitLab UI or the API
+    # (infra/scripts/promote-prod.sh), never by a push, schedule, trigger or onboarding.
+    - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api") && $APP_ONBOARDING != "true" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $DEPLOYMENT_ENVIRONMENT == "prod"'
       variables:
         DEPLOYMENT_TIER: production
 
@@ -509,7 +509,7 @@ variables:
   extends: 01-release
   manual_confirmation: "Publish $CI_COMMIT_SHORT_SHA as a release and deploy it to uat?"
   rules:
-    - if: '$CI_PIPELINE_SOURCE != "push" || $RELEASE_VERSION != "" || $SONAR_SCAN_ONLY == "true" || $NEW_MAJOR_VERSION != ""'
+    - if: '$CI_PIPELINE_SOURCE != "push" || $RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod" || $SONAR_SCAN_ONLY == "true" || $NEW_MAJOR_VERSION != ""'
       when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: manual
@@ -528,7 +528,7 @@ variables:
     DEPLOYMENT_ENVIRONMENT: uat
     DEPLOYMENT_TIER: staging
   rules:
-    - if: '$CI_PIPELINE_SOURCE != "push" || $RELEASE_VERSION != "" || $SONAR_SCAN_ONLY == "true" || $NEW_MAJOR_VERSION != ""'
+    - if: '$CI_PIPELINE_SOURCE != "push" || $RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod" || $SONAR_SCAN_ONLY == "true" || $NEW_MAJOR_VERSION != ""'
       when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
@@ -550,7 +550,7 @@ set-major-version:
     - infra/scripts/ci-set-major-version.sh
   manual_confirmation: "Set the next Swirl Demo App major version from NEW_MAJOR_VERSION?"
   rules:
-    - if: '$RELEASE_VERSION != ""'
+    - if: '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"'
       when: never
     - if: '$PLAYWRIGHT_SCHEDULE == "true"'
       when: never

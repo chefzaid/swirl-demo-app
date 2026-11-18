@@ -45,7 +45,8 @@ by Kubernetes and Vault.
 
 Every commit builds and deploys a snapshot to `int`. Publishing a release from a
 default-branch commit pipeline deploys it to `uat`. `prod` is a manual pipeline that
-promotes the release running on `uat`, without rebuilding. Central Argo CD deploys
+promotes the release running on `uat`, without rebuilding, started from the GitLab UI
+or with `mask promote prod` ([command line](docs/deployment.md#promote-prod-from-a-command-line)). Central Argo CD deploys
 only the selected environment's namespace. All three environments
 can share the platform cluster; remote clusters are optional. See the
 [delivery flow](docs/deployment.md#delivery-flow) for prerequisites and verification.

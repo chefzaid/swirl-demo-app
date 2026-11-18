@@ -39,6 +39,7 @@ check_repository() {
   python3 infra/scripts/test-keycloak.py
   python3 infra/scripts/test-deployment.py
   python3 infra/scripts/test-promotion.py
+  python3 infra/scripts/test-promote-prod.py
   python3 infra/scripts/test-doc-links.py
   python3 infra/scripts/check-doc-links.py
   python3 infra/scripts/test-playwright-images.py

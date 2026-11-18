@@ -231,7 +231,28 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(pipeline["02-deploy"]["tags"], ["swirl-cloud-application-$DEPLOYMENT_ENVIRONMENT"])
         for name in ("01-build", "02-test", "03-package", "01-e2e", "04-coverage", "02-quality", "03-security",
                      "01-release", "set-major-version"):
-            self.assertEqual(pipeline[name]["rules"][0], {"if": '$RELEASE_VERSION != ""', "when": "never"})
+            self.assertEqual(pipeline[name]["rules"][0],
+                             {"if": '$RELEASE_VERSION != "" || $DEPLOYMENT_ENVIRONMENT == "prod"', "when": "never"})
+
+    def test_prod_promotion_runs_from_the_ui_or_the_api_and_builds_nothing(self):
+        pipeline = yaml.safe_load((ROOT / ".gitlab-ci.yml").read_text())
+        jobs = [name for name, job in pipeline.items() if isinstance(job, dict) and "rules" in job and name != "workflow"]
+        promotion = {"CI_COMMIT_BRANCH": "trunk", "CI_DEFAULT_BRANCH": "trunk", "PIPELINE_MODE": "standard",
+                     "DEPLOYMENT_ENVIRONMENT": "prod", "APP_ONBOARDING": "false", "SONAR_SCAN_ONLY": "false"}
+        for source in ("web", "api"):
+            started = {**promotion, "CI_PIPELINE_SOURCE": source}
+            self.assertEqual(job_rule("workflow", started), "on_success", source)
+            # Only the delivery policy (no rules) and the deployment run; neither needs build artifacts.
+            selected = {name for name in jobs if job_rule(name, started) not in ("never", "absent")}
+            self.assertEqual(selected, {"02-deploy"}, source)
+            self.assertEqual(job_rule("02-deploy", {**started, "PIPELINE_MODE": "full"}), "on_success", source)
+        self.assertNotIn("rules", pipeline["00-delivery-policy"])
+        self.assertEqual([item["job"] for item in pipeline["02-deploy"]["needs"] if not item.get("optional")],
+                         ["00-delivery-policy"])
+        for source in ("push", "schedule", "trigger", "pipeline", "merge_request_event"):
+            self.assertEqual(job_rule("02-deploy", {**promotion, "CI_PIPELINE_SOURCE": source}), "absent", source)
+        self.assertEqual(job_rule("02-deploy", {**promotion, "CI_PIPELINE_SOURCE": "api", "APP_ONBOARDING": "true"}), "absent")
+        self.assertEqual(job_rule("02-deploy", {**promotion, "CI_PIPELINE_SOURCE": "api", "CI_COMMIT_BRANCH": "feature"}), "absent")
 
     def test_jobs_start_as_soon_as_their_inputs_exist(self):
         pipeline = yaml.safe_load((ROOT / ".gitlab-ci.yml").read_text())
@@ -289,8 +310,8 @@ class ReleaseTests(unittest.TestCase):
             # uat publishes and deploys a release; prod only promotes the release running on uat.
             self.assertEqual(job_rule("01-release", selected), "never" if environment == "prod" else "on_success")
             self.assertEqual(job_rule("02-deploy", selected), "on_success")
-            self.assertEqual(job_rule("02-deploy", {**selected, "CI_PIPELINE_SOURCE": "api"}),
-                             "absent" if environment == "prod" else "on_success")
+            # API-started pipelines deploy like web ones; prod still promotes only the uat release.
+            self.assertEqual(job_rule("02-deploy", {**selected, "CI_PIPELINE_SOURCE": "api"}), "on_success")
         self.assertEqual(job_rule("01-snapshot", {**variables, "RELEASE_VERSION": "1.2.3"}), "never")
         self.assertEqual(job_rule("set-major-version", {**variables, "CI_COMMIT_BRANCH": "trunk"}), "never")
         major = {**variables, "CI_COMMIT_BRANCH": "trunk", "NEW_MAJOR_VERSION": "2", "PIPELINE_MODE": "standard"}

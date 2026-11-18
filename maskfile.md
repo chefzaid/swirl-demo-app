@@ -10,6 +10,7 @@ echo "  mask coverage [back|front|all] - run coverage commands"
 echo "  mask build [back|front|all]    - build apps"
 echo "  mask mutation                  - run backend mutation tests"
 echo "  mask run [all|user|order|front] - run apps (default: all)"
+echo "  mask promote prod [--no-wait]  - promote the release running on uat to prod (GITLAB_TOKEN)"
 ```
 
 ## install
@@ -123,4 +124,30 @@ else
   FRONT_PID=$!
   wait "$FRONT_PID"
 fi
+```
+
+## promote
+
+> Promote a release between environments through GitLab pipelines
+
+### promote prod
+
+> Promote the release running on uat to prod: starts a default-branch pipeline with DEPLOYMENT_ENVIRONMENT=prod through the GitLab API (token in GITLAB_TOKEN or --token-file), waits for it and prints the version prod now runs
+
+<!-- markdownlint-disable-next-line MD036 -->
+**OPTIONS**
+
+* no_wait
+  * flags: --no-wait
+  * desc: Start the pipeline and print its URL without waiting for it
+* token_file
+  * flags: --token-file
+  * type: string
+  * desc: Read the GitLab token from this file instead of GITLAB_TOKEN
+
+```bash
+set --
+if [ "${no_wait:-}" = "true" ]; then set -- "$@" --no-wait; fi
+if [ -n "${token_file:-}" ]; then set -- "$@" --token-file "$token_file"; fi
+exec "$MASKFILE_DIR/infra/scripts/promote-prod.sh" "$@"
 ```

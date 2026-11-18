@@ -30,7 +30,9 @@
         <java.version>25</java.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <spring-boot.version>4.1.2</spring-boot.version>
-        <!-- Security fixes pending inclusion in the Spring Boot dependency BOM. -->
+        <!-- Security fixes pending in the Spring Boot BOM. The code and Spring use Jackson 3 only; Jackson 2 (databind, core,
+             dataformat-yaml, datatype-jsr310) comes only via springdoc's swagger-core 2.2.x (latest 2.2.56), pinned here to 2.21.8.
+             Drop jackson-2-bom.version, and Jackson 2 with it, once swagger-core ships on Jackson 3; jackson-annotations 2.21 is Jackson 3's own. -->
         <jackson-2-bom.version>2.21.8</jackson-2-bom.version>
         <jackson-bom.version>3.1.8</jackson-bom.version>
         <springdoc.version>3.2.0</springdoc.version>

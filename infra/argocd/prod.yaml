@@ -4,8 +4,8 @@ metadata:
   name: swirl-demo-app-prod
   namespace: infra
   annotations:
-    swirl-demo-app.delivery/pipeline: '1558'
-    swirl-demo-app.delivery/source: e2ac2bc046590c5d7fabeba1ee55cf507df2062f
+    swirl-demo-app.delivery/pipeline: '1934'
+    swirl-demo-app.delivery/source: 7fb9bb35e3a4fa13fe81c0dc719a05e1af1f51e0
     swirl-demo-app.delivery/kind: release
   labels:
     app.kubernetes.io/name: swirl-demo-app
@@ -15,7 +15,7 @@ spec:
   project: applications-prod
   source:
     repoURL: http://gitlab.swirl.internal/swirl/swirl-demo-app.git
-    targetRevision: b152153c21892ce4689efaf92f71ec59016ee877
+    targetRevision: db1b274e955e5bbf07603970e3a195f121443d4a
     path: infra/environments/prod
   destination:
     name: in-cluster

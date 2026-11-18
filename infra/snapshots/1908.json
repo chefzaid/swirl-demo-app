@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "kind": "snapshot",
+  "releaseVersion": "snapshot-9f9e83eba3044fa9e1ca3a8ceedb9ac567ef4dee-1908",
+  "sourceRevision": "9f9e83eba3044fa9e1ca3a8ceedb9ac567ef4dee",
+  "pipelineId": "1908",
+  "images": {
+    "swirlapp-user": {
+      "repository": "registry.swirlit.dev/swirl/swirl-demo-app/swirlapp-user",
+      "digest": "sha256:87c606fb8d0381595ac55e09fb62a909eba6029bb415e267c579b059b510abf4"
+    },
+    "swirlapp-order": {
+      "repository": "registry.swirlit.dev/swirl/swirl-demo-app/swirlapp-order",
+      "digest": "sha256:7ea048373fbb568b27e9e9804fb70d231ec40856c361e0981b7f7995d0b0583f"
+    },
+    "swirlapp-web": {
+      "repository": "registry.swirlit.dev/swirl/swirl-demo-app/swirlapp-web",
+      "digest": "sha256:e57063c32763154d00ff561032014b6765f69fece7fc660c405b95402ef84a59"
+    }
+  },
+  "sourceBranch": "dependabot/npm_and_yarn/swirlapp-web/jsdom-31.0.0"
+}

@@ -1,13 +1,13 @@
-FROM docker.io/library/node:24.19.0-alpine@sha256:2a49bdf71e9fd965a58c1703fd9ddd205b34e5782b692a72dd1d248abb0beb43 AS build
+FROM docker.io/library/node:24.22.3-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS build
 WORKDIR /workspace
 COPY package.json package-lock.json ./
-RUN npm install --global npm@12.0.2
+RUN npm install --global npm@12.2.2
 RUN npm ci --ignore-scripts
 COPY angular.json tsconfig.json tsconfig.app.json tsconfig.spec.json .browserslistrc ./
 COPY src ./src
 RUN npm run build-prod
 
-FROM docker.io/nginxinc/nginx-unprivileged:1.30.4-alpine@sha256:bc69cfff69f75aef06daeda8dea70de95fa9ad97a03fe134cd4e5e6789d51124
+FROM docker.io/nginxinc/nginx-unprivileged:1.30.6-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03
 USER root
 RUN apk upgrade --no-cache
 USER 101:101

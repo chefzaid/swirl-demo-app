@@ -47,12 +47,12 @@ variables:
   SONAR_USER_HOME: "$CI_PROJECT_DIR/.cache/sonar"
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.cache/maven"
   NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.cache/npm"
-  KANIKO_IMAGE: "gcr.io/kaniko-project/executor@sha256:c3109d5926a997b100c4343944e06c6b30a6804b2f9abe0994d3de6ef92b028e"
+  KANIKO_IMAGE: "gcr.io/kaniko-project/executor@sha256:2562c4fe551399514277ffff7dcca9a3b1628c4ea38cb017d7286dc6ea52f4cd"
   KANIKO_EXECUTOR: "$CI_PROJECT_DIR/.cache/kaniko/executor"
 
 00-delivery-policy:
   stage: .pre
-  image: docker.io/library/maven@sha256:8df9a1dbc464977482f726f28a8a1985dcef4e4e68bdda1ae0330711bcb3a192
+  image: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
   before_script:
     - apk add --no-cache bash
   script:
@@ -60,7 +60,7 @@ variables:
 
 01-build:
   stage: build
-  image: docker.io/library/maven@sha256:8df9a1dbc464977482f726f28a8a1985dcef4e4e68bdda1ae0330711bcb3a192
+  image: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
   cache:
     - key: swirl-demo-app-maven-v2
       paths:
@@ -94,7 +94,7 @@ variables:
   needs:
     - job: 01-build
       artifacts: false
-  image: docker.io/library/maven@sha256:8df9a1dbc464977482f726f28a8a1985dcef4e4e68bdda1ae0330711bcb3a192
+  image: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
   cache:
     - key: swirl-demo-app-maven-v2
       paths:
@@ -144,7 +144,7 @@ variables:
     - job: 01-build
       artifacts: true
   image:
-    name: mcr.microsoft.com/playwright:v1.64.0-noble@sha256:06a9939e57531807f8d5fd76ce44b53165ffb7d7501d87ab10e285c20b1e971f
+    name: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
     entrypoint: [""]
   cache:
     - key: swirl-demo-app-playwright-npm-v2
@@ -185,7 +185,7 @@ variables:
     - job: 02-test
       artifacts: true
   image:
-    name: node:24.15.0-bookworm-slim@sha256:4e6b70dd6cbfc88c8157ba19aa3d9f9cce6ba4703576d55459e45efcbc9c5f5d
+    name: node:24.22.3-bookworm-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
     entrypoint: [""]
   cache:
     - key: swirl-demo-app-maven-v2
@@ -200,7 +200,7 @@ variables:
     - apt-get update -qq
     - apt-get install -y -qq --no-install-recommends git ca-certificates
     - export APP_VERSION="$("$CI_PROJECT_DIR/infra/scripts/current-version.sh")"
-    - npm install --global @sonar/scan@5.0.0
+    - npm install --global @sonar/scan@5.0.2
   script:
     - bash infra/scripts/test-quality.sh
     - bash infra/scripts/ci-quality.sh
@@ -229,7 +229,7 @@ variables:
 03-security:
   stage: verify
   image:
-    name: docker.io/aquasec/trivy:0.74.0@sha256:ee940acbf1f58ebadb42d01434ce4609530bf1b52536afbd1eee66cd7123c5c9
+    name: docker.io/aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb
     entrypoint: [""]
   variables:
     TRIVY_CACHE_DIR: .cache/trivy
@@ -279,10 +279,10 @@ variables:
     - job: 01-build
       artifacts: true
   image:
-    name: docker.io/library/maven@sha256:8df9a1dbc464977482f726f28a8a1985dcef4e4e68bdda1ae0330711bcb3a192
+    name: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
     entrypoint: [""]
   cache:
-    - key: swirl-demo-app-kaniko-executor-v1
+    - key: swirl-demo-app-kaniko-executor-v2
       paths:
         - .cache/kaniko/
       policy: pull-push
@@ -331,10 +331,10 @@ variables:
     - job: 01-build
       artifacts: true
   image:
-    name: docker.io/library/maven@sha256:8df9a1dbc464977482f726f28a8a1985dcef4e4e68bdda1ae0330711bcb3a192
+    name: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
     entrypoint: [""]
   cache:
-    - key: swirl-demo-app-kaniko-executor-v1
+    - key: swirl-demo-app-kaniko-executor-v2
       paths:
         - .cache/kaniko/
       policy: pull-push
@@ -376,14 +376,14 @@ variables:
       artifacts: true
       optional: true
   image:
-    name: docker.io/library/maven@sha256:8df9a1dbc464977482f726f28a8a1985dcef4e4e68bdda1ae0330711bcb3a192
+    name: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
     entrypoint: [""]
   resource_group: swirl-demo-app-$DEPLOYMENT_ENVIRONMENT
   interruptible: false
   before_script:
     - apk add --no-cache bash curl git jq python3 py3-yaml
-    - curl --fail --silent --show-error --location --output /usr/local/bin/kubectl "https://dl.k8s.io/release/v1.35.4/bin/linux/amd64/kubectl"
-    - echo "b529430df69a688fd61b64ad2299edb5fd71cb58be2a4779dba624c7d3510efd  /usr/local/bin/kubectl" | sha256sum -c
+    - curl --fail --silent --show-error --location --output /usr/local/bin/kubectl "https://dl.k8s.io/release/v1.35.10/bin/linux/amd64/kubectl"
+    - echo "c49a28f1f4efc4d475ed05f47f2ce8e563bf7bef69ed77fe1b924ea6d83b6327  /usr/local/bin/kubectl" | sha256sum -c
     - chmod 0755 /usr/local/bin/kubectl
   script:
     - infra/scripts/ci-release.sh deploy
@@ -447,7 +447,7 @@ set-major-version:
   stage: version
   tags: [swirl-cloud-application-release]
   image:
-    name: docker.io/library/maven@sha256:8df9a1dbc464977482f726f28a8a1985dcef4e4e68bdda1ae0330711bcb3a192
+    name: docker.io/library/maven@sha256:5efcc6faba78451290a355763d260f990361e21084ea2125a81ba1d7b5f545f2
     entrypoint: [""]
   needs:
     - job: 00-delivery-policy

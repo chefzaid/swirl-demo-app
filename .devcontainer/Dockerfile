@@ -39,7 +39,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # Keep the package manager and CLI aligned with the application toolchain.
-RUN npm install -g npm@12.0.2 @angular/cli@22.1.4
+RUN npm install -g npm@12.2.2 @angular/cli@22.2.6
 
 # Create workspace and Maven directories
 RUN mkdir -p /workspace \

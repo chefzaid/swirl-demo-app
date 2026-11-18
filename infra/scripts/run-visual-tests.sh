@@ -18,7 +18,7 @@ fi
 mkdir -p "$web/node_modules"
 docker run --rm --init --ipc=host -e CI=true \
   -v "$web":/work -w /work -v swirl-demo-app-visual-modules:/work/node_modules \
-  mcr.microsoft.com/playwright:v1.64.0-noble \
+  mcr.microsoft.com/playwright:v1.64.1-noble \
   sh -c "npm ci && npm run $script; status=\$?
     chown -R $(id -u):$(id -g) test-results playwright-report e2e/visual.spec.ts-snapshots 2>/dev/null
     exit \$status"

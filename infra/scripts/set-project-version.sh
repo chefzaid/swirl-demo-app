@@ -11,7 +11,7 @@ version="${1:-}"
 }
 
 printf '%s\n' "$version" > VERSION
-mvn --batch-mode --quiet org.codehaus.mojo:versions-maven-plugin:2.19.1:set \
+mvn --batch-mode --quiet org.codehaus.mojo:versions-maven-plugin:2.24.0:set \
   -DnewVersion="$version" -DprocessAllModules=true -DgenerateBackupPoms=false
 
 for manifest in swirlapp-web/package.json swirlapp-web/package-lock.json; do

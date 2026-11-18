@@ -557,13 +557,11 @@ Before merging a sensitive change:
 
 ### Runtime dependency maintenance
 
-Spring Boot 4.1.1 supplies patched Netty, Log4j and PostgreSQL JDBC
-dependencies. The parent POM additionally pins Tomcat 11.0.25 for
-CVE-2026-65182, CVE-2026-65905 and CVE-2026-68525, Jackson 2.21.7 and 3.1.7
-(`jackson-2-bom.version`, `jackson-bom.version`) for CVE-2026-68497,
-CVE-2026-89407, CVE-2026-89425, CVE-2026-91776 and CVE-2026-91777, and
-Kafka's transitive `at.yawk.lz4:lz4-java` to 1.11.4 for CVE-2026-59949 and
-CVE-2026-106451. Remove these overrides
+Spring Boot 4.1.2 supplies patched Tomcat, Netty, Log4j and PostgreSQL JDBC
+dependencies. The parent POM additionally pins Jackson 2.21.8 and 3.1.8
+(`jackson-2-bom.version`, `jackson-bom.version`) for CVE-2026-110879, and
+Kafka's transitive `at.yawk.lz4:lz4-java` to 1.12.1 for CVE-2026-59949,
+CVE-2026-106451 and GHSA-48mj-8f7c-7qfm. Remove these overrides
 when the managed dependency versions include the fixes. Runtime Dockerfiles
 apply Alpine security updates before dropping privileges. Both web Dockerfiles
 also update the packages inherited from the pinned unprivileged NGINX image

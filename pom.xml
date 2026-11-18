@@ -41,7 +41,7 @@
         <pitest-maven.version>1.30.2</pitest-maven.version>
         <pitest-junit5-plugin.version>1.2.3</pitest-junit5-plugin.version>
         <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
         <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
     </properties>
 
@@ -57,7 +57,7 @@
             <dependency>
                 <groupId>at.yawk.lz4</groupId>
                 <artifactId>lz4-java</artifactId>
-                <version>1.12.1</version>
+                <version>1.14.0</version>
             </dependency>
             <dependency>
                 <groupId>com.tngtech.archunit</groupId>

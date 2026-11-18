@@ -50,3 +50,9 @@ runs build, test, package and E2E, with E2E required, and nothing after. Each
 environment deploys its images as `<image>:<version>@sha256:<digest>`, so the
 digest stays the deployed identity and the tag shows the version. The
 [pipeline jobs](../deployment.md#pipeline-jobs) table is the current reference.
+
+Build and test each run as two parallel jobs (`SUITE: [server, web]`), and
+`needs` starts every job as soon as its inputs exist: the tests no longer wait
+for the build, `03-package` runs alongside them, and `int` delivery waits for
+neither. The combined coverage policy, which needs both test suites, moved from
+`02-test` to `04-coverage`, which scan-only pipelines also run.

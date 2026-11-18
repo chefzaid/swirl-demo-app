@@ -45,7 +45,7 @@ a promise of a scan at an exact time. A completed manual or normal CI analysis
 also resets the age used by discovery.
 
 Manual and discovery-triggered scan-only pipelines set `SONAR_SCAN_ONLY=true` and run
-`01-build → 02-test → 02-quality`. Image packaging, E2E, Trivy, release, deployment
+`01-build`, `02-test`, then `04-coverage` and `02-quality`. Image packaging, E2E, Trivy, release, deployment
 and repository version changes are excluded by job rules. SonarQube Community
 Build analyzes the default branch (`main` here); other branches retain their
 local test and dependency reports.

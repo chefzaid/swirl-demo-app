@@ -44,6 +44,7 @@
         <pitest-junit5-plugin.version>1.2.3</pitest-junit5-plugin.version>
         <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
+        <surefire.forkCount>2</surefire.forkCount>
         <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
     </properties>
 
@@ -105,7 +106,11 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>@{argLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                    <!-- Two test JVMs per module: tests share no state outside their JVM (in-memory H2,
+                         random ports, mock Kafka). Each keeps the 2 GiB heap one JVM had in an 8 GiB CI job. -->
+                    <forkCount>${surefire.forkCount}</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>@{argLine} -Xmx2g -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
                 </configuration>
             </plugin>
             <plugin>

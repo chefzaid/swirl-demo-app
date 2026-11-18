@@ -213,11 +213,11 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(choice["value"], "int")
         self.assertEqual(choice["options"], ["int", "uat", "prod"])
         self.assertTrue(choice["description"])
-        # Like Indezy and Thoughty, every build pipeline verifies the runtime images before anything publishes them.
+        # Like Indezy and Thoughty, every build pipeline verifies the runtime images, and releases wait for it.
         self.assertEqual(pipeline["03-package"]["script"], ["infra/scripts/ci-container-build.sh verify"])
         self.assertEqual([(item["job"], item["artifacts"]) for item in pipeline["03-package"]["needs"]],
-                         [("01-build", True), ("02-test", False)])
-        for name in ("01-e2e", "01-release", "01-snapshot"):
+                         [("01-build", True)])
+        for name in ("01-e2e", "01-release"):
             self.assertIn({"job": "03-package", "artifacts": False}, pipeline[name]["needs"])
         self.assertEqual(pipeline["01-release"]["resource_group"], "swirl-demo-app-release")
         self.assertEqual(pipeline["set-major-version"]["resource_group"], "swirl-demo-app-release")
@@ -229,14 +229,36 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(pipeline["default"]["tags"], ["swirl-cloud-application-int"])
         self.assertEqual(pipeline["01-release"]["tags"], ["swirl-cloud-application-release"])
         self.assertEqual(pipeline["02-deploy"]["tags"], ["swirl-cloud-application-$DEPLOYMENT_ENVIRONMENT"])
-        for name in ("01-build", "02-test", "03-package", "01-e2e", "02-quality", "03-security", "01-release", "set-major-version"):
+        for name in ("01-build", "02-test", "03-package", "01-e2e", "04-coverage", "02-quality", "03-security",
+                     "01-release", "set-major-version"):
             self.assertEqual(pipeline[name]["rules"][0], {"if": '$RELEASE_VERSION != ""', "when": "never"})
+
+    def test_jobs_start_as_soon_as_their_inputs_exist(self):
+        pipeline = yaml.safe_load((ROOT / ".gitlab-ci.yml").read_text())
+        needs = {name: [item["job"] for item in job["needs"]] for name, job in pipeline.items()
+                 if isinstance(job, dict) and isinstance(job.get("needs"), list)}
+        for name in ("01-build", "02-test"):
+            self.assertEqual(pipeline[name]["parallel"]["matrix"], [{"SUITE": ["server", "web"]}])
+            self.assertIn('"$SUITE"', pipeline[name]["script"][0])
+        # The tests and the source scan start after the delivery policy, not after the build.
+        self.assertEqual(needs["02-test"], ["00-delivery-policy"])
+        self.assertEqual(needs["03-security"], ["00-delivery-policy"])
+        self.assertEqual(pipeline["02-test"]["variables"], {"KUBERNETES_CPU_LIMIT": "8", "KUBERNETES_MEMORY_LIMIT": "12Gi"})
+        # Integration delivery waits only for the build: the snapshot builds and pushes the images itself.
+        self.assertEqual(needs["01-snapshot"], ["01-build"])
+        self.assertEqual(needs["03-package"], ["01-build"])
+        # The combined coverage policy needs both test suites' reports.
+        self.assertEqual(needs["04-coverage"], ["02-test"])
+        self.assertEqual(pipeline["04-coverage"]["script"], ["infra/scripts/ci-verify.sh coverage"])
+        self.assertTrue(pipeline["04-coverage"]["allow_failure"])
+        self.assertNotIn("coverage", pipeline["02-test"])
+        self.assertEqual(pipeline["04-coverage"]["rules"], pipeline["02-test"]["rules"])
 
     def test_nightly_e2e_schedule_runs_the_suite_and_nothing_after_it(self):
         schedule = {"CI_PIPELINE_SOURCE": "schedule", "CI_COMMIT_BRANCH": "trunk", "CI_DEFAULT_BRANCH": "trunk",
                     "PIPELINE_MODE": "standard", "DEPLOYMENT_ENVIRONMENT": "int", "APP_ONBOARDING": "false",
                     "SONAR_SCAN_ONLY": "false", "PLAYWRIGHT_SCHEDULE": "true"}
-        for job in ("01-build", "02-test", "03-package", "01-e2e"):
+        for job in ("01-build", "02-test", "03-package", "04-coverage", "01-e2e"):
             self.assertEqual(job_rule(job, schedule), "on_success", job)
         for job in ("02-quality", "03-security", "01-release", "01-snapshot", "02-deploy", "01-publish",
                     "02-deploy-uat", "set-major-version"):

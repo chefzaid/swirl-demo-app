@@ -212,7 +212,7 @@ Deployment verifies the annotated release tag, GitLab release and image digests.
 Snapshots and unfinished releases are rejected for `uat` and `prod`.
 
 Commit pipelines build, test, package and deploy `int` automatically and leave
-publication manual. Optional E2E, quality and security reports do not gate release.
+publication manual; `int` delivery does not wait for the tests or `03-package`. Optional E2E, quality and security reports do not gate release.
 Compilation/package artifacts are produced by `01-build`, and `03-package` checks
 that the runtime images build. `01-release` (manual and onboarding pipelines) or
 `01-publish` (commit pipelines) then builds, tags and pushes the release images
@@ -257,12 +257,13 @@ A promotion pipeline is one started with `RELEASE_VERSION`.
 | Job | Stage | Runs | What it does |
 | --- | --- | --- | --- |
 | `00-delivery-policy` | .pre | every pipeline | required: refuses an invalid environment, release or major-version request before anything builds |
-| `01-build` | build | every pipeline except promotion | required: delivery-script, manifest, alert-rule and documentation checks, both JARs and the production web archive |
-| `02-test` | build | every pipeline except promotion | allowed to fail: backend and frontend tests and the coverage policy |
-| `03-package` | build | every pipeline except promotion and Sonar scan-only | required: builds the three runtime images with Kaniko, without pushing |
+| `01-build` | build | every pipeline except promotion | required, as two parallel jobs: `01-build: [server]` runs the delivery-script, manifest, alert-rule and documentation checks and builds both JARs; `01-build: [web]` builds the production web archive |
+| `02-test` | build | every pipeline except promotion, from the start | allowed to fail, as two parallel jobs: `02-test: [server]` runs the Maven tests with JaCoCo, `02-test: [web]` the Vitest suite |
+| `03-package` | build | every pipeline except promotion and Sonar scan-only, after `01-build` | required: builds the three runtime images with Kaniko, without pushing, alongside the tests |
 | `01-e2e` | verify | manual; automatic in the [nightly E2E schedule](testing.md#scheduled-e2e-runs) | allowed to fail, except in the schedule: the Playwright smoke, accessibility and visual suites |
 | `02-quality` | verify | automatic on the default branch and in full mode, manual otherwise | allowed to fail: Sonar analysis from the test artifacts |
 | `03-security` | verify | automatic in full mode, manual otherwise | allowed to fail: Trivy scan and CycloneDX SBOM, failing on high or critical findings |
+| `04-coverage` | verify | every pipeline except promotion, after both `02-test` jobs | allowed to fail: the combined line-coverage policy over the JaCoCo and Vitest reports, shown as the pipeline's coverage |
 | `01-snapshot` | release | every branch commit pipeline for `int` | publishes the integration snapshot (above) |
 | `01-release` | release | default branch for `uat`: manual with confirmation, automatic in full mode and API onboarding | publishes a release (above) |
 | `01-publish` | release | default-branch commit pipelines, manual with confirmation | `01-release` for commit pipelines |
@@ -271,10 +272,22 @@ A promotion pipeline is one started with `RELEASE_VERSION`.
 | `set-major-version` | version | default branch, manual, in a pipeline started with `NEW_MAJOR_VERSION` | prepares `<NEW_MAJOR_VERSION>.0.0` and synchronizes the Maven and npm manifests |
 
 `PIPELINE_MODE=full` runs quality and security automatically; E2E stays manual.
-A pipeline with `PLAYWRIGHT_SCHEDULE=true` runs build, tests, package and the
-E2E suites, nothing after. `SONAR_SCAN_ONLY=true` runs only build, test and
-quality. Publication and deployment jobs are not interruptible and hold a
-resource group.
+A pipeline with `PLAYWRIGHT_SCHEDULE=true` runs build, tests, coverage, package
+and the E2E suites, nothing after. `SONAR_SCAN_ONLY=true` runs only build, test,
+coverage and quality. Publication and deployment jobs are not interruptible and
+hold a resource group.
+
+Each job starts as soon as its inputs exist (`needs`): both test jobs and the
+Trivy scan right after `00-delivery-policy`, `03-package` and `01-snapshot` once
+both build jobs are done, `04-coverage` and `02-quality` once both test jobs are.
+Integration delivery (`01-build`, `01-snapshot`, `02-deploy`) therefore waits for
+neither the tests nor `03-package`; `01-snapshot` builds and pushes the images
+itself. The test jobs run with 8 CPUs and 12 GiB (`KUBERNETES_CPU_LIMIT`,
+`KUBERNETES_MEMORY_LIMIT`). Maven builds with one thread per CPU (`-T 1C`), so
+user and order build and test side by side, and Surefire runs two test JVMs per
+module. `ci-verify.sh` reads the job's CPU quota from its cgroup and caps
+Angular's build and Vitest at one worker less (`NG_BUILD_MAX_WORKERS`,
+`VITEST_MAX_WORKERS`), since Node counts the host's threads.
 
 ## Version Lifecycle
 

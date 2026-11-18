@@ -166,6 +166,12 @@ Test reports:
 - `swirlapp-user/target/site/jacoco/index.html`
 - `swirlapp-order/target/site/jacoco/index.html`
 
+Surefire runs each module's test classes in two JVMs (`surefire.forkCount` in
+`pom.xml`, 2 GiB of heap each). The tests keep their state inside their JVM
+(in-memory H2, random ports, mock Kafka consumers), so classes in different JVMs
+never meet. Pass `-Dsurefire.forkCount=1` for a single JVM, and `-T 1C` to build
+and test user and order side by side, as CI does.
+
 The shared module skips its JaCoCo gate because it is infrastructure code tested directly. Each deployable service applies a 60 percent instruction gate after excluding application bootstrap, configuration, domain, and DTO classes.
 
 ## Backend Test Profiles
